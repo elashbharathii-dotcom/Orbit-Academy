@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Exo', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  --color-space-deep: #05070D;
+  --color-space-navy: #0A0F1D;
+  --color-space-elevated: #11182E;
+  --color-space-overlay: rgba(7, 11, 22, 0.84);
+  --color-space-border: rgba(148, 163, 184, 0.14);
+  --color-space-border-active: rgba(56, 189, 248, 0.40);
+
+  --color-telemetry-cyan: #38BDF8;
+  --color-solar-amber: #F59E0B;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #475569;
+  --color-status-success: #10B981;
+  --color-status-warning: #F59E0B;
+  --color-status-danger: #EF4444;
+
+  --color-planet-sol: #FBBF24;
+  --color-planet-earth-blue: #38BDF8;
+  --color-planet-earth-green: #34D399;
+  --color-planet-mars: #F87171;
+  --color-planet-jupiter-cream: #FDE68A;
+  --color-planet-jupiter-amber: #D97706;
+  --color-planet-saturn: #FCD34D;
+  --color-planet-uranus: #6EE7B7;
+  --color-planet-neptune: #60A5FA;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #05070D;
+    color: #F8FAFC;
+    font-family: 'Exo', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
