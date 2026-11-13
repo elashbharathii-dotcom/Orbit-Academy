@@ -30,20 +30,24 @@ interface LauraDialogueProps {
   onNextCuriosity: () => void;
   contextName: string;
   isAiConnected: boolean;
+  anchor?: {
+    left: number;
+    top: number;
+    pointerDirection: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  };
 }
 
 /**
- * LAURA Dialogue & Interactive Chat Interface (Phase 6B)
+ * LAURA Dialogue & Interactive Chat Interface (Phase 6D)
  * Aligned with design-system/orbit-academy/MASTER.md
  *
  * Features:
+ * - Dynamically anchored relative to LAURA's live flight coordinates
+ * - Speech pointer triangle dynamically points toward LAURA
+ * - Prevents viewport clipping and never overlaps mission-critical inputs
  * - Real-time conversational interface powered by Google Gemini Developer API
- * - Full conversation feed with student vs. LAURA speech bubbles
- * - Contextual astronomical awareness based on selected celestial body
  * - Animated thinking telemetry indicator ("LAURA is gazing into the cosmos... ✦ ✧")
  * - Dedicated "Next Curiosity" button preserving Phase 6A curated trivia cycler
- * - Safe input handling: character limit (500 chars), Enter-to-send, auto-scroll
- * - Graceful connection state badge (AI Transmission vs. Offline Archive)
  */
 export const LauraDialogue: React.FC<LauraDialogueProps> = ({
   isOpen,
@@ -55,12 +59,13 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
   onNextCuriosity,
   contextName,
   isAiConnected,
+  anchor,
 }) => {
   const [inputText, setInputText] = useState<string>('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom of conversation whenever messages or thinking state updates
+  // Auto-scroll to bottom whenever messages or thinking state updates
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
@@ -90,11 +95,19 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
     }
   };
 
+  const pointerDir = anchor?.pointerDirection || 'bottom-left';
+
   return (
     <div
       role="region"
       aria-label="LAURA Companion Mission Dialogue"
-      className="pointer-events-auto absolute bottom-16 left-0 z-30 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-[rgba(245,158,11,0.35)] bg-[#0A0F1D]/95 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-fade-in sm:w-[400px] md:bottom-20 md:w-[440px]"
+      style={{
+        left: anchor ? `${anchor.left}px` : undefined,
+        top: anchor ? `${anchor.top}px` : undefined,
+      }}
+      className={`pointer-events-auto fixed z-30 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-[rgba(245,158,11,0.35)] bg-[#0A0F1D]/95 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-fade-in sm:w-[390px] md:w-[420px] ${
+        !anchor ? 'bottom-20 left-4' : ''
+      }`}
     >
       {/* 1. Header with Status Telemetry & Controls */}
       <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] px-4 py-3">
@@ -153,7 +166,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
       <div
         ref={chatScrollRef}
         aria-live="polite"
-        className="flex max-h-[300px] min-h-[160px] flex-col gap-3 overflow-y-auto p-4 sm:max-h-[340px]"
+        className="flex max-h-[260px] min-h-[150px] flex-col gap-3 overflow-y-auto p-4 sm:max-h-[300px]"
       >
         {messages.map((msg) => (
           <div
@@ -172,9 +185,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
               ) : (
                 <>
                   <Bot className="h-2.5 w-2.5 text-[#F59E0B]" aria-hidden="true" />
-                  <span className="text-[#F59E0B]">
-                    {msg.tag || 'LAURA'}
-                  </span>
+                  <span className="text-[#F59E0B]">{msg.tag || 'LAURA'}</span>
                   {msg.isCuriosity && (
                     <span className="rounded bg-[#F59E0B]/15 px-1 text-[8px] text-[#FBBF24]">
                       Archive
@@ -270,11 +281,31 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         </form>
       </div>
 
-      {/* Speech Triangle Pointer downward pointing towards Laura avatar */}
-      <div
-        className="pointer-events-none absolute -bottom-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
-        aria-hidden="true"
-      />
+      {/* Dynamic Speech Pointer pointing towards LAURA */}
+      {pointerDir === 'bottom-left' && (
+        <div
+          className="pointer-events-none absolute -bottom-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
+          aria-hidden="true"
+        />
+      )}
+      {pointerDir === 'bottom-right' && (
+        <div
+          className="pointer-events-none absolute -bottom-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
+          aria-hidden="true"
+        />
+      )}
+      {pointerDir === 'top-left' && (
+        <div
+          className="pointer-events-none absolute -top-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
+          aria-hidden="true"
+        />
+      )}
+      {pointerDir === 'top-right' && (
+        <div
+          className="pointer-events-none absolute -top-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 };

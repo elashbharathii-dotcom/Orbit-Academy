@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { LauraStar } from './LauraStar';
 import { LauraDialogue, ChatMessage } from './LauraDialogue';
+import { LauraFlightTrail } from './LauraFlightTrail';
+import { useLauraFlight } from './useLauraFlight';
 import { LAURA_DIALOGUES, LauraEmotion } from '../../data/lauraDialogues';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 
 /**
- * LAURA Companion Controller (Phase 6B: Gemini Free Tier Upgrade)
+ * LAURA Companion Controller (Phase 6D: Autonomous Celestial Flight)
  *
  * Capabilities:
- * - Real-time conversational AI integration via backend /api/chat endpoint
- * - Verified NASA physical telemetry injection for active celestial body
- * - Expressive emotional transitions across 5 distinct states:
- *   idle, happy, thinking, laughing, celebrating
- * - Graceful fallback to curated offline dialogues if API key is not configured
- * - Preserved "Next Curiosity" educational trivia cycler
- * - Fully responsive placement avoiding HUD and Planet Dossier collisions
+ * - Fluid full-viewport flight controller with natural pursuit damping and organic hover
+ * - Context-aware autonomous navigation (drifts to observatory posts and planet focus waypoints)
+ * - Dynamic speech balloon anchoring relative to live flight coordinates without clipping
+ * - Expressive banking rotations, squash & stretch, and glittering stardust particle trails
+ * - Interactive cursor-glance awareness on desktop
+ * - Full reduced-motion accessibility support
+ * - Preserved Gemini AI chat, verified telemetry context, and offline curiosities
  */
 export const LauraCompanion: React.FC = () => {
   const { selectedPlanetId } = useSolarSystem();
@@ -27,7 +29,14 @@ export const LauraCompanion: React.FC = () => {
   const [curiosityIndex, setCuriosityIndex] = useState<number>(0);
   const [isAiConnected, setIsAiConnected] = useState<boolean>(false);
 
-  // Retrieve selected body data from celestial bodies catalogue
+  // Initialize Autonomous Flight Controller
+  const { flightState } = useLauraFlight({
+    selectedPlanetId,
+    isChatOpen: isOpen,
+    isThinking,
+  });
+
+  // Retrieve active celestial body data
   const currentBody = useMemo(() => {
     if (!selectedPlanetId) return null;
     return CELESTIAL_BODIES.find((b) => b.id === selectedPlanetId) || null;
@@ -61,7 +70,7 @@ export const LauraCompanion: React.FC = () => {
     };
   }, []);
 
-  // Reset conversation greeting & curiosity index whenever celestial focus changes
+  // React to planet selection change
   useEffect(() => {
     const greeting = curatedList[0];
     const initialMessage: ChatMessage = {
@@ -113,7 +122,6 @@ export const LauraCompanion: React.FC = () => {
           }
         : undefined;
 
-      // Extract brief history of recent turns for conversation continuity
       const historyPayload = messages.slice(-6).map((m) => ({
         role: m.role,
         content: m.text,
@@ -158,11 +166,10 @@ export const LauraCompanion: React.FC = () => {
           setIsAiConnected(false);
         }
       } catch {
-        // Graceful offline fallback
         const fallbackMsg: ChatMessage = {
           id: `fallback-${Date.now()}`,
           role: 'assistant',
-          text: "I'm having trouble connecting with our orbital antenna right now! You can explore my offline curiosities below, or configure the Gemini API key in your server .env file to enable live AI transmissions.",
+          text: "I'm having trouble contacting our deep-space antenna right now! You can explore my offline curiosities below, or configure your free GEMINI_API_KEY in server/.env to enable live AI transmissions.",
           tag: 'LOCAL ARCHIVE',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
@@ -223,11 +230,11 @@ export const LauraCompanion: React.FC = () => {
   const displayEmotion: LauraEmotion = emotionOverride || activeEmotion;
 
   return (
-    <div
-      aria-label="LAURA Celestial Companion Area"
-      className="pointer-events-none fixed bottom-24 left-4 z-20 flex flex-col items-start md:bottom-20 md:left-6"
-    >
-      {/* 1. Speech Balloon Dialogue & Chat Feed */}
+    <>
+      {/* 1. Sparkling Stardust Particle Flight Trail */}
+      <LauraFlightTrail particles={flightState.particles} />
+
+      {/* 2. Dynamically Anchored Speech Balloon Dialogue */}
       <LauraDialogue
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -238,47 +245,57 @@ export const LauraCompanion: React.FC = () => {
         onNextCuriosity={handleNextCuriosity}
         contextName={contextName}
         isAiConnected={isAiConnected}
+        anchor={flightState.speechAnchor}
       />
 
-      {/* 2. Interactive Character Button & Status Pill */}
-      <div className="pointer-events-auto flex items-center gap-2.5">
-        {/* Animated Avatar */}
-        <LauraStar
-          emotion={displayEmotion}
-          size={54}
-          onClick={handleLauraClick}
-        />
+      {/* 3. Freely Flying Celestial Character Container */}
+      <div
+        aria-label="LAURA Celestial Companion"
+        style={{
+          position: 'fixed',
+          left: `${flightState.x}px`,
+          top: `${flightState.y}px`,
+          transform: `translate(-50%, -50%) rotate(${flightState.rotation}deg) scale(${flightState.scaleX}, ${flightState.scaleY})`,
+          zIndex: 25,
+        }}
+        className="pointer-events-none select-none flex flex-col items-center transition-transform duration-75 will-change-transform"
+      >
+        <div className="pointer-events-auto flex items-center gap-2">
+          {/* Animated Avatar */}
+          <LauraStar
+            emotion={displayEmotion}
+            size={56}
+            onClick={handleLauraClick}
+          />
 
-        {/* Companion Presence Pill */}
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? 'Hide LAURA mission briefing' : 'Chat with LAURA'}
-          className="flex items-center gap-2 rounded-xl border border-[rgba(245,158,11,0.25)] bg-[#0A0F1D]/90 px-3 py-1.5 shadow-lg backdrop-blur-md transition-all hover:border-[#F59E0B] hover:bg-[#11182E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F59E0B]"
-        >
-          <span className="font-mono text-xs font-bold text-[#F59E0B]">LAURA</span>
-          <span className="font-mono text-[10px] text-[#94A3B8]">
-            {isOpen ? 'Minimize' : 'Chat'}
-          </span>
-          {isAiConnected ? (
-            <span className="h-1.5 w-1.5 rounded-full bg-[#38BDF8]" title="AI Live" />
-          ) : (
-            <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" title="Archive Mode" />
-          )}
-        </button>
+          {/* Mini Status Pill */}
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            aria-expanded={isOpen}
+            aria-label={isOpen ? 'Hide LAURA chat' : 'Open LAURA chat'}
+            className="flex items-center gap-1.5 rounded-full border border-[rgba(245,158,11,0.25)] bg-[#0A0F1D]/90 px-2.5 py-1 shadow-lg backdrop-blur-md transition-all hover:border-[#F59E0B] hover:bg-[#11182E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F59E0B]"
+          >
+            <span className="font-mono text-[10.5px] font-bold text-[#F59E0B]">LAURA</span>
+            {isAiConnected ? (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#38BDF8]" title="AI Online" />
+            ) : (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" title="Archive Mode" />
+            )}
+          </button>
+        </div>
 
-        {/* Emotion Switcher for Quick Verification (idle, happy, thinking, laughing, celebrating) */}
-        <div className="hidden items-center gap-1 rounded-lg border border-[rgba(148,163,184,0.12)] bg-[#0A0F1D]/80 p-1 font-mono text-[9px] text-[#94A3B8] backdrop-blur-md lg:flex">
+        {/* Emotion Verification Controls (Visible on hover/desktop) */}
+        <div className="pointer-events-auto mt-1 hidden items-center gap-1 rounded-md border border-[rgba(148,163,184,0.12)] bg-[#0A0F1D]/80 p-0.5 font-mono text-[8.5px] text-[#94A3B8] backdrop-blur-md group-hover:flex lg:flex">
           {(['idle', 'happy', 'thinking', 'laughing', 'celebrating'] as LauraEmotion[]).map((emo) => (
             <button
               key={emo}
               type="button"
               onClick={() => setEmotionOverride(emo)}
               aria-label={`Test ${emo} emotion`}
-              className={`rounded px-1.5 py-0.5 transition-colors ${
+              className={`rounded px-1 py-0.5 transition-colors ${
                 displayEmotion === emo
-                  ? 'bg-[#F59E0B]/20 text-[#F59E0B] font-bold'
+                  ? 'bg-[#F59E0B]/20 font-bold text-[#F59E0B]'
                   : 'hover:text-[#F8FAFC]'
               }`}
             >
@@ -287,6 +304,6 @@ export const LauraCompanion: React.FC = () => {
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 };
