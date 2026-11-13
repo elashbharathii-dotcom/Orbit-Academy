@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Compass, Globe, Pause, Play, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Compass, Globe, Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
+import { useSolarSystem } from '../../context/SolarSystemContext';
 
 interface MissionHUDProps {
   speedScale: number;
@@ -8,18 +9,18 @@ interface MissionHUDProps {
 }
 
 /**
- * Mission Control 2D Telemetry HUD (Phase 2 Overlay)
- * Built with strict adherence to design-system/orbit-academy/MASTER.md:
- * - Floating non-intrusive HUD frames
- * - Pointer-event pass-through (never blocks 3D orbit dragging)
- * - Deep Space Navy (#0A0F1D) surfaces with hairline borders
- * - Accessible vector SVG icons with ARIA labels
+ * Mission Control 2D Telemetry HUD (Phase 4 Cinematic Navigation)
+ * Features:
+ * - Unobtrusive Return-to-Overview control upon planet selection
+ * - Live UTC Mission Clock & orbital speed controls
+ * - System overview indicators and keyboard shortcut guides
  */
 export const MissionHUD: React.FC<MissionHUDProps> = ({
   speedScale,
   onSpeedChange,
 }) => {
   const [utcTime, setUtcTime] = useState<string>('');
+  const { selectedPlanetId, selectPlanet } = useSolarSystem();
 
   useEffect(() => {
     const updateClock = () => {
@@ -30,6 +31,10 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const selectedBody = useMemo(() => {
+    return selectedPlanetId ? CELESTIAL_BODIES.find((b) => b.id === selectedPlanetId) : null;
+  }, [selectedPlanetId]);
 
   const planetsCount = CELESTIAL_BODIES.filter((b) => b.id !== 'sun').length;
 
@@ -52,13 +57,37 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
           <span className="hidden h-4 w-px bg-[rgba(148,163,184,0.2)] sm:block" />
 
           <span className="hidden font-mono text-[11px] uppercase tracking-wider text-[#94A3B8] sm:inline-block">
-            Planetary Realism Engine
+            {selectedBody ? `Focus: ${selectedBody.name}` : 'Mission Control Overview'}
           </span>
 
           <span className="rounded border border-[#38BDF8]/30 bg-[#38BDF8]/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#38BDF8]">
-            PHASE 3
+            PHASE 4
           </span>
         </div>
+
+        {/* Selected Body Return Control */}
+        {selectedBody && (
+          <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-[#F59E0B]/40 bg-[#0A0F1D]/92 px-3.5 py-1.5 shadow-xl backdrop-blur-md transition-all">
+            <div className="flex items-center gap-2 font-mono text-xs text-[#F59E0B]">
+              <span className="h-2 w-2 rounded-full bg-[#F59E0B] animate-pulse" />
+              <span className="font-bold uppercase tracking-wider">
+                {selectedBody.name} // {selectedBody.latinName}
+              </span>
+            </div>
+
+            <div className="h-3.5 w-px bg-[rgba(148,163,184,0.2)]" />
+
+            <button
+              type="button"
+              onClick={() => selectPlanet(null)}
+              className="flex items-center gap-1.5 rounded-lg border border-[rgba(148,163,184,0.2)] bg-[#11182E] px-2.5 py-1 font-mono text-[11px] text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC]"
+              aria-label="Return to solar system overview (or press Escape)"
+            >
+              <RotateCcw className="h-3 w-3 text-[#38BDF8]" aria-hidden="true" />
+              <span>[ESC] Overview</span>
+            </button>
+          </div>
+        )}
 
         {/* Live UTC Telemetry & Orbit Speed Controls */}
         <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#0A0F1D]/88 p-1.5 shadow-lg backdrop-blur-md">
@@ -102,13 +131,13 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
         </div>
       </header>
 
-      {/* 2. Bottom Mission Control Footer & Telemetry Legend */}
+      {/* 2. Bottom Mission Control Footer & Navigation Legend */}
       <footer className="flex flex-col items-center justify-between gap-3 md:flex-row">
         {/* Navigation / Interaction Guide */}
         <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#0A0F1D]/88 px-4 py-2 text-xs shadow-lg backdrop-blur-md">
           <Globe className="h-4 w-4 text-[#38BDF8]" aria-hidden="true" />
           <span className="font-mono text-[11px] text-[#94A3B8]">
-            NAV: <span className="text-[#F8FAFC]">L-Click + Drag</span> Orbit · <span className="text-[#F8FAFC]">Scroll</span> Zoom · <span className="text-[#F8FAFC]">R-Click</span> Pan
+            NAV: <span className="text-[#F8FAFC]">Click Planet / Reticle</span> Focus · <span className="text-[#F8FAFC]">[ESC]</span> Overview · <span className="text-[#F8FAFC]">1-8</span> Quick Select · <span className="text-[#F8FAFC]">Drag</span> Orbit
           </span>
         </div>
 
@@ -122,11 +151,10 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
           <span className="hidden h-3 w-px bg-[rgba(148,163,184,0.2)] md:block" />
 
           <span className="hidden font-mono text-[10px] uppercase text-[#475569] md:inline-block">
-            PROCEDURAL NASA TEXTURES // SHADOW TERMINATORS ACTIVE
+            BEZIER CAMERA CHOREOGRAPHY ACTIVE
           </span>
         </div>
       </footer>
     </div>
   );
 };
-

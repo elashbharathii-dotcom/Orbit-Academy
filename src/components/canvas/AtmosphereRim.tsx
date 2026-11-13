@@ -64,3 +64,4 @@ export const AtmosphereRim: React.FC<AtmosphereRimProps> = ({
     </mesh>
   );
 };
+

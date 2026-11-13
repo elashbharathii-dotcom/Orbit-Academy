@@ -55,3 +55,12 @@ export interface CelestialBodyDefinition {
   learningModule: LearningModuleInfo;
 }
 
+export type NavigationMode = 'overview' | 'focus';
+
+export interface SolarSystemInteractionState {
+  selectedPlanetId: CelestialId | null;
+  hoveredPlanetId: CelestialId | null;
+  isTransitioning: boolean;
+  selectPlanet: (id: CelestialId | null) => void;
+  setHoveredPlanet: (id: CelestialId | null) => void;
+}

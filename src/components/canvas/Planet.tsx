@@ -3,6 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CelestialBodyDefinition } from '../../types';
 import { AtmosphereRim } from './AtmosphereRim';
+import { CelestialReticle } from './CelestialReticle';
+import { useSolarSystem } from '../../context/SolarSystemContext';
+import { setCelestialPosition } from '../../utils/celestialRegistry';
 import {
   getMercuryTexture,
   getVenusTexture,
@@ -25,6 +28,9 @@ interface PlanetProps {
 /**
  * High-Realism 3D Celestial Body (Planet)
  * Features:
+ * - Interactive pointer selection, hover feedback, and keyboard focus
+ * - Real-time spatial tracking for camera controller
+ * - Minimalist, non-obtrusive CelestialReticle positioned above the pole
  * - Scientifically calibrated procedural surface textures
  * - Real day/night terminator lines cast by Sol
  * - Dual-layer dynamic atmosphere & rotating cloud systems for Earth
@@ -42,8 +48,14 @@ export const Planet: React.FC<PlanetProps> = ({
   const cloudsMeshRef = useRef<THREE.Mesh>(null);
   const ringsMeshRef = useRef<THREE.Mesh>(null);
 
+  const { selectedPlanetId, hoveredPlanetId, selectPlanet, setHoveredPlanet } = useSolarSystem();
+
+  const isSelected = selectedPlanetId === data.id;
+  const isHovered = hoveredPlanetId === data.id;
+
   // Track orbital position angle over time
   const angleRef = useRef<number>(initialAngleOffset);
+  const worldPosVec = useMemo(() => new THREE.Vector3(), []);
 
   const { id } = data;
   const {
@@ -95,8 +107,13 @@ export const Planet: React.FC<PlanetProps> = ({
     // 1. Orbital Revolution around Sol
     if (orbitGroupRef.current && visualOrbitRadius > 0) {
       angleRef.current += delta * orbitSpeedMultiplier * speedScale;
-      orbitGroupRef.current.position.x = Math.cos(angleRef.current) * visualOrbitRadius;
-      orbitGroupRef.current.position.z = Math.sin(angleRef.current) * visualOrbitRadius;
+      const x = Math.cos(angleRef.current) * visualOrbitRadius;
+      const z = Math.sin(angleRef.current) * visualOrbitRadius;
+      orbitGroupRef.current.position.set(x, 0, z);
+
+      // Register live world position for camera navigation
+      orbitGroupRef.current.getWorldPosition(worldPosVec);
+      setCelestialPosition(id, worldPosVec);
     }
 
     // 2. Axial Planetary Rotation
@@ -104,7 +121,7 @@ export const Planet: React.FC<PlanetProps> = ({
       planetMeshRef.current.rotation.y += delta * rotationSpeedMultiplier * 0.8;
     }
 
-    // 3. Earth Dynamic Cloud Drift (slightly faster than crust rotation for atmospheric realism)
+    // 3. Earth Dynamic Cloud Drift (slightly faster than crust rotation)
     if (cloudsMeshRef.current) {
       cloudsMeshRef.current.rotation.y += delta * rotationSpeedMultiplier * 0.95;
     }
@@ -115,19 +132,49 @@ export const Planet: React.FC<PlanetProps> = ({
     }
   });
 
+  const handleMeshClick = (e: any) => {
+    e.stopPropagation();
+    selectPlanet(isSelected ? null : id);
+  };
+
+  const handlePointerOver = (e: any) => {
+    e.stopPropagation();
+    setHoveredPlanet(id);
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = (e: any) => {
+    e.stopPropagation();
+    setHoveredPlanet(null);
+    document.body.style.cursor = 'default';
+  };
+
   return (
     <group ref={orbitGroupRef} position={[visualOrbitRadius, 0, 0]}>
+      {/* Non-obstructing Celestial Reticle placed above the planet */}
+      <CelestialReticle data={data} yOffset={visualRadius * 1.55} />
+
       {/* Axial Tilt Container */}
       <group rotation={[0, 0, axialTiltRad]}>
         
         {/* 1. Main Planet Surface Sphere */}
-        <mesh ref={planetMeshRef} castShadow receiveShadow>
+        <mesh
+          ref={planetMeshRef}
+          castShadow
+          receiveShadow
+          onClick={handleMeshClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={isSelected ? [1.03, 1.03, 1.03] : isHovered ? [1.015, 1.015, 1.015] : [1.0, 1.0, 1.0]}
+        >
           <sphereGeometry args={[visualRadius, 48, 48]} />
           <meshStandardMaterial
             map={surfaceTexture}
             color={surfaceTexture ? '#FFFFFF' : primaryColor}
             roughness={id === 'earth' ? 0.6 : 0.85}
             metalness={0.05}
+            emissive={isSelected ? primaryColor : isHovered ? '#38BDF8' : '#000000'}
+            emissiveIntensity={isSelected ? 0.12 : isHovered ? 0.05 : 0}
           />
         </mesh>
 
