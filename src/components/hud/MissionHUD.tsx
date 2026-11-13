@@ -66,8 +66,8 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
               {selectedBody ? `Focus: ${selectedBody.name}` : 'Mission Control Console'}
             </span>
 
-            <span className="rounded border border-[#38BDF8]/30 bg-[#38BDF8]/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#38BDF8]">
-              PHASE 5
+            <span className="rounded border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#F59E0B]">
+              PHASE 6A
             </span>
           </div>
 

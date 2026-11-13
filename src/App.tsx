@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { SolarSystemCanvas } from './components/canvas/SolarSystemCanvas';
 import { MissionHUD } from './components/hud/MissionHUD';
+import { LauraCompanion } from './components/companion/LauraCompanion';
 import { SolarSystemProvider } from './context/SolarSystemContext';
 
 /**
  * ORBIT ACADEMY — 3D Solar System Mission Control Root
- * Phase 4 Milestone: Planet Selection, Minimal Reticle Labels & Cinematic Camera Navigation
+ * Phase 6A Milestone: LAURA Celestial Companion & Interactive Animation
  */
 export default function App(): React.JSX.Element {
   // Global orbital speed multiplier (0 = paused, 0.45 = standard 1x)
@@ -22,6 +23,9 @@ export default function App(): React.JSX.Element {
           speedScale={speedScale}
           onSpeedChange={setSpeedScale}
         />
+
+        {/* 3. LAURA — Celestial Star Companion */}
+        <LauraCompanion />
       </div>
     </SolarSystemProvider>
   );
