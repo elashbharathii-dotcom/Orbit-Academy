@@ -33,6 +33,20 @@ const NeptuneDiscoveryScreen = React.lazy(() =>
   import('./modules/neptune-discovery/NeptuneDiscoveryScreen').then((m) => ({ default: m.NeptuneDiscoveryScreen }))
 );
 
+// Six Primary Core Experiences
+const LearnPortalScreen = React.lazy(() =>
+  import('./modules/learn/LearnPortalScreen').then((m) => ({ default: m.LearnPortalScreen }))
+);
+const ScienceLabScreen = React.lazy(() =>
+  import('./modules/lab/ScienceLabScreen').then((m) => ({ default: m.ScienceLabScreen }))
+);
+const QuizArenaScreen = React.lazy(() =>
+  import('./modules/quiz/QuizArenaScreen').then((m) => ({ default: m.QuizArenaScreen }))
+);
+const SpaceCreationStudioScreen = React.lazy(() =>
+  import('./modules/build/SpaceCreationStudioScreen').then((m) => ({ default: m.SpaceCreationStudioScreen }))
+);
+
 /**
  * Module Suspense Fallback Loader
  */
@@ -69,7 +83,14 @@ const AppViewport: React.FC = () => {
       {!isHome && (
         <div className="relative z-10 min-h-screen w-full">
           <Suspense fallback={<ScreenSuspenseFallback />}>
-            {currentRoute === ROUTES.EARTH_DRAWING && <EarthDrawingScreen />}
+            {/* Six Primary Core Experiences */}
+            {currentRoute === ROUTES.LEARN && <LearnPortalScreen />}
+            {(currentRoute === ROUTES.DRAW || currentRoute === ROUTES.EARTH_DRAWING) && <EarthDrawingScreen />}
+            {currentRoute === ROUTES.LAB && <ScienceLabScreen />}
+            {currentRoute === ROUTES.QUIZ && <QuizArenaScreen />}
+            {currentRoute === ROUTES.BUILD && <SpaceCreationStudioScreen />}
+
+            {/* Planetary Modular Experiences */}
             {currentRoute === ROUTES.MARS_ADVENTURE && <MarsAdventureScreen />}
             {currentRoute === ROUTES.EXPLORER && <SolarExplorerScreen />}
             {currentRoute === ROUTES.VENUS_CLIMATE && <VenusClimateScreen />}

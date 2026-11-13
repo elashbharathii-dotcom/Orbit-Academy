@@ -30,76 +30,75 @@ Accompanying every student is **LAURA**, an original living celestial mascot and
 
 ---
 
-## 🚀 Current Features
+## 🚀 The Six Core Experiences
 
-All features listed below are **fully implemented and verified** in the active codebase:
+ORBIT ACADEMY is organized into six interconnected, flagship interactive pillars accessible instantly from the universal glassmorphic navigation bar:
 
-### 🪐 1. Interactive 3D Solar System Engine
-- **Photorealistic Planetary Rendering**: All eight planets (Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune) plus the Sun rendered with authentic 2048×1024 (2K) equirectangular maps synthesized from NASA, JPL, USGS, and ESA missions.
-- **Solar Atmospheric Shader**: Custom GLSL limb-darkening shader implementing the astronomical photometric formula $I(\mu) = I_0(0.42 + 0.58\mu^{0.72})$ to eliminate flat yellow shading on the Sun.
-- **Atmospheric Rim & Cloud Layers**: Multi-pass rendering on Earth featuring synchronized global cloud cover, Rayleigh atmospheric rim scattering, and nighttime city lights powered by NASA Suomi NPP VIIRS data.
-- **Saturn Ring System**: Realistic 2048×128 radial alpha-mapped ring disc modeling the Cassini Division, Encke Gap, and ice-dust photometric absorption.
-- **Orbital Mechanics**: Real-time orbital revolution and axial rotation with astronomical speeds, proportional radii scaling, and authentic axial inclinations.
-- **Deep Space Visuals**: Multi-layer procedural starfield (1,200 pinpoint stars with non-attenuated pinprick glints and astronomical B-V color temperature distribution) against an all-sky Gaia DR2 / Tycho-2 Milky Way backdrop.
-- **Procedural Fallback Pipeline**: Deterministic HTML5 Canvas texture synthesis ensures smooth 60 FPS operation even if external photographic assets are unavailable.
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                 ORBIT ACADEMY                                    │
+│  [🔭 EXPLORE]  [📚 LEARN]  [🎨 DRAW]  [🔬 LAB]  [🏆 QUIZ]  [🚀 BUILD]   [⚡ XP: 620] │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 🛰️ 2. Mission Control HUD & Navigation
-- **Cinematic Camera Transitions**: Smooth quadratic/cubic camera transitions smoothly glide the viewpoint between Solar System Overview and close-up planetary inspection orbits.
-- **Interactive Celestial Reticles**: Understated scientific target reticles with hover state highlights and selection indicators that never obstruct planetary observation.
-- **Planetary Quick-Access Dock**: Persistent bottom navigation bar with authentic astronomical color signatures, pulse rings, and one-click camera focus.
-- **Mission Control Planet Dossier**: Slide-in telemetry panel displaying verified physical data from NASA planetary fact sheets:
-  - Astronomical classification & Latin designation
-  - Real distance from Sun (km and Astronomical Units)
-  - Equatorial diameter (km)
-  - Surface gravity ($m/s^2$)
-  - Orbital period (Earth days/years) & Axial rotation period (Earth hours)
-  - Atmospheric gas composition percentages
-  - Mean temperature ($^\circ C$) & Known moon counts
-  - Educational learning module mission objective preview
-- **Simulation Clock & Controls**: Live UTC mission clock with real-time orbital speed controls (`Pause`, `0.5x`, `1x`, `2x`).
-- **Keyboard Shortcuts**: Instant navigation via keyboard (`1`–`8` for Mercury through Neptune, `Esc` to return to Solar System Overview, `Space` to toggle orbital animation).
+### 🔭 1. EXPLORE — Cinematic 3D Space Explorer
+- **Continuous Keplerian Orbital Simulation**: Continuous planetary orbital revolutions and true axial tilts with astronomically scaled angular velocities ($v \propto 1/\sqrt{r}$).
+- **Procedural Asteroid Belt**: 1,100 instanced asteroids (`THREE.InstancedMesh`) orbiting in Keplerian resonance between Mars and Jupiter with irregular rock geometries in a single draw call.
+- **Dynamic Deep-Space Comets**: Highly eccentric Keplerian comets ($e=0.72$) featuring sublimating comas, bright nuclei, and dual ion tails pointing radially away from the Sun with inverse-square solar radiation pressure.
+- **Physically Motivated SDO Solar Model**: Custom GLSL limb-darkening shader based on Solar Dynamics Observatory photometry $I(\mu) = I_0(0.42 + 0.58\mu^{0.72})$, inner chromospheric glowing rim, and multi-layered volumetric coronal ray shell.
+- **NASA 2K Planetary Textures**: Authentic 2048×1024 photographic surface maps from NASA, JPL, USGS, and ESA across all eight planets and major moons.
+- **Earth Multi-Pass Atmospheric System**: Dynamic cloud layers, Rayleigh blue atmospheric rim scattering, and nighttime city illumination from NASA Suomi NPP VIIRS data.
+- **Saturn Detailed Ring System**: 2048×128 radial alpha-mapped ring disc accurately modeling the Cassini Division, Encke Gap, and ice-dust photometric absorption.
+- **Cinematic Cubic-Bezier Camera Traversal**: Smooth interpolation between solar overview and planetary close-ups with collision avoidance and mobile touch gesture support.
 
-### ⭐ 3. LAURA — Celestial AI Companion (v3.0)
-- **Original Sculpted Mascot Design**: Custom 5-point celestial star character with dimensional multi-stop golden shading, back-bevel depth, warm specular highlights, and blush cheeks.
-- **Living Facial Expressions & Blinking**: Large expressive eyes with dual sunlit catchlights, natural intermittent blinking timer (3.5s–6.5s interval), dynamic eyebrows, and 5 distinct emotional states:
-  - `idle`: Content neutral smile
-  - `happy`: Uplifting warm encouragement
-  - `thinking`: Inquisitive open mouth with gaze directed toward the cosmos
-  - `laughing`: Wide joyful open mouth with tongue detail
-  - `celebrating`: Gleaming star eyes (`★ ★`) for major scientific breakthroughs
-- **True Viewport Screen-Space Flight Engine**: Decoupled flight controller moving LAURA across the entire viewport using hardware-accelerated CSS cubic-bezier transitions (`translate3d`), directional banking tilt ($\pm 16^\circ$), and landing settle.
-- **Stardust Flight Trails**: Glittering particle sparkles (`✦`, `✧`, `⋆`) trailing behind LAURA during high-speed traversal.
-- **Developer Waypoint Controls**: One-click flight dispatch to canonical screen coordinates (`[Home]`, `[Top-Left]`, `[Top-Right]`, `[Center]`, `[Bottom-Right]`).
+### 📚 2. LEARN — Interactive Astronomy Portal
+- **Cadet Progression Dashboard**: Daily learning streak tracker, accumulated XP points, level progression, and daily astronomy challenges.
+- **8 Comprehensive Astrophysics Courses**:
+  1. *Solar System Architecture & Keplerian Orbits*
+  2. *The Sun: Anatomy of Our Star*
+  3. *Earth's Delicate Biosphere & Atmosphere*
+  4. *Mars: The Search for Ancient Water & Life*
+  5. *Jupiter: The King of Planets & Great Red Spot*
+  6. *Saturn: Lord of the Rings & Ocean Moons*
+  7. *Ice Giants: Uranus & Neptune*
+  8. *The Milky Way Galaxy & Supermassive Black Holes*
+- **Structured Lesson Reader**: Reading duration estimators, curated scientific diagrams, key term glossaries, and lesson progress trackers.
+- **Interactive Knowledge Checkpoints**: In-lesson multiple-choice comprehension questions with instant scientific explanations, scoring, and mastery certificates.
 
-### 🤖 4. Google Gemini AI Telemetry & Chat
-- **Official Google Gen AI SDK**: Powered by `@google/genai` using the modern `gemini-2.5-flash` model.
-- **Context-Aware Astronomical Injection**: Automatically builds dynamic system prompts injecting NASA physical metrics corresponding to the planet currently in focus.
-- **Decoupled Mission Dialogue Panel**: Ergonomic floating HUD communication window that remains stable, comfortable, and readable regardless of LAURA's flight position.
-- **Emotion Recognition**: Parses structured emotion tags (`[EMOTION: ...]`) from Gemini responses to dynamically synchronize LAURA's facial expressions with conversational tone.
-- **Resilient Fallback Archive**: Curated offline astronomy dialogues and trivia cycler (`Next Curiosity`) if an API key is unconfigured, or during network timeouts and quota limits.
-- **Secure Backend Proxy**: Express server architecture ensures `GEMINI_API_KEY` is strictly held on the backend and never exposed to the client bundle.
-- **In-Memory Rate Limiting**: Client protection enforcing a maximum of 20 transmissions per minute per IP.
+### 🎨 3. DRAW — Creative Astronomy Art Studio
+- **10 Astronomical Art Categories**: Planets, Spacecraft & Rockets, Moons, Constellations, Galaxies, Astronauts, Nebulae, Comets & Asteroids, Observatories, Deep Space Phenomena.
+- **Dual Creation Modes**:
+  - **Vector Color-by-Number**: Closed SVG vector paths with scientific color palettes, numbered region badges, and click-to-fill paint bucket mechanics.
+  - **Freehand Astronomy Canvas**: Smooth HTML5 canvas with customizable brush types, adjustable radius sliders, eraser, and color pickers.
+- **Studio Utility Toolbar**: Undo/Redo historical stack, zoom & pan viewport controls, canvas reset, and high-resolution PNG export with official academic watermarks.
+- **Completion Rewards**: Celebration confetti bursts and educational fact badges upon completing artwork.
 
-### ♿ 5. Accessibility & Inclusivity
-- **Accessible 2D Celestial Directory**: Full-screen modal table presenting all 8 planets and the Sun with complete tabular metrics as an alternative to the 3D WebGL Canvas.
-- **Reduced-Motion Compliance**: Full support for `prefers-reduced-motion` media queries; disables aggressive camera sweeps and instant-snaps LAURA waypoints when requested.
-- **High Contrast & Keyboard Focus**: Accessible ARIA labels, focus rings, role declarations, and keyboard navigable controls.
+### 🔬 4. LAB — Virtual Space Science Laboratory
+Four dedicated experimental chambers simulating fundamental astrophysical laws:
+- **Periodic Table & Molecular Chemistry Lab**: Interactive element explorer with cosmic origin classifications (Big Bang, Stellar Fusion, Supernovae, Cosmic Ray Spallation) and molecular structure analyzer ($H_2O$, $CO_2$, $CH_4$).
+- **Planetary Vacuum Drop Tower**: Realistic quadratic gravitational acceleration ($y = \frac{1}{2}gt^2$) drop tests comparing free-fall time and terminal velocity across Earth ($9.81\ m/s^2$), Moon ($1.62\ m/s^2$), Mars ($3.72\ m/s^2$), Jupiter ($24.79\ m/s^2$), and Sun ($274.0\ m/s^2$).
+- **Space Physics & Relativistic Black Hole Chamber**: Real-time 3D Three.js simulation of a Kerr/Schwarzschild black hole featuring gravitational light bending, event horizon shadow, photon ring, and Doppler-boosted accretion disk with live mass slider ($1\ M_\odot$ to $100\ M_\odot$) and event horizon radius calculation ($R_s = \frac{2GM}{c^2}$).
+- **Multi-Wavelength Telescope Observatory**: Celestial observation simulator toggling between Optical, Radio, Infrared, and X-Ray wavelengths with spectral analysis graphs and wavelength telemetry.
 
-### 🎨 6. Celestial Destination Registry & Modular Learning Applications (Phase 7)
-- **Centralized Destination Registry**: Maps every celestial body to a dedicated educational application with theme accents, availability states, and pedagogical objectives.
-- **Dynamic Application Routing**: History-based URL routing supporting browser back/forward navigation and direct deep-linking:
-  - **Sun (`/`)**: Mission Control & Academy Home with interactive 3D Solar System overview.
-  - **Mercury (`/explorer`)**: Solar System Explorer with planetary scale comparators and extreme day/night thermal swing graphs.
-  - **Venus (`/lab/venus`)**: Climate & Atmosphere Lab featuring an interactive runaway greenhouse effect simulator and CO₂ pressure gauge.
-  - **Earth (`/learning/earth`)**: Full-featured Drawing & Colouring Studio equipped with responsive HTML5 canvas, Earth palette, stroke smoothing, brush gauges, eraser, and PNG artwork export.
-  - **Mars (`/game/mars`)**: Mars Rover Adventure featuring Jezero Crater mission briefings and an interactive laser spectroscopy scanner prototype.
-  - **Jupiter (`/lab/jupiter`)**: Planetary Science Lab with interactive Great Red Spot anticyclonic wind scrubbers and Galilean moon Laplace resonance models (Io 4 : Europa 2 : Ganymede 1).
-  - **Saturn (`/art/saturn`)**: Space Art & Ring Studio analyzing Cassini Division optical thickness, ring particulate ice densities, and shepherd moon dynamics.
-  - **Uranus (`/quiz/uranus`)**: Astronomy Quiz Arena offering interactive 5-question challenges with instant astrophysical explanations, score tracker, and cosmic rank certificates.
-  - **Neptune (`/discovery/neptune`)**: Cosmic Discovery Center with supersonic atmospheric wind speedometers (2,100 km/h) and Kuiper Belt gateway charts.
-- **Cinematic Module Approach Transitions**: Clicking any planet in 3D smoothly triggers quadratic camera swoops toward the planet with automated drag detection preventing accidental launches during orbit gestures.
-- **Persistent Scene Context**: The 3D WebGL scene remains warm in the DOM, allowing instant zero-reload returns when pressing `[ESC]` or clicking "Solar System".
-- **Code-Split Bundles**: Every module screen is dynamically lazy-loaded using `React.lazy` and `React.Suspense` for minimal initial bundle overhead.
+### 🏆 5. QUIZ — Astronomy Quiz Arena
+- **7 Astrophysics Disciplines**: Planetary Science, Solar Dynamics, Cosmology & Deep Space, Space Exploration History, Exoplanets & Astrobiology, Stellar Evolution, Orbital Mechanics.
+- **Multi-Tier Difficulty**: Cadet (Beginner), Specialist (Intermediate), Commander (Advanced).
+- **60-Second Timed Blitz Mode**: High-speed competitive mode with countdown timer, rapid-fire astrophysics questions, and streak multipliers ($1\times$ to $3\times$).
+- **Instant Explanations & Analytics**: Comprehensive astrophysical breakdown on every question with correct/incorrect tracking, accuracy percentages, and XP reward granting.
+
+### 🚀 6. BUILD — 3D Spacecraft Creation Studio
+- **Interactive 3D Three.js Modular Assembly**: Real-time React Three Fiber CAD stage with 360° orbital camera inspection, grid snapping, and component stacking.
+- **Modular Component Catalog**: Command Capsules, Cryogenic Hydrolox Fuel Tanks, Vacuum Rocket Engines, Deployable Solar Arrays, and Deep-Space Dish Antennas.
+- **Live Physics Telemetry**: Real-time mass summation ($kg$), vacuum thrust calculation ($kN$), power generation budget ($kW$), and Earth Thrust-to-Weight Ratio ($TWR = \frac{Thrust}{m \cdot g}$).
+- **Engine Test Burn Simulation**: Particle plume exhaust animation with dynamic thrust gauges and launch clearance verification.
+
+---
+
+## ⭐ LAURA — Autonomous AI Star Companion (v3.0)
+- **Living Character Design**: Dimensional 5-point celestial mascot with warm golden back-bevel shading, blush cheeks, dual catchlight eyes, and natural intermittent blinking.
+- **Autonomous Viewport Gliding**: Decoupled flight engine utilizing hardware-accelerated cubic-bezier transitions (`translate3d`), dynamic banking tilt ($\pm 16^\circ$), obstacle avoidance, and golden stardust particle trails.
+- **Google Gemini 2.5 Flash Integration**: Real-time contextual astrophysics conversation via `@google/genai`, dynamic prompt injection of active celestial telemetry, emotion extraction, and offline fallback archive.
+- **Five Expressive States**: `idle` (warm smile), `happy` (encouragement), `thinking` (curious gaze), `laughing` (open joyful mouth), and `celebrating` (gleaming star eyes).
 
 ---
 

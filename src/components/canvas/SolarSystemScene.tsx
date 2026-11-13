@@ -5,6 +5,8 @@ import { Planet } from './Planet';
 import { OrbitLine } from './OrbitLine';
 import { Starfield } from './Starfield';
 import { MilkyWayBackground } from './MilkyWayBackground';
+import { AsteroidBelt } from './AsteroidBelt';
+import { Comet } from './Comet';
 import { CameraController } from './CameraController';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -52,7 +54,13 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
       {/* 4. Central Luminous Sun with SDO Photosphere & Point-Light Shadows */}
       {sunData && <Sun radius={sunData.visual.visualRadius} />}
 
-      {/* 5. Planetary Orbits & Revolving Planets */}
+      {/* 5. Main Asteroid Belt between Mars and Jupiter */}
+      <AsteroidBelt count={1100} innerRadius={22.5} outerRadius={29.0} />
+
+      {/* 6. Active Eccentric Comet with Glowing Tail */}
+      <Comet semiMajorAxis={46} eccentricity={0.72} inclinationDeg={16} />
+
+      {/* 7. Planetary Orbits & Revolving Planets */}
       {planets.map((planet, idx) => (
         <React.Fragment key={planet.id}>
           {/* Subordinate Hairline Orbital Trajectory Path */}

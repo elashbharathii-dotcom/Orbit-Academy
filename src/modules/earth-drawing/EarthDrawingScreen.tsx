@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ModuleShell } from '../../components/modules/ModuleShell';
-import { getDestinationByPlanetId } from '../../navigation/celestialDestinations';
+import { MasterHeader } from '../../components/navigation/MasterHeader';
 import {
   DRAWING_CATEGORIES,
   DRAWING_ACTIVITIES,
@@ -41,8 +40,6 @@ interface BrushHistoryStep {
 type HistoryStep = FillHistoryStep | BrushHistoryStep;
 
 export const EarthDrawingScreen: React.FC = () => {
-  const destination = getDestinationByPlanetId('earth');
-
   // Navigation State: Gallery vs Studio
   const [selectedActivity, setSelectedActivity] = useState<DrawingActivity | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -315,8 +312,12 @@ export const EarthDrawingScreen: React.FC = () => {
   });
 
   return (
-    <ModuleShell destination={destination}>
-      <div className="flex flex-col gap-6 w-full">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030712] font-sans text-[#F8FAFC]">
+      {/* Universal Master Header */}
+      <MasterHeader />
+
+      <main className="relative flex-1 flex flex-col p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto">
+        <div className="flex flex-col gap-6 w-full">
         {/* VIEW 1: Visual Illustration Gallery */}
         {!selectedActivity && (
           <div className="flex flex-col gap-6 w-full">
@@ -887,7 +888,8 @@ export const EarthDrawingScreen: React.FC = () => {
             )}
           </div>
         )}
-      </div>
-    </ModuleShell>
+        </div>
+      </main>
+    </div>
   );
 };
