@@ -41,13 +41,13 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
   return (
     <>
       {/* 1. Balanced Cosmic Ambient Light (sculpts dark sides without washing out terminators) */}
-      <ambientLight color="#1E293B" intensity={0.42} />
+      <ambientLight color="#253653" intensity={0.34} />
 
       {/* 2. Deep Space Gaia Milky Way Survey Panorama */}
-      <MilkyWayBackground radius={650} opacity={0.38} />
+      <MilkyWayBackground radius={650} opacity={0.52} />
 
       {/* 3. Deep Space Multi-Layer Spectral Pinpoint Starfield */}
-      <Starfield count={2200} />
+      <Starfield count={3200} />
 
       {/* 4. Central Luminous Sun with SDO Photosphere & Point-Light Shadows */}
       {sunData && <Sun radius={sunData.visual.visualRadius} />}
@@ -58,8 +58,8 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
           {/* Subordinate Hairline Orbital Trajectory Path */}
           <OrbitLine
             radius={planet.visual.visualOrbitRadius}
-            color="#334155"
-            opacity={0.075}
+            color="#52749B"
+            opacity={0.16}
           />
 
           {/* 3D Planet Mesh with Photographic Textures, Axial Tilt, Spin, and Reticle */}
@@ -76,7 +76,9 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
         ref={controlsRef}
         makeDefault
         enableDamping={true}
-        dampingFactor={0.05}
+        dampingFactor={0.045}
+        autoRotate={!useSolarSystem().selectedPlanetId}
+        autoRotateSpeed={0.12}
         minDistance={8}
         maxDistance={140}
         maxPolarAngle={Math.PI / 2 + 0.12}
