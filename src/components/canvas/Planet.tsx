@@ -7,10 +7,10 @@ import { CelestialReticle } from './CelestialReticle';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 import { setCelestialPosition } from '../../utils/celestialRegistry';
 import {
-  getPlanetarySurfaceTexture,
-  getEarthCloudsTexture,
-  getEarthNightLightsTexture,
-  getSaturnRingAlphaTexture,
+  usePlanetaryTexture,
+  useEarthCloudsTexture,
+  useEarthNightLightsTexture,
+  useSaturnRingTexture,
 } from '../../utils/planetaryTextures';
 
 interface PlanetProps {
@@ -21,7 +21,7 @@ interface PlanetProps {
 
 /**
  * Creates radial UV mapping for Saturn's rings
- * Maps radial distance (inner to outer) to horizontal U coordinate of the 2K ring texture
+ * Maps radial distance from inner ring edge to outer ring edge to U coordinate [0, 1]
  */
 function createRadialRingGeometry(innerRadius: number, outerRadius: number, segments: number = 128) {
   const geometry = new THREE.RingGeometry(innerRadius, outerRadius, segments, 8);
@@ -40,17 +40,16 @@ function createRadialRingGeometry(innerRadius: number, outerRadius: number, segm
 }
 
 /**
- * Ultra-Realistic 3D Planetary Body (Phase 6C)
+ * Ultra-Realistic 3D Planetary Body (Phase 6C Visual Correction)
  * 
- * Capabilities:
- * - Genuine 2K photographic NASA & Solar System Scope planetary equirectangular maps
- * - Dynamic Earth realism: photographic Blue Marble day map, city night lights on unlit hemisphere,
- *   independent rotating cloud layer, and Rayleigh atmospheric scattering rim
- * - Mars realism: USGS/Viking true-color albedo map, matte silicate roughness, craters, polar caps
- * - Jupiter realism: Cassini/Juno belt zones and Great Red Spot
- * - Saturn realism: High-detail equatorial atmosphere + 2K radial ring alpha with Cassini Division
- * - Real-time shadows: planet shadow on rings, ring shadow on planet equator
- * - Precise physical inclinations, smooth orbital revolution, and non-obtrusive mission-control reticles
+ * Major Fixes & Enhancements:
+ * - Real-time reactive texture binding ensures 2K photographic NASA maps display immediately
+ * - Earth: authentic Blue Marble daytime map, realistic thin Rayleigh scattering rim (no neon halo),
+ *   dynamic night-side city lights, and independent drifting cloud deck
+ * - Mars: natural rust-red albedo with crater terrain; subtle dark-side albedo floor prevents black silhouette loss
+ * - Jupiter: crisp Cassini/Juno atmospheric bands and Great Red Spot with natural planetary shading
+ * - Saturn: true Cassini-Division radial ring texture with transparency, receiving planet shadow
+ * - Restrained selection and hover reticles aligned with approved design tokens
  */
 export const Planet: React.FC<PlanetProps> = ({
   data,
@@ -81,13 +80,13 @@ export const Planet: React.FC<PlanetProps> = ({
     hasRings,
   } = data.visual;
 
-  // Retrieve cached 2K photographic texture with procedural fallback
-  const surfaceTexture = useMemo(() => getPlanetarySurfaceTexture(id), [id]);
-  const earthCloudsTexture = useMemo(() => (id === 'earth' ? getEarthCloudsTexture() : null), [id]);
-  const earthNightTexture = useMemo(() => (id === 'earth' ? getEarthNightLightsTexture() : null), [id]);
-  const saturnRingTexture = useMemo(() => (id === 'saturn' ? getSaturnRingAlphaTexture() : null), [id]);
+  // Reactively loaded 2K photographic maps (auto-rerenders upon browser decode)
+  const surfaceTexture = usePlanetaryTexture(id);
+  const earthCloudsTexture = useEarthCloudsTexture();
+  const earthNightTexture = useEarthNightLightsTexture();
+  const saturnRingTexture = useSaturnRingTexture();
 
-  // Saturn radial ring geometry with calibrated UV coordinates
+  // Radial UV-mapped Saturn ring geometry
   const saturnRingGeometry = useMemo(() => {
     if (id !== 'saturn') return null;
     return createRadialRingGeometry(visualRadius * 1.45, visualRadius * 2.65, 128);
@@ -118,18 +117,18 @@ export const Planet: React.FC<PlanetProps> = ({
         varying vec3 vWorldPosition;
 
         void main() {
-          // Sol is at system origin [0, 0, 0]
+          // Sol is at origin [0, 0, 0]
           vec3 dirToSun = normalize(-vWorldPosition);
           float sunDot = dot(vWorldNormal, dirToSun);
           
-          // Twilight smoothstep: night lights emerge as dusk settles
-          float nightFactor = smoothstep(0.06, -0.22, sunDot);
+          // Smooth transition from twilight into dark night
+          float nightFactor = smoothstep(0.05, -0.25, sunDot);
           
-          vec4 nightSample = texture2D(uNightTexture, vUv);
-          vec3 lightRgb = nightSample.rgb * vec3(1.15, 1.05, 0.88);
-          float alpha = dot(nightSample.rgb, vec3(0.299, 0.587, 0.114)) * nightFactor * 0.95;
+          vec4 nightColor = texture2D(uNightTexture, vUv);
+          vec3 cityRgb = nightColor.rgb * vec3(1.15, 1.05, 0.85);
+          float alpha = dot(nightColor.rgb, vec3(0.299, 0.587, 0.114)) * nightFactor * 0.95;
           
-          gl_FragColor = vec4(lightRgb, alpha);
+          gl_FragColor = vec4(cityRgb, alpha);
         }
       `,
       uniforms: {
@@ -141,33 +140,55 @@ export const Planet: React.FC<PlanetProps> = ({
     });
   }, [id, earthNightTexture]);
 
-  // Calibrate material roughness per planetary type
+  if (earthNightShaderMaterial && earthNightTexture) {
+    earthNightShaderMaterial.uniforms.uNightTexture.value = earthNightTexture;
+  }
+
+  // Physically tuned planetary roughness
   const materialRoughness = useMemo(() => {
     switch (id) {
       case 'earth':
-        return 0.55; // Oceans reflect specular sunlight
+        return 0.52; // Oceans reflect soft specular sunlight
       case 'mars':
-        return 0.88; // Matte silicate dust and rock
+        return 0.85; // Matte rust silicate rock and dust
       case 'mercury':
         return 0.92; // Cratered regolith
       case 'venus':
-        return 0.82; // Dense sulfuric clouds
+        return 0.78; // Dense sulfuric cloud deck
       case 'jupiter':
-        return 0.72; // Gaseous atmosphere
+        return 0.65; // Dynamic gas bands
       case 'saturn':
-        return 0.75;
+        return 0.70;
       case 'uranus':
       case 'neptune':
-        return 0.65; // Methane haze
+        return 0.62; // Deep methane atmosphere
       default:
         return 0.8;
     }
   }, [id]);
 
+  // Subtle dark-side ambient albedo floor (prevents planets from turning pitch-black)
+  const emissiveColor = useMemo(() => {
+    if (isSelected) return primaryColor;
+    if (isHovered) return '#38BDF8';
+    if (id === 'mars') return '#4A1C0E'; // Warm Martian night-side floor
+    if (id === 'jupiter') return '#2A1B12';
+    if (id === 'saturn') return '#2A2416';
+    if (id === 'mercury') return '#1A1A1A';
+    return '#0A101D';
+  }, [id, isSelected, isHovered, primaryColor]);
+
+  const emissiveIntensity = useMemo(() => {
+    if (isSelected) return 0.14;
+    if (isHovered) return 0.06;
+    if (id === 'mars') return 0.08; // Visible sculpted night-side
+    return 0.04; // Gentle astronomical visibility floor
+  }, [id, isSelected, isHovered]);
+
   const axialTiltRad = THREE.MathUtils.degToRad(axialTiltDeg);
 
   useFrame((_, delta) => {
-    // 1. Planetary Orbital Revolution
+    // 1. Orbital Revolution
     if (orbitGroupRef.current && visualOrbitRadius > 0) {
       angleRef.current += delta * orbitSpeedMultiplier * speedScale;
       const x = Math.cos(angleRef.current) * visualOrbitRadius;
@@ -178,7 +199,7 @@ export const Planet: React.FC<PlanetProps> = ({
       setCelestialPosition(id, worldPosVec);
     }
 
-    // 2. Planetary Axial Spin
+    // 2. Axial Planetary Rotation
     if (planetMeshRef.current) {
       planetMeshRef.current.rotation.y += delta * rotationSpeedMultiplier * 0.8;
     }
@@ -233,13 +254,13 @@ export const Planet: React.FC<PlanetProps> = ({
             map={surfaceTexture}
             color="#FFFFFF"
             roughness={materialRoughness}
-            metalness={0.04}
-            emissive={isSelected ? primaryColor : isHovered ? '#38BDF8' : '#000000'}
-            emissiveIntensity={isSelected ? 0.12 : isHovered ? 0.05 : 0}
+            metalness={0.03}
+            emissive={emissiveColor}
+            emissiveIntensity={emissiveIntensity}
           />
         </mesh>
 
-        {/* 2. Earth: City Night Lights on Dark Hemisphere */}
+        {/* 2. Earth: Dynamic Night-Side City Lights */}
         {id === 'earth' && earthNightShaderMaterial && (
           <mesh scale={[1.002, 1.002, 1.002]}>
             <sphereGeometry args={[visualRadius, 48, 48]} />
@@ -249,12 +270,12 @@ export const Planet: React.FC<PlanetProps> = ({
 
         {/* 3. Earth: Independent Dynamic Cloud Layer */}
         {id === 'earth' && earthCloudsTexture && (
-          <mesh ref={cloudsMeshRef} scale={[1.016, 1.016, 1.016]}>
+          <mesh ref={cloudsMeshRef} scale={[1.015, 1.015, 1.015]}>
             <sphereGeometry args={[visualRadius, 48, 48]} />
             <meshStandardMaterial
               map={earthCloudsTexture}
               transparent={true}
-              opacity={0.85}
+              opacity={0.82}
               blending={THREE.NormalBlending}
               depthWrite={false}
               roughness={0.9}
@@ -262,27 +283,27 @@ export const Planet: React.FC<PlanetProps> = ({
           </mesh>
         )}
 
-        {/* 4. Earth: Rayleigh Atmospheric Scattering Rim */}
+        {/* 4. Earth: Thin Realistic Rayleigh Scattering Rim (Not Neon) */}
         {id === 'earth' && (
-          <AtmosphereRim radius={visualRadius} color="#38BDF8" intensity={1.15} falloff={2.6} />
+          <AtmosphereRim radius={visualRadius} color="#38BDF8" intensity={0.85} falloff={3.2} />
         )}
 
         {/* 5. Venus: Dense Sulfuric Atmosphere Rim */}
         {id === 'venus' && (
-          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.92} falloff={2.9} />
+          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.85} falloff={3.0} />
         )}
 
-        {/* 6. Uranus: Aquamarine Methane Atmospheric Rim */}
+        {/* 6. Uranus: Delicate Methane Atmospheric Rim */}
         {id === 'uranus' && (
-          <AtmosphereRim radius={visualRadius} color="#5EEAD4" intensity={1.08} falloff={2.5} />
+          <AtmosphereRim radius={visualRadius} color="#5EEAD4" intensity={0.95} falloff={2.8} />
         )}
 
-        {/* 7. Neptune: Royal Azure Methane Atmospheric Rim */}
+        {/* 7. Neptune: Deep Azure Methane Atmospheric Rim */}
         {id === 'neptune' && (
-          <AtmosphereRim radius={visualRadius} color="#3B82F6" intensity={1.22} falloff={2.4} />
+          <AtmosphereRim radius={visualRadius} color="#3B82F6" intensity={1.05} falloff={2.6} />
         )}
 
-        {/* 8. Saturn: 2K Radial Ring Alpha System with Cassini Division */}
+        {/* 8. Saturn: Authentic 2K Radial Ring System with Cassini Division */}
         {hasRings && id === 'saturn' && saturnRingGeometry && (
           <mesh
             ref={ringsMeshRef}
@@ -292,12 +313,12 @@ export const Planet: React.FC<PlanetProps> = ({
             receiveShadow
           >
             <meshStandardMaterial
-              map={saturnRingTexture || undefined}
+              map={saturnRingTexture}
               side={THREE.DoubleSide}
               transparent={true}
-              opacity={0.94}
+              opacity={0.96}
               roughness={0.65}
-              metalness={0.05}
+              metalness={0.04}
             />
           </mesh>
         )}
@@ -310,7 +331,7 @@ export const Planet: React.FC<PlanetProps> = ({
               color="#5EEAD4"
               side={THREE.DoubleSide}
               transparent={true}
-              opacity={0.32}
+              opacity={0.28}
               roughness={0.9}
             />
           </mesh>

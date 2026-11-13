@@ -46,3 +46,4 @@ export const MilkyWayBackground: React.FC<MilkyWayBackgroundProps> = ({
     </mesh>
   );
 };
+

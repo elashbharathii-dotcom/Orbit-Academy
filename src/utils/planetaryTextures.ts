@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { CelestialId } from '../types';
 import {
@@ -15,175 +16,219 @@ import {
 } from './textureGenerator';
 
 /**
- * High-Realism Planetary Texture Manager (Phase 6C)
+ * Astronomical Planetary Texture Manager (Phase 6C Visual Correction)
  * 
  * Features:
- * - Loads genuine 2K NASA & Solar System Scope photographic equirectangular maps
- * - Photometrically calibrated with THREE.SRGBColorSpace and anisotropic filtering
- * - Zero-blocking fallback: provides immediate procedural canvas texture while loading
- *   or in the event of asset retrieval interruption
- * - Memory-cached singleton textures prevent redundant GPU texture allocations
+ * - Reactive texture loading with automatic React state re-rendering
+ * - Binds genuine 2K NASA & USGS equirectangular maps directly to GPU materials
+ * - Sets THREE.SRGBColorSpace, proper wrapping, and anisotropic filtering
+ * - Instantaneous procedural canvas fallback ensures zero blank frames
+ * - Memory-cached singletons prevent duplicate network requests or VRAM allocations
  */
 
 const textureCache = new Map<string, THREE.Texture>();
 const loader = new THREE.TextureLoader();
 
+const PLANET_TEXTURE_URLS: Record<CelestialId, string> = {
+  sun: '/assets/textures/sun.jpg',
+  mercury: '/assets/textures/mercury.jpg',
+  venus: '/assets/textures/venus_atmosphere.jpg',
+  earth: '/assets/textures/earth_daymap.jpg',
+  mars: '/assets/textures/mars.jpg',
+  jupiter: '/assets/textures/jupiter.jpg',
+  saturn: '/assets/textures/saturn.jpg',
+  uranus: '/assets/textures/uranus.jpg',
+  neptune: '/assets/textures/neptune.jpg',
+};
+
+const PROCEDURAL_FALLBACKS: Record<CelestialId, () => THREE.Texture> = {
+  sun: getProceduralSun,
+  mercury: getProceduralMercury,
+  venus: getProceduralVenus,
+  earth: getProceduralEarth,
+  mars: getProceduralMars,
+  jupiter: getProceduralJupiter,
+  saturn: getProceduralSaturn,
+  uranus: getProceduralUranus,
+  neptune: getProceduralNeptune,
+};
+
 /**
- * Asynchronously loads a texture with immediate fallback to procedural canvas
+ * Configure texture parameters for photometrically accurate astronomical rendering
  */
-function loadTextureWithFallback(
-  url: string,
-  fallbackProvider: () => THREE.Texture
-): THREE.Texture {
-  if (textureCache.has(url)) {
-    return textureCache.get(url)!;
-  }
+function configureTexture(tex: THREE.Texture): THREE.Texture {
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 8;
+  tex.needsUpdate = true;
+  return tex;
+}
 
-  // Generate fallback texture synchronously so the material is never blank
-  const fallback = fallbackProvider();
-  
-  // Clone or adapt fallback as initial texture
-  const activeTexture = fallback.clone();
-  textureCache.set(url, activeTexture);
+/**
+ * React Hook that synchronously returns a fallback texture and reactively swaps in
+ * the real 2K photographic map as soon as it is decoded by the browser.
+ */
+export function usePlanetaryTexture(id: CelestialId): THREE.Texture {
+  const url = PLANET_TEXTURE_URLS[id];
+  const fallbackProvider = PROCEDURAL_FALLBACKS[id];
 
-  // Load the photographic map in background
-  loader.load(
-    url,
-    (loadedTexture) => {
-      loadedTexture.colorSpace = THREE.SRGBColorSpace;
-      loadedTexture.wrapS = THREE.RepeatWrapping;
-      loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
-      loadedTexture.generateMipmaps = true;
-      loadedTexture.minFilter = THREE.LinearMipmapLinearFilter;
-      loadedTexture.magFilter = THREE.LinearFilter;
-      
-      // Update image data on cached texture and trigger GPU update
-      activeTexture.image = loadedTexture.image;
-      activeTexture.colorSpace = THREE.SRGBColorSpace;
-      activeTexture.needsUpdate = true;
-    },
-    undefined,
-    (error) => {
-      console.warn(`[PlanetaryTextures] Falling back to procedural map for ${url}:`, error);
+  const [texture, setTexture] = useState<THREE.Texture>(() => {
+    if (textureCache.has(url)) {
+      return textureCache.get(url)!;
     }
-  );
+    return fallbackProvider();
+  });
 
-  return activeTexture;
-}
-
-/**
- * Retrieve primary surface texture map for any celestial body
- */
-export function getPlanetarySurfaceTexture(id: CelestialId): THREE.Texture {
-  switch (id) {
-    case 'sun':
-      return loadTextureWithFallback('/assets/textures/sun.jpg', getProceduralSun);
-    case 'mercury':
-      return loadTextureWithFallback('/assets/textures/mercury.jpg', getProceduralMercury);
-    case 'venus':
-      return loadTextureWithFallback('/assets/textures/venus_atmosphere.jpg', getProceduralVenus);
-    case 'earth':
-      return loadTextureWithFallback('/assets/textures/earth_daymap.jpg', getProceduralEarth);
-    case 'mars':
-      return loadTextureWithFallback('/assets/textures/mars.jpg', getProceduralMars);
-    case 'jupiter':
-      return loadTextureWithFallback('/assets/textures/jupiter.jpg', getProceduralJupiter);
-    case 'saturn':
-      return loadTextureWithFallback('/assets/textures/saturn.jpg', getProceduralSaturn);
-    case 'uranus':
-      return loadTextureWithFallback('/assets/textures/uranus.jpg', getProceduralUranus);
-    case 'neptune':
-      return loadTextureWithFallback('/assets/textures/neptune.jpg', getProceduralNeptune);
-    default:
-      return getProceduralEarth();
-  }
-}
-
-/**
- * Retrieve Venus radar surface (used for subterranean or alternative view)
- */
-export function getVenusRadarSurfaceTexture(): THREE.Texture {
-  return loadTextureWithFallback('/assets/textures/venus_surface.jpg', getProceduralVenus);
-}
-
-/**
- * Retrieve Earth dynamic atmospheric cloud deck
- */
-export function getEarthCloudsTexture(): THREE.Texture {
-  return loadTextureWithFallback('/assets/textures/earth_clouds.jpg', getProceduralEarthClouds);
-}
-
-/**
- * Retrieve Earth city night lights map
- */
-export function getEarthNightLightsTexture(): THREE.Texture {
-  if (textureCache.has('earth_nightmap')) {
-    return textureCache.get('earth_nightmap')!;
-  }
-
-  const texture = loader.load(
-    '/assets/textures/earth_nightmap.jpg',
-    (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.ClampToEdgeWrapping;
-      tex.needsUpdate = true;
-    },
-    undefined,
-    () => {
-      console.warn('[PlanetaryTextures] Earth night lights unavailable, using transparent fallback');
+  useEffect(() => {
+    if (textureCache.has(url)) {
+      setTexture(textureCache.get(url)!);
+      return;
     }
-  );
 
-  textureCache.set('earth_nightmap', texture);
+    let isMounted = true;
+
+    loader.load(
+      url,
+      (loadedTexture) => {
+        if (!isMounted) return;
+        const configured = configureTexture(loadedTexture);
+        textureCache.set(url, configured);
+        setTexture(configured);
+        console.log(`[PlanetaryTextures] Loaded real photographic map: ${id} (${url})`);
+      },
+      undefined,
+      (err) => {
+        console.warn(`[PlanetaryTextures] Failed to load ${url}, keeping procedural fallback:`, err);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, url]);
+
   return texture;
 }
 
 /**
- * Retrieve Saturn ring opacity and radial banding texture
+ * React Hook for Earth Clouds Texture
  */
-export function getSaturnRingAlphaTexture(): THREE.Texture {
-  if (textureCache.has('saturn_ring')) {
-    return textureCache.get('saturn_ring')!;
-  }
+export function useEarthCloudsTexture(): THREE.Texture {
+  const url = '/assets/textures/earth_clouds.jpg';
+  const [texture, setTexture] = useState<THREE.Texture>(() => {
+    if (textureCache.has(url)) return textureCache.get(url)!;
+    return getProceduralEarthClouds();
+  });
 
-  const fallback = getProceduralSaturnRings();
-  const ringTexture = fallback.clone();
-  textureCache.set('saturn_ring', ringTexture);
-
-  loader.load(
-    '/assets/textures/saturn_ring.png',
-    (loadedTex) => {
-      loadedTex.colorSpace = THREE.SRGBColorSpace;
-      loadedTex.wrapS = THREE.ClampToEdgeWrapping;
-      loadedTex.wrapT = THREE.ClampToEdgeWrapping;
-      ringTexture.image = loadedTex.image;
-      ringTexture.needsUpdate = true;
-    },
-    undefined,
-    () => {
-      console.warn('[PlanetaryTextures] Using procedural Saturn ring fallback');
+  useEffect(() => {
+    if (textureCache.has(url)) {
+      setTexture(textureCache.get(url)!);
+      return;
     }
-  );
 
-  return ringTexture;
+    let isMounted = true;
+    loader.load(url, (loaded) => {
+      if (!isMounted) return;
+      const configured = configureTexture(loaded);
+      textureCache.set(url, configured);
+      setTexture(configured);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
+  return texture;
 }
 
 /**
- * Retrieve Milky Way & deep space all-sky background survey map
+ * React Hook for Earth Night Lights Texture
+ */
+export function useEarthNightLightsTexture(): THREE.Texture | null {
+  const url = '/assets/textures/earth_nightmap.jpg';
+  const [texture, setTexture] = useState<THREE.Texture | null>(() => {
+    return textureCache.get(url) || null;
+  });
+
+  useEffect(() => {
+    if (textureCache.has(url)) {
+      setTexture(textureCache.get(url)!);
+      return;
+    }
+
+    let isMounted = true;
+    loader.load(url, (loaded) => {
+      if (!isMounted) return;
+      const configured = configureTexture(loaded);
+      textureCache.set(url, configured);
+      setTexture(configured);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
+  return texture;
+}
+
+/**
+ * React Hook for Saturn Ring Radial Texture
+ */
+export function useSaturnRingTexture(): THREE.Texture {
+  const url = '/assets/textures/saturn_ring.png';
+  const [texture, setTexture] = useState<THREE.Texture>(() => {
+    if (textureCache.has(url)) return textureCache.get(url)!;
+    return getProceduralSaturnRings();
+  });
+
+  useEffect(() => {
+    if (textureCache.has(url)) {
+      setTexture(textureCache.get(url)!);
+      return;
+    }
+
+    let isMounted = true;
+    loader.load(url, (loaded) => {
+      if (!isMounted) return;
+      loaded.colorSpace = THREE.SRGBColorSpace;
+      loaded.wrapS = THREE.ClampToEdgeWrapping;
+      loaded.wrapT = THREE.ClampToEdgeWrapping;
+      loaded.generateMipmaps = true;
+      loaded.minFilter = THREE.LinearMipmapLinearFilter;
+      loaded.magFilter = THREE.LinearFilter;
+      loaded.needsUpdate = true;
+      textureCache.set(url, loaded);
+      setTexture(loaded);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
+  return texture;
+}
+
+/**
+ * Synchronous accessor for Milky Way background map
  */
 export function getMilkyWayTexture(): THREE.Texture {
-  if (textureCache.has('milky_way')) {
-    return textureCache.get('milky_way')!;
-  }
+  const url = '/assets/textures/milky_way.jpg';
+  if (textureCache.has(url)) return textureCache.get(url)!;
 
-  const texture = loader.load('/assets/textures/milky_way.jpg', (tex) => {
+  const texture = loader.load(url, (tex) => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
   });
 
-  textureCache.set('milky_way', texture);
+  textureCache.set(url, texture);
   return texture;
 }

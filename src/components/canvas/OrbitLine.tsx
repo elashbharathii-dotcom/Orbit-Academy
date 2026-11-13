@@ -9,13 +9,14 @@ interface OrbitLineProps {
 }
 
 /**
- * Elegant hairline orbital trajectory loop rendered in the orbital plane (XZ).
+ * Hairline orbital trajectory loop rendered in the orbital plane (XZ).
+ * Restrained and subordinate to celestial bodies, providing subtle astronomical reference.
  */
 export const OrbitLine: React.FC<OrbitLineProps> = ({
   radius,
   segments = 128,
-  color = '#94A3B8',
-  opacity = 0.16,
+  color = '#334155',
+  opacity = 0.075,
 }) => {
   const linePoints = useMemo(() => {
     const points: THREE.Vector3[] = [];
@@ -37,4 +38,3 @@ export const OrbitLine: React.FC<OrbitLineProps> = ({
     </lineLoop>
   );
 };
-
