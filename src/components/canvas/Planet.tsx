@@ -5,6 +5,7 @@ import { CelestialBodyDefinition } from '../../types';
 import { AtmosphereRim } from './AtmosphereRim';
 import { CelestialReticle } from './CelestialReticle';
 import { useSolarSystem } from '../../context/SolarSystemContext';
+import { useNavigation } from '../../navigation/NavigationProvider';
 import { setCelestialPosition } from '../../utils/celestialRegistry';
 import {
   usePlanetaryTexture,
@@ -61,10 +62,13 @@ export const Planet: React.FC<PlanetProps> = ({
   const cloudsMeshRef = useRef<THREE.Mesh>(null);
   const ringsMeshRef = useRef<THREE.Mesh>(null);
 
-  const { selectedPlanetId, hoveredPlanetId, selectPlanet, setHoveredPlanet } = useSolarSystem();
+  const { selectedPlanetId, hoveredPlanetId, setHoveredPlanet } = useSolarSystem();
+  const { launchModuleForPlanet } = useNavigation();
 
   const isSelected = selectedPlanetId === data.id;
   const isHovered = hoveredPlanetId === data.id;
+
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
 
   const angleRef = useRef<number>(initialAngleOffset);
   const worldPosVec = useMemo(() => new THREE.Vector3(), []);
@@ -215,9 +219,24 @@ export const Planet: React.FC<PlanetProps> = ({
     }
   });
 
+  const handlePointerDown = (e: any) => {
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  };
+
   const handleMeshClick = (e: any) => {
     e.stopPropagation();
-    selectPlanet(isSelected ? null : id);
+
+    // Prevent accidental module launch during orbital drag gestures
+    if (pointerDownPos.current) {
+      const dx = Math.abs(e.clientX - pointerDownPos.current.x);
+      const dy = Math.abs(e.clientY - pointerDownPos.current.y);
+      if (Math.hypot(dx, dy) > 8) {
+        return;
+      }
+    }
+
+    // Launch dedicated learning module with cinematic camera approach
+    launchModuleForPlanet(id);
   };
 
   const handlePointerOver = (e: any) => {
@@ -244,6 +263,7 @@ export const Planet: React.FC<PlanetProps> = ({
           ref={planetMeshRef}
           castShadow
           receiveShadow
+          onPointerDown={handlePointerDown}
           onClick={handleMeshClick}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}

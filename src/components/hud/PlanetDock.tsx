@@ -1,18 +1,20 @@
 import React from 'react';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
 import { useSolarSystem } from '../../context/SolarSystemContext';
+import { useNavigation } from '../../navigation/NavigationProvider';
 
 /**
- * Planetary Quick-Access Navigation Dock (Phase 5)
+ * Planetary Quick-Access Navigation Dock (Phase 5 & 7)
  * Requirements:
  * - Persistent at bottom of viewport
  * - Authentic astronomical reference colors
  * - Clear active selection ring in Solar Amber (#F59E0B)
- * - Triggers cinematic camera navigation seamlessly
+ * - Supports both selecting a planet and launching its educational module
  * - Accessible keyboard navigation and mobile-responsive scroll
  */
 export const PlanetDock: React.FC = () => {
   const { selectedPlanetId, selectPlanet } = useSolarSystem();
+  const { launchModuleForPlanet } = useNavigation();
 
   return (
     <nav
@@ -23,14 +25,22 @@ export const PlanetDock: React.FC = () => {
         const isSelected = selectedPlanetId === body.id;
         const isSol = body.id === 'sun';
 
+        const handleClick = () => {
+          if (isSelected && !isSol) {
+            launchModuleForPlanet(body.id);
+          } else {
+            selectPlanet(isSelected ? null : body.id);
+          }
+        };
+
         return (
           <button
             key={body.id}
             type="button"
             role="tab"
             aria-selected={isSelected}
-            aria-label={`Select ${body.name} (${body.latinName})`}
-            onClick={() => selectPlanet(isSelected ? null : body.id)}
+            aria-label={isSelected && !isSol ? `Launch ${body.name} module` : `Select ${body.name} (${body.latinName})`}
+            onClick={handleClick}
             className={`group relative flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 font-mono text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] ${
               isSelected
                 ? 'border border-[#F59E0B] bg-[#F59E0B]/15 text-[#F8FAFC] shadow-[0_0_12px_rgba(245,158,11,0.25)]'
@@ -60,10 +70,19 @@ export const PlanetDock: React.FC = () => {
               {body.name}
             </span>
 
+            {/* Launch Action Indicator when Selected */}
+            {isSelected && !isSol && (
+              <span className="rounded bg-[#F59E0B]/25 px-1.5 py-0.5 text-[9px] font-bold text-[#F59E0B] animate-pulse">
+                LAUNCH →
+              </span>
+            )}
+
             {/* Keyboard Shortcut Hint for Desktop */}
-            <span className="hidden font-mono text-[9px] text-[#475569] sm:inline-block">
-              [{isSol ? '0' : index}]
-            </span>
+            {!isSelected && (
+              <span className="hidden font-mono text-[9px] text-[#475569] sm:inline-block">
+                [{isSol ? '0' : index}]
+              </span>
+            )}
           </button>
         );
       })}

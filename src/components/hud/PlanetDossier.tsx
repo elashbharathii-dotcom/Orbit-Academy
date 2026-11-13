@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   X, 
   ExternalLink, 
@@ -9,37 +9,39 @@ import {
   Maximize2, 
   Moon, 
   Wind,
-  CheckCircle2
+  Rocket
 } from 'lucide-react';
 import { CelestialBodyDefinition } from '../../types';
 import { useSolarSystem } from '../../context/SolarSystemContext';
+import { useNavigation } from '../../navigation/NavigationProvider';
+import { getDestinationByPlanetId } from '../../navigation/celestialDestinations';
 
 interface PlanetDossierProps {
   data: CelestialBodyDefinition | null;
 }
 
 /**
- * Mission Control Planet Dossier (Phase 5)
+ * Mission Control Planet Dossier (Phase 5 & 7)
  * Built with strict adherence to design-system/orbit-academy/MASTER.md:
  * - Slides in from right side on Desktop; adapts to bottom drawer on Mobile
  * - Uncompromised NASA physical metrics
- * - Educational module preview & safe placeholder exploration CTA
+ * - Direct Educational Module launcher via Phase 7 Celestial Destination Registry
  */
 export const PlanetDossier: React.FC<PlanetDossierProps> = ({ data }) => {
   const { selectPlanet } = useSolarSystem();
-  const [showModulePlaceholder, setShowModulePlaceholder] = useState<boolean>(false);
+  const { launchModuleForPlanet } = useNavigation();
 
   if (!data) return null;
 
-  const { name, latinName, tagline, visual, physical, learningModule } = data;
+  const { name, latinName, tagline, visual, physical } = data;
+  const dest = getDestinationByPlanetId(data.id);
 
   const handleClose = () => {
-    setShowModulePlaceholder(false);
     selectPlanet(null);
   };
 
-  const handleExploreClick = () => {
-    setShowModulePlaceholder(true);
+  const handleLaunchModule = () => {
+    launchModuleForPlanet(data.id);
   };
 
   return (
@@ -173,45 +175,42 @@ export const PlanetDossier: React.FC<PlanetDossierProps> = ({ data }) => {
           </div>
         </div>
 
-        {/* 4. Educational Learning Module Preview */}
+        {/* 4. Educational Learning Module Launcher (Phase 7) */}
         <div className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-3.5">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#F59E0B]">
-              Learning Destination // {learningModule.learningCategory}
+              Learning Destination // {dest.category}
             </span>
-            <span className="rounded bg-[#F59E0B]/20 px-1.5 py-0.5 font-mono text-[9px] text-[#F59E0B]">
-              CURRICULUM
+            <span
+              className="rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase"
+              style={{
+                backgroundColor: `${dest.themeAccent}20`,
+                color: dest.themeAccent,
+              }}
+            >
+              {dest.badge}
             </span>
           </div>
 
           <h4 className="mt-1 font-sans text-sm font-bold text-[#F8FAFC]">
-            {learningModule.moduleTitle}
+            {dest.name}
           </h4>
           <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
-            {learningModule.missionObjective}
+            {dest.learningObjective}
           </p>
 
           {/* Primary Exploration Action CTA */}
           <div className="mt-4">
             <button
               type="button"
-              onClick={handleExploreClick}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F59E0B] px-4 py-2.5 font-sans text-xs font-bold tracking-wide text-[#05070D] transition-all duration-200 hover:bg-[#D97706] hover:shadow-[0_0_16px_rgba(245,158,11,0.35)] active:translate-y-0"
+              onClick={handleLaunchModule}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F59E0B] px-4 py-2.5 font-mono text-xs font-bold tracking-wide text-[#05070D] shadow-lg transition-all duration-200 hover:bg-[#FBBF24] hover:shadow-[0_0_16px_rgba(245,158,11,0.4)] active:scale-98"
             >
-              <span>EXPLORE {name.toUpperCase()} MODULE</span>
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{dest.buttonText.toUpperCase()}</span>
+              <ExternalLink className="h-3.5 w-3.5 ml-1" aria-hidden="true" />
             </button>
           </div>
-
-          {/* Safe Educational Placeholder Notice */}
-          {showModulePlaceholder && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#38BDF8]/30 bg-[#0A0F1D] p-3 text-xs text-[#38BDF8] animate-fade-in">
-              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[#38BDF8]" aria-hidden="true" />
-              <div>
-                <span className="font-bold">Mission Staged:</span> {learningModule.moduleTitle} is scheduled for development in subsequent milestones. Astronomical telemetry and 3D exploration are fully active!
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </aside>

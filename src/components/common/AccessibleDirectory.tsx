@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Globe, ArrowRight, Check } from 'lucide-react';
+import { X, Globe, Check, Rocket } from 'lucide-react';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
 import { useSolarSystem } from '../../context/SolarSystemContext';
+import { useNavigation } from '../../navigation/NavigationProvider';
 import { CelestialId } from '../../types';
 
 interface AccessibleDirectoryProps {
@@ -10,14 +11,15 @@ interface AccessibleDirectoryProps {
 }
 
 /**
- * Accessible 2D Solar System Directory Modal (Phase 5)
+ * Accessible 2D Solar System Directory Modal (Phase 5 & 7)
  * Requirements:
  * - Semantic HTML table with screen-reader accessible captions & headers
  * - Full keyboard navigation (Escape to close, auto-focus management)
- * - Enables selection of celestial destinations without requiring WebGL interaction
+ * - Enables both selecting celestial destinations and launching educational modules directly
  */
 export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen, onClose }) => {
   const { selectedPlanetId, selectPlanet } = useSolarSystem();
+  const { launchModuleForPlanet } = useNavigation();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape key
@@ -39,6 +41,11 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
   const handleSelect = (id: CelestialId) => {
     selectPlanet(id);
     onClose();
+  };
+
+  const handleLaunch = (id: CelestialId) => {
+    onClose();
+    launchModuleForPlanet(id, { immediate: true });
   };
 
   return (
@@ -150,30 +157,39 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
                       </span>
                     </td>
 
-                    {/* Select Action Button */}
+                    {/* Actions: Select in 3D & Launch Module */}
                     <td className="py-3.5 pl-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleSelect(body.id)}
-                        aria-label={`Select and fly to ${body.name}`}
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
-                          isSelected
-                            ? 'border border-[#F59E0B] bg-[#F59E0B] text-[#05070D]'
-                            : 'border border-[rgba(148,163,184,0.2)] bg-[#11182E] text-[#38BDF8] hover:border-[#38BDF8] hover:text-[#F8FAFC]'
-                        }`}
-                      >
-                        {isSelected ? (
-                          <>
-                            <Check className="h-3 w-3" aria-hidden="true" />
-                            <span>Active</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Select</span>
-                            <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                          </>
-                        )}
-                      </button>
+                      <div className="inline-flex items-center gap-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(body.id)}
+                          aria-label={`Select and fly to ${body.name}`}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                            isSelected
+                              ? 'border border-[#F59E0B] bg-[#F59E0B] text-[#05070D]'
+                              : 'border border-[rgba(148,163,184,0.2)] bg-[#11182E] text-[#94A3B8] hover:border-[#38BDF8] hover:text-[#F8FAFC]'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <>
+                              <Check className="h-3 w-3" aria-hidden="true" />
+                              <span>Focused</span>
+                            </>
+                          ) : (
+                            <span>Focus 3D</span>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleLaunch(body.id)}
+                          aria-label={`Launch ${body.name} educational module`}
+                          className="inline-flex items-center gap-1 rounded-lg border border-[#F59E0B]/40 bg-[#F59E0B]/15 px-2.5 py-1 text-xs font-semibold text-[#F59E0B] transition-all hover:bg-[#F59E0B] hover:text-[#05070D]"
+                        >
+                          <Rocket className="h-3 w-3" aria-hidden="true" />
+                          <span>Launch</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

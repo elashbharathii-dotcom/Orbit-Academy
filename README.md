@@ -85,6 +85,22 @@ All features listed below are **fully implemented and verified** in the active c
 - **Reduced-Motion Compliance**: Full support for `prefers-reduced-motion` media queries; disables aggressive camera sweeps and instant-snaps LAURA waypoints when requested.
 - **High Contrast & Keyboard Focus**: Accessible ARIA labels, focus rings, role declarations, and keyboard navigable controls.
 
+### 🎨 6. Celestial Destination Registry & Modular Learning Applications (Phase 7)
+- **Centralized Destination Registry**: Maps every celestial body to a dedicated educational application with theme accents, availability states, and pedagogical objectives.
+- **Dynamic Application Routing**: History-based URL routing supporting browser back/forward navigation and direct deep-linking:
+  - **Sun (`/`)**: Mission Control & Academy Home with interactive 3D Solar System overview.
+  - **Mercury (`/explorer`)**: Solar System Explorer with planetary scale comparators and extreme day/night thermal swing graphs.
+  - **Venus (`/lab/venus`)**: Climate & Atmosphere Lab featuring an interactive runaway greenhouse effect simulator and CO₂ pressure gauge.
+  - **Earth (`/learning/earth`)**: Full-featured Drawing & Colouring Studio equipped with responsive HTML5 canvas, Earth palette, stroke smoothing, brush gauges, eraser, and PNG artwork export.
+  - **Mars (`/game/mars`)**: Mars Rover Adventure featuring Jezero Crater mission briefings and an interactive laser spectroscopy scanner prototype.
+  - **Jupiter (`/lab/jupiter`)**: Planetary Science Lab with interactive Great Red Spot anticyclonic wind scrubbers and Galilean moon Laplace resonance models (Io 4 : Europa 2 : Ganymede 1).
+  - **Saturn (`/art/saturn`)**: Space Art & Ring Studio analyzing Cassini Division optical thickness, ring particulate ice densities, and shepherd moon dynamics.
+  - **Uranus (`/quiz/uranus`)**: Astronomy Quiz Arena offering interactive 5-question challenges with instant astrophysical explanations, score tracker, and cosmic rank certificates.
+  - **Neptune (`/discovery/neptune`)**: Cosmic Discovery Center with supersonic atmospheric wind speedometers (2,100 km/h) and Kuiper Belt gateway charts.
+- **Cinematic Module Approach Transitions**: Clicking any planet in 3D smoothly triggers quadratic camera swoops toward the planet with automated drag detection preventing accidental launches during orbit gestures.
+- **Persistent Scene Context**: The 3D WebGL scene remains warm in the DOM, allowing instant zero-reload returns when pressing `[ESC]` or clicking "Solar System".
+- **Code-Split Bundles**: Every module screen is dynamically lazy-loaded using `React.lazy` and `React.Suspense` for minimal initial bundle overhead.
+
 ---
 
 ## 🏗️ Planned Features & Roadmap
@@ -93,12 +109,10 @@ The following educational features represent the future development roadmap:
 
 | Milestone | Target Module | Scope & Educational Objective | Status |
 | :--- | :--- | :--- | :--- |
-| **Phase 7A** | 🌍 **Earth Science Lab** | Interactive atmosphere layers, greenhouse effect simulation, and climate dynamics | 🗓️ *Planned* |
-| **Phase 7B** | 🔴 **Mars Exploration** | Rover telemetry, Olympus Mons topography exploration, and sample analysis | 🗓️ *Planned* |
-| **Phase 7C** | 🪐 **Saturn Drawing Lab** | Celestial canvas for students to paint and illustrate rings, moons, and auroras | 🗓️ *Planned* |
-| **Phase 7D** | ⚡ **Jupiter Gas Lab** | Fluid atmospheric storm simulation and Great Red Spot vortex experiments | 🗓️ *Planned* |
-| **Phase 7E** | 🧊 **Uranus & Neptune Quizzes** | Gamified astronomy challenges, distance calculations, and spectrum analysis | 🗓️ *Planned* |
-| **Phase 8** | 🏆 **Mission Achievements** | Student flight log, collectible mission badges, and progress persistence | 🗓️ *Planned* |
+| **Phase 8A** | 🔴 **Mars 3D Rover Gameplay** | Full 3D rover physics, Jezero Crater terrain driving, rock obstacle traversal, and sample collection missions | 🗓️ *Planned* |
+| **Phase 8B** | 🎨 **Advanced Space Art Studio** | Layer-based astro-illustration tools, planetary texture stickers, and community art gallery | 🗓️ *Planned* |
+| **Phase 8C** | 🏆 **Mission Achievements & Badges** | Student flight log, collectible astronomical badges, and persistent Academy grade levels | 🗓️ *Planned* |
+| **Phase 9** | 📱 **Mobile WebGL Optimization & PWA** | Dynamic level-of-detail (LOD) geometry, offline ServiceWorker caching, and installable PWA mode | 🗓️ *Planned* |
 
 ---
 
@@ -334,3 +348,4 @@ Contributions to ORBIT ACADEMY are welcome! Whether it's adding scientific data,
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for complete details.
 
 Copyright © 2026 **Elash Bharathi I**.
+
