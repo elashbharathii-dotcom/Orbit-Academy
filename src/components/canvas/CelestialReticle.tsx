@@ -122,3 +122,4 @@ export const CelestialReticle: React.FC<CelestialReticleProps> = ({ data, yOffse
     </Html>
   );
 };
+

@@ -3,6 +3,7 @@ import { CelestialBodyDefinition } from '../types';
 /**
  * Authentic NASA physical metrics paired with carefully calibrated
  * visual scaling parameters for intuitive 3D navigation.
+ * Sources: NASA Planetary Fact Sheets & JPL Solar System Dynamics.
  */
 export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
   {
@@ -20,15 +21,16 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#F59E0B',
     },
     physical: {
+      classification: 'Yellow Dwarf Star (Spectral Class G2V)',
       realDistanceAU: 0,
-      realDistanceKm: '0 km',
+      realDistanceKm: '0 km (System Center)',
       realDiameterKm: '1,392,700 km',
       orbitalPeriodDays: 0,
       rotationPeriodHours: 600.0, // ~25 Earth days at equator
       surfaceGravityMs2: 274.0,
       meanTemperatureC: 5500,
       moonsCount: 0,
-      atmosphericComposition: ['Hydrogen (73.4%)', 'Helium (25.0%)', 'Oxygen (0.8%)', 'Carbon (0.3%)'],
+      atmosphericComposition: ['Hydrogen (73.46%)', 'Helium (24.85%)', 'Oxygen (0.77%)', 'Carbon (0.29%)'],
     },
     learningModule: {
       destinationName: 'Sol Core',
@@ -53,6 +55,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#707070',
     },
     physical: {
+      classification: 'Terrestrial Planet / Iron-Rich Core',
       realDistanceAU: 0.387,
       realDistanceKm: '57,909,050 km',
       realDiameterKm: '4,879 km',
@@ -61,7 +64,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       surfaceGravityMs2: 3.7,
       meanTemperatureC: 167,
       moonsCount: 0,
-      atmosphericComposition: ['Oxygen (42%)', 'Sodium (29%)', 'Hydrogen (22%)', 'Helium (6%)'],
+      atmosphericComposition: ['Trace Exosphere: Oxygen (42%)', 'Sodium (29%)', 'Hydrogen (22%)', 'Helium (6%)'],
     },
     learningModule: {
       destinationName: 'Caloris Basin',
@@ -86,6 +89,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#C49450',
     },
     physical: {
+      classification: 'Terrestrial Planet / Supercritical Atmosphere',
       realDistanceAU: 0.723,
       realDistanceKm: '108,208,000 km',
       realDiameterKm: '12,104 km',
@@ -119,6 +123,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#34D399',
     },
     physical: {
+      classification: 'Terrestrial Planet / Active Biosphere',
       realDistanceAU: 1.0,
       realDistanceKm: '149,598,023 km',
       realDiameterKm: '12,742 km',
@@ -152,6 +157,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#8C381E',
     },
     physical: {
+      classification: 'Terrestrial Planet / Iron Oxide Crust',
       realDistanceAU: 1.524,
       realDistanceKm: '227,939,200 km',
       realDiameterKm: '6,779 km',
@@ -160,7 +166,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       surfaceGravityMs2: 3.721,
       meanTemperatureC: -65,
       moonsCount: 2, // Phobos, Deimos
-      atmosphericComposition: ['Carbon Dioxide (95.3%)', 'Nitrogen (2.6%)', 'Argon (1.9%)', 'Oxygen (0.13%)'],
+      atmosphericComposition: ['Carbon Dioxide (95.32%)', 'Nitrogen (2.6%)', 'Argon (1.9%)', 'Oxygen (0.13%)'],
     },
     learningModule: {
       destinationName: 'Jezero Crater',
@@ -185,6 +191,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       secondaryColor: '#B8783A',
     },
     physical: {
+      classification: 'Gas Giant / Jovian Magnetosphere',
       realDistanceAU: 5.204,
       realDistanceKm: '778,547,200 km',
       realDiameterKm: '139,820 km',
@@ -219,6 +226,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       hasRings: true,
     },
     physical: {
+      classification: 'Gas Giant / Planetary Ring System',
       realDistanceAU: 9.582,
       realDistanceKm: '1,433,529,000 km',
       realDiameterKm: '116,460 km',
@@ -253,6 +261,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       hasRings: true,
     },
     physical: {
+      classification: 'Ice Giant / Retrograde Oblique Rotator',
       realDistanceAU: 19.201,
       realDistanceKm: '2,870,972,200 km',
       realDiameterKm: '50,724 km',
@@ -287,6 +296,7 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
       hasRings: true,
     },
     physical: {
+      classification: 'Ice Giant / Supersonic Atmospheric Dynamics',
       realDistanceAU: 30.047,
       realDistanceKm: '4,498,252,900 km',
       realDiameterKm: '49,244 km',
@@ -306,4 +316,3 @@ export const CELESTIAL_BODIES: CelestialBodyDefinition[] = [
     },
   },
 ];
-

@@ -15,6 +15,7 @@ export type CelestialId =
   | 'neptune';
 
 export interface CelestialPhysicalData {
+  classification: string;
   realDistanceAU: number;
   realDistanceKm: string;
   realDiameterKm: string;

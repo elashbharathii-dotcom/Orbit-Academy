@@ -23,3 +23,4 @@ export function setCelestialPosition(id: CelestialId, position: THREE.Vector3): 
 export function getCelestialPosition(id: CelestialId): THREE.Vector3 {
   return celestialPositions.get(id) || new THREE.Vector3(0, 0, 0);
 }
+
