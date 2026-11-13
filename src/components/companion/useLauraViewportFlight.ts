@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { CelestialId } from '../../types';
 
-export type FlightDestinationId =
-  | 'home'
-  | 'upper-left'
-  | 'upper-right'
-  | 'center'
-  | 'lower-right'
-  | 'center-left';
-
 export interface ViewportPoint {
   x: number;
   y: number;
@@ -20,175 +12,170 @@ export interface UseLauraViewportFlightOptions {
 }
 
 /**
- * True Full-Viewport Flight Controller for LAURA (Phase 6D Correction)
+ * Autonomous Living Celestial Flight Controller for LAURA (Milestone 2)
  * 
- * Architecture:
- * - Direct screen-space coordinates calculated against window.innerWidth/Height
- * - Distant viewport travel (hundreds of pixels across screen)
- * - CSS hardware-accelerated cubic-bezier transitions (zero 60fps React state thrashing)
- * - Directional flight banking and squash/stretch during high-speed traversal
- * - Autonomous context-aware waypoint navigation and gentle hovering
- * - Developer movement test triggers for verifiable proof of flight
+ * Capabilities:
+ * - Independent, organic floating movement across available screen space
+ * - Natural sinusoidal bobbing (breathing animation) and dynamic banking rotation
+ * - UI obstacle avoidance: avoids top header, bottom dock, and active planet dossier
+ * - Contextual reactions: accompanies user when selecting planets
+ * - Stable conversational anchor when chat is open
+ * - Hardware-accelerated GPU transitions with cubic-bezier easing
  */
 export function useLauraViewportFlight({
   selectedPlanetId,
   isChatOpen,
 }: UseLauraViewportFlightOptions) {
-  // Check reduced motion preference
   const prefersReducedMotion = useRef<boolean>(
     typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 
-  // Compute exact pixel coordinates for each canonical waypoint
-  const getWaypointCoordinates = useCallback(
-    (dest: FlightDestinationId): ViewportPoint => {
-      if (typeof window === 'undefined') return { x: 88, y: 650 };
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+  // Compute safe scenic observation points across available screen space
+  const getSafeWaypoint = useCallback((zone: 'overview-left' | 'overview-right' | 'dossier-companion' | 'chat-dock'): ViewportPoint => {
+    if (typeof window === 'undefined') return { x: 100, y: 160 };
+    const w = window.innerWidth;
+    const h = window.innerHeight;
 
-      switch (dest) {
-        case 'home':
-          // Bottom-Left resting co-pilot post
-          return { x: Math.max(52, 88), y: Math.max(120, h - 120) };
-        case 'upper-left':
-          // Mission Control flight deck
-          return { x: 130, y: Math.min(h - 100, 115) };
-        case 'upper-right':
-          // Observation post adjacent to Planet Dossier
-          return {
-            x: w >= 1024 ? Math.max(160, w - 440) : Math.max(60, w - 100),
-            y: Math.min(h - 100, 125),
-          };
-        case 'center':
-          // Cosmic navigation center stage
-          return { x: Math.round(w * 0.5), y: Math.round(h * 0.42) };
-        case 'lower-right':
-          // Telemetry outpost
-          return { x: Math.max(80, w - 110), y: Math.max(120, h - 120) };
-        case 'center-left':
-          // Left planetary observatory
-          return { x: 110, y: Math.round(h * 0.5) };
-        default:
-          return { x: 88, y: h - 120 };
-      }
-    },
-    []
-  );
+    switch (zone) {
+      case 'dossier-companion':
+        // Accompany student to upper-left of Planet Dossier
+        return {
+          x: w >= 1024 ? Math.max(120, w - 390) : Math.max(60, w - 80),
+          y: Math.max(90, Math.min(140, h * 0.18)),
+        };
+      case 'chat-dock':
+        // Anchored comfortably above or beside dialogue panel
+        return {
+          x: w >= 768 ? Math.max(80, w - 240) : Math.max(60, w * 0.5),
+          y: Math.max(80, h - 450),
+        };
+      case 'overview-right':
+        // Open celestial viewing space right
+        return {
+          x: Math.max(100, Math.min(w - 120, w * 0.82)),
+          y: Math.max(100, Math.min(h - 140, h * 0.32)),
+        };
+      case 'overview-left':
+      default:
+        // Open celestial viewing space left
+        return {
+          x: Math.max(90, Math.min(w - 100, w * 0.15)),
+          y: Math.max(95, Math.min(h - 140, h * 0.28)),
+        };
+    }
+  }, []);
 
   const [position, setPosition] = useState<ViewportPoint>(() =>
-    getWaypointCoordinates('home')
+    getSafeWaypoint(selectedPlanetId ? 'dossier-companion' : 'overview-left')
   );
   const [rotation, setRotation] = useState<number>(0);
   const [isGliding, setIsGliding] = useState<boolean>(false);
-  const [activeDestination, setActiveDestination] =
-    useState<FlightDestinationId>('home');
 
-  const glideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentPosRef = useRef<ViewportPoint>(position);
-  const lastInteractionTime = useRef<number>(Date.now());
-  const autonomousStep = useRef<number>(0);
+  const glideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wanderCycleIndex = useRef<number>(0);
 
-  // Core flight dispatch: travels to any specified screen coordinates
-  const flyToPoint = useCallback(
-    (target: ViewportPoint, destId: FlightDestinationId = 'center') => {
+  // Smooth transit to target coordinate
+  const flyToTarget = useCallback(
+    (target: ViewportPoint) => {
       if (prefersReducedMotion.current) {
         setPosition(target);
         currentPosRef.current = target;
-        setActiveDestination(destId);
         return;
       }
 
       const dx = target.x - currentPosRef.current.x;
       const dy = target.y - currentPosRef.current.y;
-      const distance = Math.hypot(dx, dy);
+      const dist = Math.hypot(dx, dy);
 
-      // If already at target within 10px, skip
-      if (distance < 12) return;
+      if (dist < 15) return;
 
-      // Compute banking tilt angle based on horizontal direction
-      const tilt = Math.max(-18, Math.min(18, (dx / (distance || 1)) * 16));
+      // Natural banking tilt into flight trajectory (-14 to +14 deg)
+      const tilt = Math.max(-14, Math.min(14, (dx / (dist || 1)) * 14));
       setRotation(tilt);
       setIsGliding(true);
       setPosition(target);
       currentPosRef.current = target;
-      setActiveDestination(destId);
 
       if (glideTimeoutRef.current) clearTimeout(glideTimeoutRef.current);
-
-      // Transition completes in 1600ms: settle and reset tilt
       glideTimeoutRef.current = setTimeout(() => {
         setIsGliding(false);
         setRotation(0);
-      }, 1600);
+      }, 1500);
     },
     []
   );
 
-  // Fly to named waypoint
-  const flyToDestination = useCallback(
-    (dest: FlightDestinationId) => {
-      const coords = getWaypointCoordinates(dest);
-      flyToPoint(coords, dest);
-      lastInteractionTime.current = Date.now();
-    },
-    [getWaypointCoordinates, flyToPoint]
-  );
-
-  // React to planet selection
+  // 1. Contextual flight reaction when student selects/deselects a planet
   useEffect(() => {
-    if (selectedPlanetId && selectedPlanetId !== 'sun') {
-      // Fly to Upper-Right beside Planet Dossier
-      flyToDestination('upper-right');
-    } else {
-      // Return to Home in Overview mode
-      flyToDestination('home');
-    }
-  }, [selectedPlanetId, flyToDestination]);
+    if (isChatOpen) return;
 
-  // Window resize handler: update positions to stay in bounds
+    if (selectedPlanetId && selectedPlanetId !== 'sun') {
+      const pt = getSafeWaypoint('dossier-companion');
+      flyToTarget(pt);
+    } else {
+      const pt = getSafeWaypoint('overview-left');
+      flyToTarget(pt);
+    }
+  }, [selectedPlanetId, isChatOpen, getSafeWaypoint, flyToTarget]);
+
+  // 2. Chat open stabilization
+  useEffect(() => {
+    if (isChatOpen) {
+      const pt = getSafeWaypoint('chat-dock');
+      flyToTarget(pt);
+    }
+  }, [isChatOpen, getSafeWaypoint, flyToTarget]);
+
+  // 3. Autonomous gentle wander when student is passively observing the Solar System
+  useEffect(() => {
+    if (prefersReducedMotion.current) return;
+    if (isChatOpen || selectedPlanetId) return;
+
+    const wanderTimer = setInterval(() => {
+      // Cycle through open viewing spaces
+      const zones: Array<'overview-left' | 'overview-right'> = [
+        'overview-left',
+        'overview-right',
+      ];
+      wanderCycleIndex.current = (wanderCycleIndex.current + 1) % zones.length;
+      const targetZone = zones[wanderCycleIndex.current];
+
+      // Add gentle random variance so it feels organic rather than robotic
+      const basePt = getSafeWaypoint(targetZone);
+      const randomOffset: ViewportPoint = {
+        x: Math.max(80, Math.min(window.innerWidth - 100, basePt.x + (Math.random() - 0.5) * 80)),
+        y: Math.max(90, Math.min(window.innerHeight - 130, basePt.y + (Math.random() - 0.5) * 60)),
+      };
+
+      flyToTarget(randomOffset);
+    }, 14000); // Gentle wander every 14 seconds
+
+    return () => clearInterval(wanderTimer);
+  }, [isChatOpen, selectedPlanetId, getSafeWaypoint, flyToTarget]);
+
+  // 4. Window resize handler
   useEffect(() => {
     const handleResize = () => {
-      const newCoords = getWaypointCoordinates(activeDestination);
-      setPosition(newCoords);
-      currentPosRef.current = newCoords;
+      const targetZone = isChatOpen
+        ? 'chat-dock'
+        : selectedPlanetId
+        ? 'dossier-companion'
+        : 'overview-left';
+      const pt = getSafeWaypoint(targetZone);
+      setPosition(pt);
+      currentPosRef.current = pt;
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [activeDestination, getWaypointCoordinates]);
-
-  // Autonomous idle drift: if in overview and chat closed, periodically visits waypoints
-  useEffect(() => {
-    if (prefersReducedMotion.current) return;
-
-    const interval = setInterval(() => {
-      const timeSinceInteraction = Date.now() - lastInteractionTime.current;
-      // Drift every 20 seconds of user idleness
-      if (!selectedPlanetId && !isChatOpen && timeSinceInteraction > 19000) {
-        lastInteractionTime.current = Date.now();
-        const cycle: FlightDestinationId[] = [
-          'upper-left',
-          'center-left',
-          'upper-right',
-          'lower-right',
-          'home',
-        ];
-        const nextDest = cycle[autonomousStep.current % cycle.length];
-        autonomousStep.current += 1;
-        flyToDestination(nextDest);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [selectedPlanetId, isChatOpen, flyToDestination]);
+  }, [isChatOpen, selectedPlanetId, getSafeWaypoint]);
 
   return {
     position,
     rotation,
     isGliding,
-    activeDestination,
-    flyToDestination,
+    flyToTarget,
   };
 }
-

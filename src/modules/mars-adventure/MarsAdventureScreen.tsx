@@ -3,13 +3,10 @@ import { ModuleShell } from '../../components/modules/ModuleShell';
 import { getDestinationByPlanetId } from '../../navigation/celestialDestinations';
 import {
   Compass,
-  Radio,
   CheckCircle2,
-  AlertCircle,
-  Play,
   RotateCcw,
-  Sparkles,
-  Thermometer,
+  Zap,
+  Target,
 } from 'lucide-react';
 
 interface MartianSample {
@@ -20,6 +17,8 @@ interface MartianSample {
   composition: string;
   organicSignatures: string;
   status: 'scanned' | 'unscanned';
+  x: number;
+  y: number;
 }
 
 const INITIAL_SAMPLES: MartianSample[] = [
@@ -31,6 +30,8 @@ const INITIAL_SAMPLES: MartianSample[] = [
     composition: 'Phyllosilicates (Clays), Carbonates, Magnetite',
     organicSignatures: 'Aromatic hydrocarbon traces detected',
     status: 'scanned',
+    x: 35,
+    y: 42,
   },
   {
     id: 'sample-2',
@@ -40,6 +41,8 @@ const INITIAL_SAMPLES: MartianSample[] = [
     composition: 'Basaltic Andesite, Olivine Crystals',
     organicSignatures: 'No organic biomarkers detected',
     status: 'unscanned',
+    x: 68,
+    y: 30,
   },
   {
     id: 'sample-3',
@@ -49,272 +52,214 @@ const INITIAL_SAMPLES: MartianSample[] = [
     composition: 'Pyroxene, Iron Oxide (Hematite), Feldspar',
     organicSignatures: 'Hydrated sulfates verified',
     status: 'unscanned',
+    x: 52,
+    y: 74,
   },
 ];
 
 export const MarsAdventureScreen: React.FC = () => {
   const destination = getDestinationByPlanetId('mars');
 
-  const [isExpeditionActive, setIsExpeditionActive] = useState<boolean>(false);
   const [samples, setSamples] = useState<MartianSample[]>(INITIAL_SAMPLES);
   const [selectedSample, setSelectedSample] = useState<MartianSample>(INITIAL_SAMPLES[0]);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [radarPing, setRadarPing] = useState<number>(1);
+  const [isFiringLaser, setIsFiringLaser] = useState<boolean>(false);
 
-  const handleStartExpedition = () => {
-    setIsExpeditionActive(true);
-  };
+  const handleFireLaser = (sample: MartianSample) => {
+    setSelectedSample(sample);
+    setIsFiringLaser(true);
 
-  const handleScanSample = (sampleId: string) => {
-    setIsScanning(true);
     setTimeout(() => {
       setSamples((prev) =>
-        prev.map((s) => (s.id === sampleId ? { ...s, status: 'scanned' } : s))
+        prev.map((s) => (s.id === sample.id ? { ...s, status: 'scanned' } : s))
       );
-      setSelectedSample((prev) => ({ ...prev, status: 'scanned' }));
-      setIsScanning(false);
-      setRadarPing((prev) => prev + 1);
+      setSelectedSample({ ...sample, status: 'scanned' });
+      setIsFiringLaser(false);
     }, 1200);
   };
+
+  const handleReset = () => {
+    setSamples(INITIAL_SAMPLES);
+    setSelectedSample(INITIAL_SAMPLES[0]);
+  };
+
+  const scannedCount = samples.filter((s) => s.status === 'scanned').length;
 
   return (
     <ModuleShell destination={destination}>
       <div className="flex flex-col gap-6 w-full">
-        {/* Cinematic Mars Rover Expedition Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-[#EF4444]/30 bg-gradient-to-r from-[#1A0A0A] via-[#0A0F1D] to-[#2B0E0E] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex flex-col gap-2 max-w-2xl">
+        {/* Module Header Banner */}
+        <div className="rounded-3xl border border-[#EF4444]/30 bg-gradient-to-r from-[#2B0E0E] via-[#05070D] to-[#1A0A0A] p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-[#EF4444] animate-ping" />
-                <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#EF4444]">
-                  NASA MARS 2020 TELEMETRY LINK
-                </span>
-                <span className="rounded bg-[#EF4444]/20 border border-[#EF4444]/40 px-2 py-0.5 font-mono text-[9px] font-bold text-[#FCA5A5]">
-                  JEZERO CRATER EXPEDITION
+                <span className="h-2 w-2 rounded-full bg-[#EF4444] animate-ping" />
+                <span className="font-mono text-xs uppercase tracking-widest text-[#EF4444]">
+                  NASA MARS 2020 JEZERO OUTPOST
                 </span>
               </div>
-
-              <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
-                Mars Rover Adventure: Red Planet Exploration
-              </h2>
-
-              <p className="font-sans text-sm text-[#CBD5E1] leading-relaxed">
-                Take command of the robotic rover exploration outpost in Jezero Crater. 
-                Investigate dried paleolake delta beds, conduct laser-induced breakdown spectroscopy on mineral samples, 
-                and chart subsurface water-ice signatures.
+              <h1 className="mt-1 font-sans text-2xl sm:text-3xl font-extrabold text-[#F8FAFC]">
+                Mars Rover Exploration & Laser Spectroscopy
+              </h1>
+              <p className="mt-1 font-sans text-xs sm:text-sm text-[#94A3B8] max-w-2xl leading-relaxed">
+                Direct the Perseverance rover across Jezero Crater. 
+                Deploy the SuperCam laser-induced breakdown spectrometer (LIBS) to vaporize rock targets, 
+                identify paleolake clay minerals, and cache core samples for future Earth return.
               </p>
             </div>
 
-            {/* Launch Action */}
-            <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
-              {!isExpeditionActive ? (
-                <button
-                  type="button"
-                  onClick={handleStartExpedition}
-                  className="group flex items-center gap-2.5 rounded-2xl bg-[#EF4444] px-6 py-3 font-mono text-sm font-bold text-[#FFFFFF] shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:bg-[#DC2626] hover:scale-105 active:scale-95"
-                >
-                  <Play className="h-4 w-4 fill-current transition-transform group-hover:scale-110" />
-                  <span>Start Expedition</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsExpeditionActive(false)}
-                  className="flex items-center gap-2 rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[#11182E] px-4 py-2 font-mono text-xs text-[#94A3B8] transition-colors hover:text-[#F8FAFC]"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span>Reset Mission Briefing</span>
-                </button>
-              )}
-
-              <span className="font-mono text-[10px] text-[#94A3B8]">
-                {isExpeditionActive ? '● EXPEDITION TELEMETRY LIVE' : 'AWAITING MISSION INITIATION'}
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#EF4444]/10 border border-[#EF4444]/30 px-3.5 py-1.5 font-mono text-xs font-bold text-[#FCA5A5]">
+                {scannedCount} / {samples.length} SAMPLES CACHED
               </span>
             </div>
           </div>
         </div>
 
-        {/* Rover Mission Status & Interactive Scanner Experience */}
-        {isExpeditionActive ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-            {/* Left: Interactive Radar Grid & Targets */}
-            <div className="lg:col-span-1 flex flex-col gap-4 rounded-2xl border border-[#EF4444]/25 bg-[#0A0F1D]/90 p-5 shadow-xl backdrop-blur-md">
-              <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-3">
-                <div className="flex items-center gap-2">
-                  <Radio className="h-4 w-4 text-[#EF4444] animate-pulse" />
-                  <span className="font-mono text-xs font-bold text-[#F8FAFC]">
-                    Radar Sweep (Ping #{radarPing})
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-[#10B981]">ANTENNA LOCK</span>
+        {/* Interactive Workspace Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Interactive Jezero Radar & Rover Scanner */}
+          <div className="lg:col-span-2 relative aspect-[16/10] min-h-[340px] rounded-3xl border border-white/10 bg-[#160B0B] shadow-2xl overflow-hidden flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between z-10">
+              <div className="flex items-center gap-2">
+                <Compass className="h-4 w-4 text-[#EF4444]" />
+                <span className="font-mono text-xs font-semibold text-[#F8FAFC]">
+                  JEZERO CRATER RADAR GRID
+                </span>
               </div>
 
-              {/* Sample Target Selector */}
-              <div className="flex flex-col gap-2.5">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-[#94A3B8]">
-                  Select Rock Core Target:
-                </span>
-                {samples.map((sample) => (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] text-[#94A3B8] hover:text-[#F8FAFC]"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Reset Field</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Simulated Martian Terrain Texture with Outcrop Waypoints */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Topographic Contours */}
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#EF4444_1px,transparent_1px)] [background-size:24px_24px]" />
+
+              {/* Laser Beam Animation */}
+              {isFiringLaser && (
+                <div
+                  style={{
+                    left: `${selectedSample.x}%`,
+                    top: `${selectedSample.y}%`,
+                  }}
+                  className="absolute pointer-events-none -translate-x-1/2 -translate-y-1/2 h-48 w-0.5 bg-gradient-to-t from-red-500 via-amber-300 to-transparent shadow-[0_0_12px_#EF4444] animate-pulse z-20"
+                />
+              )}
+
+              {/* Sample Target Outcrops */}
+              {samples.map((sample) => {
+                const isSelected = selectedSample.id === sample.id;
+                const isScanned = sample.status === 'scanned';
+
+                return (
                   <button
                     key={sample.id}
                     type="button"
-                    onClick={() => setSelectedSample(sample)}
-                    className={`flex flex-col items-start gap-1 rounded-xl p-3 text-left transition-all ${
-                      selectedSample.id === sample.id
-                        ? 'border border-[#EF4444] bg-[#EF4444]/15 shadow-[0_0_12px_rgba(239,68,68,0.2)]'
-                        : 'border border-[rgba(148,163,184,0.12)] bg-[#11182E] hover:border-[rgba(148,163,184,0.25)]'
-                    }`}
+                    onClick={() => handleFireLaser(sample)}
+                    style={{ left: `${sample.x}%`, top: `${sample.y}%` }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 group flex flex-col items-center gap-1 focus:outline-none z-10`}
                   >
-                    <div className="flex w-full items-center justify-between">
-                      <span className="font-sans text-xs font-bold text-[#F8FAFC]">
-                        {sample.name}
-                      </span>
-                      {sample.status === 'scanned' ? (
-                        <span className="rounded bg-[#10B981]/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#10B981]">
-                          ANALYZED
-                        </span>
+                    <div
+                      className={`relative flex h-8 w-8 items-center justify-center rounded-full border transition-transform duration-300 ${
+                        isSelected
+                          ? 'border-[#EF4444] bg-[#EF4444]/30 scale-125 shadow-[0_0_16px_#EF4444]'
+                          : isScanned
+                          ? 'border-[#10B981] bg-[#10B981]/20'
+                          : 'border-white/20 bg-black/60 hover:scale-110'
+                      }`}
+                    >
+                      {isScanned ? (
+                        <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
                       ) : (
-                        <span className="rounded bg-[#EF4444]/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#EF4444]">
-                          PENDING
-                        </span>
+                        <Target className="h-4 w-4 text-[#EF4444] animate-pulse" />
                       )}
                     </div>
-                    <span className="font-mono text-[10px] text-[#94A3B8]">
-                      {sample.location}
+
+                    <span className="rounded-full bg-black/70 border border-white/10 px-2 py-0.5 font-mono text-[9px] text-[#F8FAFC] backdrop-blur-sm whitespace-nowrap">
+                      {sample.name}
                     </span>
                   </button>
-                ))}
-              </div>
-
-              {/* Laser Scan Trigger */}
-              <button
-                type="button"
-                disabled={isScanning}
-                onClick={() => handleScanSample(selectedSample.id)}
-                className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-[#EF4444] bg-[#EF4444] py-2.5 font-mono text-xs font-bold text-white shadow-lg transition-all hover:bg-[#DC2626] disabled:opacity-50"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>{isScanning ? 'Firing Raman Laser Spectrometer...' : 'Fire Spectrometer Laser'}</span>
-              </button>
+                );
+              })}
             </div>
 
-            {/* Right: Live Sample Telemetry Readout */}
-            <div className="lg:col-span-2 flex flex-col gap-4 rounded-2xl border border-[rgba(148,163,184,0.16)] bg-[#0A0F1D]/95 p-6 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.14)] pb-4">
-                <div>
-                  <h3 className="font-sans text-lg font-bold text-[#F8FAFC]">
-                    {selectedSample.name}
-                  </h3>
-                  <span className="font-mono text-xs text-[#EF4444]">
-                    {selectedSample.location} • {selectedSample.depth}
-                  </span>
-                </div>
+            {/* Bottom Status */}
+            <div className="z-10 flex items-center justify-between border-t border-white/5 pt-2 text-[10.5px] font-mono text-[#94A3B8]">
+              <span>Laser Wavelength: 1064 nm (Infrared LIBS)</span>
+              <span>Subsurface Radar: RIMFAX Active</span>
+              <span>Cache Tubes Sealed: {scannedCount}</span>
+            </div>
+          </div>
+
+          {/* Right Column: Sample Telemetry & SuperCam Spectrum Analysis */}
+          <div className="flex flex-col gap-5">
+            <div className="rounded-2xl border border-white/10 bg-[#05070D]/85 p-5 shadow-xl backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div className="flex items-center gap-2">
-                  <Thermometer className="h-4 w-4 text-[#38BDF8]" />
-                  <span className="font-mono text-xs text-[#94A3B8]">Surface Temp: -65°C</span>
-                </div>
-              </div>
-
-              {/* Composition Readout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-[rgba(148,163,184,0.12)] bg-[#11182E] p-4">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
-                    Mineralogical Composition
-                  </span>
-                  <p className="mt-1 font-sans text-sm font-semibold text-[#F8FAFC]">
-                    {selectedSample.composition}
-                  </p>
+                  <Zap className="h-4 w-4 text-[#EF4444]" />
+                  <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
+                    SuperCam Spectrometry Analysis
+                  </h3>
                 </div>
 
-                <div className="rounded-xl border border-[rgba(148,163,184,0.12)] bg-[#11182E] p-4">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
-                    Biosignature Screening
-                  </span>
-                  <p className="mt-1 font-sans text-sm font-semibold text-[#10B981]">
-                    {selectedSample.organicSignatures}
-                  </p>
-                </div>
-              </div>
-
-              {/* Atmospheric Sensor Telemetry */}
-              <div className="rounded-xl border border-[rgba(148,163,184,0.12)] bg-[#11182E]/50 p-4">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
-                  Atmospheric Pressure & Composition
+                <span
+                  className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase ${
+                    selectedSample.status === 'scanned'
+                      ? 'bg-[#10B981]/20 text-[#10B981]'
+                      : 'bg-[#EF4444]/20 text-[#FCA5A5]'
+                  }`}
+                >
+                  {selectedSample.status}
                 </span>
-                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                  <div className="rounded-lg bg-[#0A0F1D] p-2">
-                    <span className="block font-mono text-[10px] text-[#94A3B8]">Pressure</span>
-                    <span className="font-mono text-xs font-bold text-[#F8FAFC]">6.1 mbar (0.6% Earth)</span>
-                  </div>
-                  <div className="rounded-lg bg-[#0A0F1D] p-2">
-                    <span className="block font-mono text-[10px] text-[#94A3B8]">Carbon Dioxide</span>
-                    <span className="font-mono text-xs font-bold text-[#EF4444]">95.3%</span>
-                  </div>
-                  <div className="rounded-lg bg-[#0A0F1D] p-2">
-                    <span className="block font-mono text-[10px] text-[#94A3B8]">Nitrogen</span>
-                    <span className="font-mono text-xs font-bold text-[#38BDF8]">2.6%</span>
-                  </div>
-                  <div className="rounded-lg bg-[#0A0F1D] p-2">
-                    <span className="block font-mono text-[10px] text-[#94A3B8]">Water Ice Signature</span>
-                    <span className="font-mono text-xs font-bold text-[#10B981]">3.8% Detected</span>
-                  </div>
-                </div>
               </div>
 
-              {/* Honest Milestone Status */}
-              <div className="mt-auto flex items-center gap-3 rounded-xl border border-[#EF4444]/30 bg-[#EF4444]/10 p-4">
-                <AlertCircle className="h-5 w-5 shrink-0 text-[#EF4444]" />
-                <div className="flex flex-col text-xs">
-                  <span className="font-bold text-[#FCA5A5]">
-                    Phase 7 Interactive Expedition Prototype
-                  </span>
-                  <span className="text-[#E2E8F0]">
-                    Full 3D rover physics, terrain driving, and panoramic Mastcam-Z simulation are scheduled for Phase 8 milestone.
-                  </span>
+              <div className="mt-4 flex flex-col gap-3 font-mono text-xs">
+                <div>
+                  <span className="text-[#94A3B8] text-[10px]">TARGET SPECIMEN</span>
+                  <h4 className="font-sans text-base font-bold text-[#F8FAFC]">
+                    {selectedSample.name}
+                  </h4>
+                  <p className="text-[11px] text-[#94A3B8] font-mono">{selectedSample.location}</p>
                 </div>
+
+                <div className="flex justify-between py-1.5 border-b border-white/5">
+                  <span className="text-[#94A3B8]">Core Depth:</span>
+                  <span className="text-[#F8FAFC]">{selectedSample.depth}</span>
+                </div>
+
+                <div className="flex flex-col gap-1 py-1.5 border-b border-white/5">
+                  <span className="text-[#94A3B8]">Mineral Composition:</span>
+                  <span className="text-[#38BDF8] font-bold">{selectedSample.composition}</span>
+                </div>
+
+                <div className="flex flex-col gap-1 py-1.5 border-b border-white/5">
+                  <span className="text-[#94A3B8]">Astrobiology Signature:</span>
+                  <span className="text-[#10B981] font-semibold">{selectedSample.organicSignatures}</span>
+                </div>
+
+                {/* Laser Trigger CTA */}
+                <button
+                  type="button"
+                  disabled={isFiringLaser}
+                  onClick={() => handleFireLaser(selectedSample)}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#EF4444] py-2.5 font-mono text-xs font-bold text-[#FFFFFF] shadow-lg transition-all hover:bg-[#DC2626] disabled:opacity-50"
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{isFiringLaser ? 'PULSING SUPERCAM LASER...' : 'FIRE SUPERCAM LASER'}</span>
+                </button>
               </div>
             </div>
           </div>
-        ) : (
-          /* Mission Briefing Cards */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0A0F1D]/80 p-5 shadow-xl backdrop-blur-md">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EF4444]/15 text-[#EF4444] mb-3">
-                <Compass className="h-5 w-5" />
-              </div>
-              <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
-                1. Navigate Jezero Crater
-              </h3>
-              <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
-                Traverse ancient river deltas that formed billions of years ago when liquid water flowed across the Martian surface.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0A0F1D]/80 p-5 shadow-xl backdrop-blur-md">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#38BDF8]/15 text-[#38BDF8] mb-3">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
-                2. Core Mineral Samples
-              </h3>
-              <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
-                Extract sealed titanium sample tubes for future return to Earth to search for potential microscopic fossil biosignatures.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0A0F1D]/80 p-5 shadow-xl backdrop-blur-md">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#10B981]/15 text-[#10B981] mb-3">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
-                3. Chart Subsurface Water Ice
-              </h3>
-              <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
-                Probe ground-penetrating radar data mapping subsurface ice deposits critical for future human astronaut landing missions.
-              </p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </ModuleShell>
   );
