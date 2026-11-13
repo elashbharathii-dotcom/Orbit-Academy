@@ -230,11 +230,10 @@ export const EarthDrawingScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsEraser(false)}
-                  className={`flex items-center justify-center gap-2 rounded-xl py-2 font-mono text-xs transition-all ${
-                    !isEraser
+                  className={`flex items-center justify-center gap-2 rounded-xl py-2 font-mono text-xs transition-all ${!isEraser
                       ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#38BDF8] shadow-[0_0_10px_rgba(56,189,248,0.2)]'
                       : 'border border-[rgba(148,163,184,0.15)] bg-[#11182E] text-[#94A3B8] hover:text-[#F8FAFC]'
-                  }`}
+                    }`}
                 >
                   <Paintbrush className="h-4 w-4" />
                   <span>Brush</span>
@@ -242,11 +241,10 @@ export const EarthDrawingScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsEraser(true)}
-                  className={`flex items-center justify-center gap-2 rounded-xl py-2 font-mono text-xs transition-all ${
-                    isEraser
+                  className={`flex items-center justify-center gap-2 rounded-xl py-2 font-mono text-xs transition-all ${isEraser
                       ? 'border border-[#F59E0B] bg-[#F59E0B]/15 font-bold text-[#F59E0B] shadow-[0_0_10px_rgba(245,158,11,0.2)]'
                       : 'border border-[rgba(148,163,184,0.15)] bg-[#11182E] text-[#94A3B8] hover:text-[#F8FAFC]'
-                  }`}
+                    }`}
                 >
                   <Eraser className="h-4 w-4" />
                   <span>Eraser</span>
@@ -270,11 +268,10 @@ export const EarthDrawingScreen: React.FC = () => {
                       setActiveColor(swatch.color);
                       setIsEraser(false);
                     }}
-                    className={`relative h-10 w-full rounded-xl border transition-all ${
-                      activeColor === swatch.color && !isEraser
+                    className={`relative h-10 w-full rounded-xl border transition-all ${activeColor === swatch.color && !isEraser
                         ? 'border-[#F8FAFC] scale-105 shadow-[0_0_10px_rgba(248,250,252,0.4)]'
                         : 'border-black/40 hover:scale-102'
-                    }`}
+                      }`}
                     style={{ backgroundColor: swatch.color }}
                   >
                     {activeColor === swatch.color && !isEraser && (
@@ -303,11 +300,10 @@ export const EarthDrawingScreen: React.FC = () => {
                     key={b.label}
                     type="button"
                     onClick={() => setBrushSize(b.size)}
-                    className={`rounded-xl py-2 font-mono text-xs transition-all ${
-                      brushSize === b.size
+                    className={`rounded-xl py-2 font-mono text-xs transition-all ${brushSize === b.size
                         ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#38BDF8]'
                         : 'border border-[rgba(148,163,184,0.15)] bg-[#11182E] text-[#94A3B8] hover:text-[#F8FAFC]'
-                    }`}
+                      }`}
                   >
                     {b.label} ({b.size}px)
                   </button>

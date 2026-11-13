@@ -107,8 +107,8 @@ export const Sun: React.FC<SunProps> = ({ radius = 4.6 }) => {
 
         void main() {
           float fresnel = 1.0 - max(0.0, dot(vNormal, vViewDir));
-          // Exponential decay hugging the solar horizon
-          float glow = pow(fresnel, 3.2) * 0.85;
+          // Exponential decay hugging the solar horizon tightly
+          float glow = pow(fresnel, 3.8) * 0.75;
           vec3 coronaColor = vec3(0.96, 0.62, 0.12);
           gl_FragColor = vec4(coronaColor, glow);
         }
@@ -184,38 +184,34 @@ export const Sun: React.FC<SunProps> = ({ radius = 4.6 }) => {
       </mesh>
 
       {/* 4. Delicate Coronal Atmosphere Rim (Restrained Fresnel) */}
-      <mesh ref={coronaRef} scale={[1.08, 1.08, 1.08]}>
+      <mesh ref={coronaRef} scale={[1.035, 1.035, 1.035]}>
         <sphereGeometry args={[radius, 36, 36]} />
         <primitive object={coronaMaterial} attach="material" />
       </mesh>
 
-      {/* 5. Minimal Sol Label */}
-      <Html
-        position={[0, radius * 1.38, 0]}
-        center
-        distanceFactor={38}
-        zIndexRange={[10, 30]}
-        className="pointer-events-auto select-none"
-      >
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Sol: Mission Control & Home"
-          onClick={handleClick}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-          className={`flex items-center gap-1.5 rounded-md border px-2 py-0.5 backdrop-blur-md transition-all cursor-pointer ${
-            isHovered || isSelected
-              ? 'border-[#F59E0B] bg-[#0A0F1D]/90 text-[#F59E0B]'
-              : 'border-transparent bg-[#0A0F1D]/40 text-[#94A3B8]'
-          }`}
+      {/* 5. Minimal Sol Label (Revealed only on hover or focus) */}
+      {(isHovered || isSelected) && (
+        <Html
+          position={[0, radius * 1.35, 0]}
+          center
+          distanceFactor={38}
+          zIndexRange={[10, 30]}
+          className="pointer-events-auto select-none"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-wider">
-            SOL // MISSION CONTROL
-          </span>
-        </div>
-      </Html>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Sol: Mission Control & Home"
+            onClick={handleClick}
+            className="flex items-center gap-1.5 rounded-full border border-[#F59E0B]/50 bg-[#0A0F1D]/90 px-2.5 py-0.5 backdrop-blur-md transition-all cursor-pointer shadow-lg animate-fade-in"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] animate-pulse" />
+            <span className="font-mono text-[9px] font-semibold tracking-wider text-[#F8FAFC]">
+              SOL // MISSION CONTROL
+            </span>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

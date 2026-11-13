@@ -38,3 +38,4 @@ export const ALL_ROUTES: AppRoute[] = [
   ROUTES.URANUS_QUIZ,
   ROUTES.NEPTUNE_DISCOVERY,
 ];
+
