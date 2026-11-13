@@ -7,6 +7,7 @@ import { Starfield } from './Starfield';
 import { MilkyWayBackground } from './MilkyWayBackground';
 import { CameraController } from './CameraController';
 import { CELESTIAL_BODIES } from '../../data/celestialBodies';
+import { useSolarSystem } from '../../context/SolarSystemContext';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 interface SolarSystemSceneProps {
@@ -28,6 +29,7 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
   speedScale = 0.45,
 }) => {
   const controlsRef = useRef<OrbitControlsImpl>(null);
+  const { selectedPlanetId } = useSolarSystem();
 
   // Separate Sun from the 8 orbiting planets
   const sunData = useMemo(() => CELESTIAL_BODIES.find((b) => b.id === 'sun'), []);
@@ -77,7 +79,7 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
         makeDefault
         enableDamping={true}
         dampingFactor={0.045}
-        autoRotate={!useSolarSystem().selectedPlanetId}
+        autoRotate={!selectedPlanetId}
         autoRotateSpeed={0.12}
         minDistance={8}
         maxDistance={140}
