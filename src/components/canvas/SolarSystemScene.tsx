@@ -35,7 +35,7 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
   return (
     <>
       {/* 1. Deep Space Cosmic Ambient Light (restrained to keep day/night contrast sharp) */}
-      <ambientLight color="#0F172A" intensity={0.25} />
+      <ambientLight color="#0A1128" intensity={0.18} />
 
       {/* 2. Deep Space Starfield with Stellar Parallax */}
       <Starfield count={2600} />
@@ -74,3 +74,4 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
     </>
   );
 };
+

@@ -52,11 +52,11 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
           <span className="hidden h-4 w-px bg-[rgba(148,163,184,0.2)] sm:block" />
 
           <span className="hidden font-mono text-[11px] uppercase tracking-wider text-[#94A3B8] sm:inline-block">
-            3D Engine Online
+            Planetary Realism Engine
           </span>
 
           <span className="rounded border border-[#38BDF8]/30 bg-[#38BDF8]/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-[#38BDF8]">
-            PHASE 2
+            PHASE 3
           </span>
         </div>
 
@@ -122,10 +122,11 @@ export const MissionHUD: React.FC<MissionHUDProps> = ({
           <span className="hidden h-3 w-px bg-[rgba(148,163,184,0.2)] md:block" />
 
           <span className="hidden font-mono text-[10px] uppercase text-[#475569] md:inline-block">
-            ORBIT SCALE: LOGARITHMIC // NASA METRICS PRESERVED
+            PROCEDURAL NASA TEXTURES // SHADOW TERMINATORS ACTIVE
           </span>
         </div>
       </footer>
     </div>
   );
 };
+

@@ -82,3 +82,4 @@ export const Starfield: React.FC<StarfieldProps> = ({ count = 2400 }) => {
     </points>
   );
 };
+

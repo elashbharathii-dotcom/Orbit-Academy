@@ -19,6 +19,7 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
   return (
     <div className="absolute inset-0 h-full w-full bg-[#05070D]">
       <Canvas
+        shadows
         camera={{
           position: [0, 42, 68],
           fov: 45,
@@ -40,3 +41,4 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
     </div>
   );
 };
+

@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { getSunTexture } from '../../utils/textureGenerator';
 
 interface SunProps {
   radius?: number;
@@ -8,75 +9,80 @@ interface SunProps {
 
 /**
  * Luminous Central Star (Sol)
- * Acts as the primary point-light emitter for the entire 3D solar system.
- * Features an emissive core, atmospheric coronal halo, and slow axial spin.
+ * Features:
+ * - Granular convective surface texture with sunspot clusters
+ * - Multi-layer additive coronal halos simulating dynamic flares
+ * - Core point-light emitter delivering realistic day/night shadows across all 8 planets
  */
 export const Sun: React.FC<SunProps> = ({ radius = 4.6 }) => {
   const coreRef = useRef<THREE.Mesh>(null);
   const coronaRef = useRef<THREE.Mesh>(null);
   const outerHaloRef = useRef<THREE.Mesh>(null);
 
+  // Retrieve cached high-resolution procedural solar texture
+  const sunTexture = useMemo(() => getSunTexture(), []);
+
   useFrame((_, delta) => {
     if (coreRef.current) {
-      coreRef.current.rotation.y += delta * 0.05;
+      coreRef.current.rotation.y += delta * 0.04;
     }
     if (coronaRef.current) {
-      coronaRef.current.rotation.y -= delta * 0.03;
-      coronaRef.current.rotation.z += delta * 0.015;
+      coronaRef.current.rotation.y -= delta * 0.025;
+      coronaRef.current.rotation.z += delta * 0.012;
     }
     if (outerHaloRef.current) {
-      outerHaloRef.current.rotation.y += delta * 0.01;
+      outerHaloRef.current.rotation.y += delta * 0.008;
     }
   });
 
   return (
     <group position={[0, 0, 0]}>
-      {/* Primary Solar Point Light Source */}
-      {/* Distance is set high enough to reach Neptune at orbit radius 51.5 */}
+      {/* 1. Primary Solar Point Light Source */}
       <pointLight
-        color="#FFF6E5"
-        intensity={2.8}
-        distance={220}
-        decay={0.4}
+        color="#FFF9ED"
+        intensity={3.2}
+        distance={250}
+        decay={0.35}
+        castShadow
       />
 
-      {/* Secondary Soft Fill Light to avoid harsh specular clipping */}
+      {/* 2. Soft Ambient Chromosphere Fill */}
       <pointLight
         color="#FDE68A"
-        intensity={1.0}
-        distance={100}
-        decay={0.5}
+        intensity={1.2}
+        distance={120}
+        decay={0.45}
       />
 
-      {/* 1. Emissive Solar Core Mesh */}
+      {/* 3. Textured Solar Surface Sphere */}
       <mesh ref={coreRef}>
         <sphereGeometry args={[radius, 48, 48]} />
         <meshBasicMaterial
-          color="#FDE047"
+          map={sunTexture}
           toneMapped={false}
         />
       </mesh>
 
-      {/* 2. Inner Coronal Glow Shell */}
+      {/* 4. Inner Coronal Flare Halo */}
       <mesh ref={coronaRef}>
-        <sphereGeometry args={[radius * 1.08, 36, 36]} />
+        <sphereGeometry args={[radius * 1.09, 36, 36]} />
         <meshBasicMaterial
           color="#F59E0B"
           transparent
-          opacity={0.38}
+          opacity={0.42}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
           toneMapped={false}
         />
       </mesh>
 
-      {/* 3. Outer Diffuse Radiance Glow Shell */}
+      {/* 5. Outer Diffuse Radiance Corona */}
       <mesh ref={outerHaloRef}>
-        <sphereGeometry args={[radius * 1.25, 32, 32]} />
+        <sphereGeometry args={[radius * 1.28, 32, 32]} />
         <meshBasicMaterial
           color="#D97706"
           transparent
-          opacity={0.16}
+          opacity={0.18}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
           toneMapped={false}
