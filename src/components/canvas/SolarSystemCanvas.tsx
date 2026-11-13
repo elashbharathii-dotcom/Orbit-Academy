@@ -25,8 +25,8 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
       <Canvas
         shadows
         camera={{
-          position: [0, 42, 68],
-          fov: 45,
+          position: [0, 48, 92],
+          fov: 42,
           near: 0.1,
           far: 1400,
         }}
@@ -35,7 +35,7 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
           antialias: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.06,
+          toneMappingExposure: 1.12,
         }}
         onCreated={({ gl, scene }) => {
           gl.setClearColor('#05070D');
