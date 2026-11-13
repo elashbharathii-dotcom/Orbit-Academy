@@ -95,7 +95,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
     }
   };
 
-  const pointerDir = anchor?.pointerDirection || 'bottom-left';
+  const pointerDir = anchor?.pointerDirection;
 
   return (
     <div
@@ -106,7 +106,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         top: anchor ? `${anchor.top}px` : undefined,
       }}
       className={`pointer-events-auto fixed z-30 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-[rgba(245,158,11,0.35)] bg-[#0A0F1D]/95 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-fade-in sm:w-[390px] md:w-[420px] ${
-        !anchor ? 'bottom-20 left-4' : ''
+        !anchor ? 'bottom-20 left-4 sm:left-6' : ''
       }`}
     >
       {/* 1. Header with Status Telemetry & Controls */}
@@ -281,26 +281,26 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         </form>
       </div>
 
-      {/* Dynamic Speech Pointer pointing towards LAURA */}
-      {pointerDir === 'bottom-left' && (
+      {/* Dynamic Speech Pointer pointing towards LAURA (when anchored) */}
+      {anchor && pointerDir === 'bottom-left' && (
         <div
           className="pointer-events-none absolute -bottom-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
           aria-hidden="true"
         />
       )}
-      {pointerDir === 'bottom-right' && (
+      {anchor && pointerDir === 'bottom-right' && (
         <div
           className="pointer-events-none absolute -bottom-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
           aria-hidden="true"
         />
       )}
-      {pointerDir === 'top-left' && (
+      {anchor && pointerDir === 'top-left' && (
         <div
           className="pointer-events-none absolute -top-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
           aria-hidden="true"
         />
       )}
-      {pointerDir === 'top-right' && (
+      {anchor && pointerDir === 'top-right' && (
         <div
           className="pointer-events-none absolute -top-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
           aria-hidden="true"

@@ -40,3 +40,4 @@ export const LauraFlightTrail: React.FC<LauraFlightTrailProps> = ({ particles })
     </div>
   );
 };
+
