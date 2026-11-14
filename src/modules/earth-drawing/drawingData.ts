@@ -15,42 +15,45 @@ export interface DrawingActivity {
   id: string;
   title: string;
   category:
-    | 'solar-system'
-    | 'space-adventures'
-    | 'friendly-aliens'
-    | 'educational-maps'
-    | 'earth-science'
-    | 'space-cartoons'
-    | 'astronomy'
-    | 'space-missions';
+    | 'planets'
+    | 'astronauts'
+    | 'rockets'
+    | 'spacecraft'
+    | 'galaxies'
+    | 'alien-characters'
+    | 'cosmic-landscapes'
+    | 'color-by-number'
+    | 'space-discovery';
   categoryLabel: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Explorer';
   description: string;
   educationalFact: string;
   badgeReward: string;
+  thumbnailUrl?: string;
+  lineArtOverlayUrl?: string;
   viewBox: string;
   palette: ColorDefinition[];
   regions: SvgRegion[];
 }
 
 export const DRAWING_CATEGORIES = [
-  { id: 'solar-system', label: 'Solar System', icon: '🪐' },
-  { id: 'space-adventures', label: 'Space Adventures', icon: '🚀' },
-  { id: 'friendly-aliens', label: 'Friendly Aliens', icon: '👾' },
-  { id: 'educational-maps', label: 'Educational Maps', icon: '🗺️' },
-  { id: 'earth-science', label: 'Earth Science', icon: '🌍' },
-  { id: 'space-cartoons', label: 'Space Cartoons', icon: '🎨' },
-  { id: 'astronomy', label: 'Astronomy', icon: '🔭' },
-  { id: 'space-missions', label: 'Space Missions', icon: '🛰️' },
+  { id: 'planets', label: 'Planets', icon: '🪐' },
+  { id: 'astronauts', label: 'Astronauts', icon: '👨‍🚀' },
+  { id: 'rockets', label: 'Rockets', icon: '🚀' },
+  { id: 'spacecraft', label: 'Spacecraft', icon: '🛰️' },
+  { id: 'galaxies', label: 'Galaxies', icon: '🌌' },
+  { id: 'alien-characters', label: 'Alien Characters', icon: '👾' },
+  { id: 'cosmic-landscapes', label: 'Cosmic Landscapes', icon: '✨' },
+  { id: 'space-discovery', label: 'Space Discovery', icon: '🔭' },
 ] as const;
 
 export const DRAWING_ACTIVITIES: DrawingActivity[] = [
-  // 1. Solar System: Earth, Moon & Sun Trio
+  // 1. Planets: Earth, Moon & Sun Trio
   {
     id: 'earth-sun-moon',
     title: 'Earth, Sol & Lunar Dance',
-    category: 'solar-system',
-    categoryLabel: 'Solar System',
+    category: 'planets',
+    categoryLabel: 'Planets',
     difficulty: 'Beginner',
     description: 'Color the cosmic dance between our radiant Sun, living Blue Planet, and orbiting Moon.',
     educationalFact: 'The Sun accounts for 99.86% of all mass in the Solar System, holding Earth and Moon in orbit.',
@@ -139,12 +142,12 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
     ],
   },
 
-  // 2. Space Adventures: Artemis Deep-Space Rocket
+  // 2. Rockets: Artemis Deep-Space Rocket
   {
     id: 'artemis-rocket',
     title: 'Artemis Lunar Bound Rocket',
-    category: 'space-adventures',
-    categoryLabel: 'Space Adventures',
+    category: 'rockets',
+    categoryLabel: 'Rockets',
     difficulty: 'Intermediate',
     description: 'Fuel and launch the next-generation human exploration rocket toward cislunar space.',
     educationalFact: 'The SLS rocket generates 8.8 million pounds of maximum thrust, 15% more than Apollo Saturn V!',
@@ -235,8 +238,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'cosmo-alien',
     title: 'Cosmo the Stardust Sprite',
-    category: 'friendly-aliens',
-    categoryLabel: 'Friendly Aliens',
+    category: 'alien-characters',
+    categoryLabel: 'Alien Characters',
     difficulty: 'Beginner',
     description: 'Bring Cosmo to life as they explore icy Europa with their glowing biological starlight antennas.',
     educationalFact: 'Astrobiologists search icy moons like Europa and Enceladus for extraterrestrial microbial life!',
@@ -321,8 +324,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'atmospheric-layers',
     title: "Earth's Atmospheric Shield",
-    category: 'educational-maps',
-    categoryLabel: 'Educational Maps',
+    category: 'cosmic-landscapes',
+    categoryLabel: 'Cosmic Landscapes',
     difficulty: 'Explorer',
     description: 'Chart the concentric protective layers of Earth from the troposphere to the outer exosphere.',
     educationalFact: 'The ozone layer in the stratosphere absorbs up to 98% of the Sun’s harmful ultraviolet radiation.',
@@ -394,8 +397,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'aurora-borealis',
     title: 'Geomagnetic Aurora Australis',
-    category: 'earth-science',
-    categoryLabel: 'Earth Science',
+    category: 'cosmic-landscapes',
+    categoryLabel: 'Cosmic Landscapes',
     difficulty: 'Intermediate',
     description: 'Color the dancing polar aurora lights powered by solar protons colliding with atmospheric gases.',
     educationalFact: 'Green auroras are produced by excited atomic oxygen at 100-300 km altitude, while nitrogen glows purple!',
@@ -451,8 +454,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'astro-bunny',
     title: 'Astro-Bunny Lunar Harvest',
-    category: 'space-cartoons',
-    categoryLabel: 'Space Cartoons',
+    category: 'astronauts',
+    categoryLabel: 'Astronauts',
     difficulty: 'Beginner',
     description: 'Join Astro-Bunny on their low-gravity garden mission on the rim of Shackleton Crater.',
     educationalFact: 'Astronauts on the Moon weighed only 1/6th of their Earth weight, allowing huge bunny hops!',
@@ -536,8 +539,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'deep-space-nebula',
     title: 'James Webb Cosmic Pillars',
-    category: 'astronomy',
-    categoryLabel: 'Astronomy',
+    category: 'galaxies',
+    categoryLabel: 'Galaxies',
     difficulty: 'Explorer',
     description: 'Illuminate towering interstellar gas clouds where newborn proto-stars ignite in nuclear fusion.',
     educationalFact: 'The James Webb Space Telescope observes the universe in infrared light, peering through dense dust clouds.',
@@ -606,8 +609,8 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
   {
     id: 'perseverance-mission',
     title: 'Perseverance Rover on Mars',
-    category: 'space-missions',
-    categoryLabel: 'Space Missions',
+    category: 'spacecraft',
+    categoryLabel: 'Spacecraft',
     difficulty: 'Intermediate',
     description: 'Paint the Perseverance robotic geologist as it drills for biosignatures on the ancient lakebed of Mars.',
     educationalFact: 'Perseverance carries the Ingenuity helicopter, which completed 72 historic powered flights on Mars!',
@@ -684,6 +687,324 @@ export const DRAWING_ACTIVITIES: DrawingActivity[] = [
         path: 'M 230,330 C 230,315 260,315 260,330 C 260,360 230,360 230,330 Z',
         targetColorNumber: 5,
         labelPos: { x: 245, y: 335 },
+      },
+    ],
+  },
+
+  // 9. Space Discovery: Young Astronomers
+  {
+    id: 'young-astronomers',
+    title: 'Young Astronomers: Space Discovery',
+    category: 'space-discovery',
+    categoryLabel: 'Space Discovery',
+    difficulty: 'Beginner',
+    description:
+      'Join two young astronomers on an exciting night of space discovery. Color planets, stars, rockets, telescopes, and their amazing astronomy adventure.',
+    educationalFact:
+      'Astronomy inspires scientific wonder: through telescopes and space missions, young explorers unlock the ancient secrets of planets, lunar craters, and distant stars.',
+    badgeReward: 'Cosmic Explorer',
+    thumbnailUrl: '/artwork/young-astronomers.png',
+    lineArtOverlayUrl: '/artwork/young-astronomers.png',
+    viewBox: '0 0 474 732',
+    palette: [
+      { number: 1, name: 'Deep Space Void', hex: '#0B1226' },
+      { number: 2, name: 'Cosmic Orange', hex: '#EA580C' },
+      { number: 3, name: 'Solar Gold', hex: '#F59E0B' },
+      { number: 4, name: 'Starlight Bright', hex: '#FEF08A' },
+      { number: 5, name: 'Comet Cyan', hex: '#38BDF8' },
+      { number: 6, name: 'Astronaut Suit White', hex: '#F8FAFC' },
+      { number: 7, name: 'Lunar Regolith Grey', hex: '#94A3B8' },
+      { number: 8, name: 'Crater Shadow Slate', hex: '#475569' },
+      { number: 9, name: 'Astronaut Hair Honey', hex: '#D97706' },
+      { number: 10, name: 'Warm Skin Glow', hex: '#FDBA74' },
+    ],
+    regions: [
+      // Deep Space Void Sky
+      {
+        id: 'ya-sky',
+        path: 'M 18,18 L 456,18 C 456,18 456,200 456,410 C 370,395 320,405 280,410 C 230,415 150,415 90,415 C 50,420 30,420 18,425 Z',
+        targetColorNumber: 1,
+        labelPos: { x: 370, y: 110 },
+      },
+      // Gas Giant Planet Base
+      {
+        id: 'ya-planet-body',
+        path: 'M 88,67 A 49,49 0 1,0 88,165 A 49,49 0 1,0 88,67 Z',
+        targetColorNumber: 2,
+        labelPos: { x: 88, y: 85 },
+      },
+      // Planet Cloud Bands
+      {
+        id: 'ya-planet-band-1',
+        path: 'M 40,105 Q 65,95 90,110 T 136,105 L 137,120 Q 110,130 85,118 T 39,120 Z',
+        targetColorNumber: 3,
+        labelPos: { x: 88, y: 118 },
+      },
+      {
+        id: 'ya-planet-band-2',
+        path: 'M 42,130 Q 65,122 90,135 T 135,130 L 132,146 Q 110,154 85,142 T 44,146 Z',
+        targetColorNumber: 3,
+        labelPos: { x: 88, y: 138 },
+      },
+      // Meteor Head
+      {
+        id: 'ya-meteor-core',
+        path: 'M 315,136 A 14,14 0 1,0 315,164 A 14,14 0 1,0 315,136 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 315, y: 150 },
+      },
+      // Meteor Tail & Speed Streak
+      {
+        id: 'ya-meteor-tail',
+        path: 'M 326,140 L 435,52 L 420,45 L 310,132 Z',
+        targetColorNumber: 5,
+        labelPos: { x: 375, y: 90 },
+      },
+      // Stars
+      {
+        id: 'ya-star-1',
+        path: 'M 182,56 L 186,66 L 196,67 L 188,74 L 191,84 L 182,78 L 173,84 L 176,74 L 168,67 L 178,66 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 182, y: 70 },
+      },
+      {
+        id: 'ya-star-2',
+        path: 'M 222,180 L 227,192 L 239,193 L 230,202 L 233,214 L 222,207 L 211,214 L 214,202 L 205,193 L 217,192 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 222, y: 197 },
+      },
+      {
+        id: 'ya-star-3',
+        path: 'M 300,75 L 303,82 L 310,83 L 305,88 L 307,95 L 300,91 L 293,95 L 295,88 L 290,83 L 297,82 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 300, y: 85 },
+      },
+      {
+        id: 'ya-star-4',
+        path: 'M 298,206 L 302,214 L 310,215 L 304,220 L 306,228 L 298,224 L 290,228 L 292,220 L 286,215 L 294,214 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 298, y: 217 },
+      },
+      {
+        id: 'ya-star-5',
+        path: 'M 388,218 L 392,226 L 400,227 L 394,232 L 396,240 L 388,236 L 380,240 L 382,232 L 376,227 L 384,226 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 388, y: 229 },
+      },
+      {
+        id: 'ya-star-6',
+        path: 'M 416,172 L 419,178 L 426,179 L 421,183 L 423,190 L 416,186 L 409,190 L 411,183 L 406,179 L 413,178 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 416, y: 181 },
+      },
+      {
+        id: 'ya-star-7',
+        path: 'M 415,522 L 419,530 L 428,531 L 421,536 L 424,545 L 415,540 L 406,545 L 409,536 L 402,531 L 411,530 Z',
+        targetColorNumber: 4,
+        labelPos: { x: 415, y: 533 },
+      },
+      // Rocket Nosecone
+      {
+        id: 'ya-rocket-nose',
+        path: 'M 78,132 C 78,132 50,185 42,205 L 114,205 C 106,185 78,132 78,132 Z',
+        targetColorNumber: 2,
+        labelPos: { x: 78, y: 175 },
+      },
+      // Rocket Body
+      {
+        id: 'ya-rocket-body',
+        path: 'M 42,205 L 42,370 C 42,382 114,382 114,370 L 114,205 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 78, y: 335 },
+      },
+      // Rocket Porthole Outer Ring
+      {
+        id: 'ya-rocket-porthole-ring',
+        path: 'M 78,244 A 24,24 0 1,0 78,292 A 24,24 0 1,0 78,244 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 78, y: 252 },
+      },
+      // Rocket Porthole Glass
+      {
+        id: 'ya-rocket-porthole-glass',
+        path: 'M 78,252 A 16,16 0 1,0 78,284 A 16,16 0 1,0 78,252 Z',
+        targetColorNumber: 5,
+        labelPos: { x: 78, y: 268 },
+      },
+      // Rocket Left Fin
+      {
+        id: 'ya-rocket-fin-left',
+        path: 'M 42,280 C 30,300 18,340 18,390 C 26,385 36,380 42,375 Z',
+        targetColorNumber: 2,
+        labelPos: { x: 28, y: 345 },
+      },
+      // Rocket Right Fin
+      {
+        id: 'ya-rocket-fin-right',
+        path: 'M 114,280 C 126,300 138,340 138,385 C 130,380 120,378 114,375 Z',
+        targetColorNumber: 2,
+        labelPos: { x: 126, y: 345 },
+      },
+      // Astronaut Outer Helmet
+      {
+        id: 'ya-astro-helmet',
+        path: 'M 210,218 C 160,218 122,258 122,308 C 122,358 160,398 210,398 C 260,398 298,358 298,308 C 298,258 260,218 210,218 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 210, y: 232 },
+      },
+      // Astronaut Visor Bubble Glass
+      {
+        id: 'ya-astro-visor',
+        path: 'M 210,230 C 168,230 135,264 135,308 C 135,352 168,386 210,386 C 252,386 285,352 285,308 C 285,264 252,230 210,230 Z',
+        targetColorNumber: 5,
+        labelPos: { x: 156, y: 275 },
+      },
+      // Astronaut Hair
+      {
+        id: 'ya-astro-hair',
+        path: 'M 160,285 C 160,250 200,240 230,245 C 255,250 262,275 260,295 C 245,285 235,285 220,288 C 205,290 190,280 175,292 C 168,290 162,288 160,285 Z',
+        targetColorNumber: 9,
+        labelPos: { x: 210, y: 268 },
+      },
+      // Astronaut Face
+      {
+        id: 'ya-astro-face',
+        path: 'M 165,295 C 175,285 235,285 255,295 C 258,325 245,360 210,360 C 175,360 162,325 165,295 Z',
+        targetColorNumber: 10,
+        labelPos: { x: 210, y: 320 },
+      },
+      // Astronaut Torso Suit
+      {
+        id: 'ya-astro-torso',
+        path: 'M 152,385 C 152,385 140,430 155,465 C 190,470 235,470 265,465 C 275,430 265,385 265,385 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 180, y: 415 },
+      },
+      // Astronaut Chest Control Panel
+      {
+        id: 'ya-astro-chestpack',
+        path: 'M 205,398 L 250,398 L 250,432 L 205,432 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 227, y: 415 },
+      },
+      // Astronaut Right Arm & Hand
+      {
+        id: 'ya-astro-arm-right',
+        path: 'M 155,395 C 145,415 155,450 178,455 C 190,455 198,435 195,415 C 190,405 178,400 168,400 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 172, y: 435 },
+      },
+      // Astronaut Left Arm & Grip
+      {
+        id: 'ya-astro-arm-left',
+        path: 'M 260,395 C 280,400 310,410 320,430 C 322,442 308,452 295,448 C 285,442 275,430 262,420 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 290, y: 425 },
+      },
+      // Astronaut Waist Belt
+      {
+        id: 'ya-astro-belt',
+        path: 'M 156,462 L 264,462 L 260,480 L 160,480 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 210, y: 471 },
+      },
+      // Astronaut Kneeling Legs
+      {
+        id: 'ya-astro-legs',
+        path: 'M 160,480 C 135,490 120,520 135,545 C 160,545 185,530 200,505 C 220,530 250,545 285,535 C 285,510 265,485 240,480 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 210, y: 510 },
+      },
+      // Astronaut Boots
+      {
+        id: 'ya-astro-boots',
+        path: 'M 115,512 C 110,530 125,550 152,550 C 160,540 155,520 142,515 Z M 240,530 C 240,555 270,565 305,560 C 310,545 295,530 270,528 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 275, y: 546 },
+      },
+      // Flagpole
+      {
+        id: 'ya-flag-pole',
+        path: 'M 314,195 L 322,195 L 310,555 L 302,555 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 312, y: 210 },
+      },
+      // Flag Banner Cloth
+      {
+        id: 'ya-flag-cloth',
+        path: 'M 322,225 C 360,230 400,215 440,232 L 436,335 C 395,315 360,335 320,320 Z',
+        targetColorNumber: 6,
+        labelPos: { x: 395, y: 245 },
+      },
+      // Flag Saturn Planet Emblem
+      {
+        id: 'ya-flag-saturn',
+        path: 'M 380,258 A 22,22 0 1,0 380,302 A 22,22 0 1,0 380,258 Z',
+        targetColorNumber: 3,
+        labelPos: { x: 380, y: 272 },
+      },
+      // Flag Saturn Ring Emblem
+      {
+        id: 'ya-flag-ring',
+        path: 'M 342,282 C 342,272 418,272 418,282 C 418,292 342,292 342,282 Z',
+        targetColorNumber: 5,
+        labelPos: { x: 355, y: 282 },
+      },
+      // Lunar Horizon Surface Terrain
+      {
+        id: 'ya-moon-surface',
+        path: 'M 18,425 C 90,415 150,415 200,420 C 260,425 340,395 456,410 L 456,717 L 18,717 Z',
+        targetColorNumber: 7,
+        labelPos: { x: 210, y: 585 },
+      },
+      // Lunar Craters
+      {
+        id: 'ya-crater-1',
+        path: 'M 40,460 C 40,448 95,448 95,460 C 95,472 40,472 40,460 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 68, y: 460 },
+      },
+      {
+        id: 'ya-crater-2',
+        path: 'M 375,490 C 375,480 430,480 430,490 C 430,500 375,500 375,490 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 402, y: 490 },
+      },
+      {
+        id: 'ya-crater-3',
+        path: 'M 40,580 C 40,565 100,565 100,580 C 100,595 40,595 40,580 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 70, y: 580 },
+      },
+      {
+        id: 'ya-crater-4',
+        path: 'M 135,620 C 135,605 200,605 200,620 C 200,635 135,635 135,620 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 168, y: 620 },
+      },
+      {
+        id: 'ya-crater-5',
+        path: 'M 265,645 C 265,632 325,632 325,645 C 325,658 265,658 265,645 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 295, y: 645 },
+      },
+      {
+        id: 'ya-crater-6',
+        path: 'M 60,700 C 60,685 125,685 125,700 C 125,715 60,715 60,700 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 92, y: 700 },
+      },
+      {
+        id: 'ya-crater-7',
+        path: 'M 190,705 C 190,690 255,690 255,705 C 255,720 190,720 190,705 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 222, y: 705 },
+      },
+      {
+        id: 'ya-crater-8',
+        path: 'M 380,712 C 380,698 440,698 440,712 C 440,726 380,726 380,712 Z',
+        targetColorNumber: 8,
+        labelPos: { x: 410, y: 712 },
       },
     ],
   },

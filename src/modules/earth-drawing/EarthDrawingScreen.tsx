@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
+import { GlassCard } from '../../components/ui/GlassCard';
+import { TelemetryBadge } from '../../components/ui/TelemetryBadge';
+import { SpaceButton } from '../../components/ui/SpaceButton';
 import {
   DRAWING_CATEGORIES,
   DRAWING_ACTIVITIES,
@@ -21,6 +24,7 @@ import {
   Sparkles,
   ArrowLeft,
   Layers,
+  Check,
 } from 'lucide-react';
 
 type ToolMode = 'bucket' | 'brush' | 'eraser';
@@ -82,6 +86,7 @@ export const EarthDrawingScreen: React.FC = () => {
     setPanOffset({ x: 0, y: 0 });
     setIsCompleted(false);
     setShowRewardModal(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Check completion
@@ -191,7 +196,18 @@ export const EarthDrawingScreen: React.FC = () => {
     };
   };
 
-  const startBrushDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || e.touches.length === 0) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+      x: (touch.clientX - rect.left) / zoomLevel,
+      y: (touch.clientY - rect.top) / zoomLevel,
+    };
+  };
+
+  const startBrushDraw = (pos: { x: number; y: number }) => {
     if (activeTool === 'bucket') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -203,7 +219,6 @@ export const EarthDrawingScreen: React.FC = () => {
     setUndoStack((prev) => [...prev, { type: 'brush', imageData: snapshot }]);
     setRedoStack([]);
 
-    const pos = getCanvasPos(e);
     setIsDrawing(true);
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
@@ -214,14 +229,13 @@ export const EarthDrawingScreen: React.FC = () => {
     ctx.globalCompositeOperation = activeTool === 'eraser' ? 'destination-out' : 'source-over';
   };
 
-  const drawBrush = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const drawBrush = (pos: { x: number; y: number }) => {
     if (!isDrawing || activeTool === 'bucket') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const pos = getCanvasPos(e);
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
   };
@@ -233,7 +247,6 @@ export const EarthDrawingScreen: React.FC = () => {
   // Pan Handlers
   const handleMouseDownPan = (e: React.MouseEvent) => {
     if (e.button === 1 || e.altKey) {
-      // Middle click or Alt+Drag for pan
       setIsPanning(true);
       panStartRef.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
     }
@@ -258,51 +271,104 @@ export const EarthDrawingScreen: React.FC = () => {
     const svgElement = document.getElementById('coloring-svg-canvas');
     if (!svgElement) return;
 
-    const svgString = new XMLSerializer().serializeToString(svgElement);
+    // Clone SVG to ensure clean serialization
+    const svgClone = svgElement.cloneNode(true) as SVGSVGElement;
+
+    // If there is an image overlay, remove it from the cloned SVG so browser doesn't block blob subresource
+    const nestedImages = svgClone.querySelectorAll('image');
+    nestedImages.forEach((img) => img.remove());
+
+    const svgString = new XMLSerializer().serializeToString(svgClone);
     const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
     const URL = window.URL || window.webkitURL || window;
     const blobURL = URL.createObjectURL(svgBlob);
 
-    const img = new Image();
-    img.onload = () => {
+    const finishExport = (renderedSvgImg: HTMLImageElement, overlayImg?: HTMLImageElement) => {
       const exportCanvas = document.createElement('canvas');
       exportCanvas.width = 1200;
       exportCanvas.height = 900;
       const ctx = exportCanvas.getContext('2d');
       if (!ctx) return;
 
-      // Draw dark cosmic space background
+      // Dark cosmic space background
       ctx.fillStyle = '#05070D';
       ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
 
-      // Draw rendered SVG
-      ctx.drawImage(img, 0, 0, 1200, 900);
+      // Parse viewBox to preserve aspect ratio
+      const vbParts = selectedActivity.viewBox.split(' ').map(Number);
+      const vbWidth = vbParts[2] || 600;
+      const vbHeight = vbParts[3] || 450;
+      const vbAspect = vbWidth / vbHeight;
 
-      // Draw overlay canvas if present
-      if (canvasRef.current) {
-        ctx.drawImage(canvasRef.current, 0, 0, 1200, 900);
+      // Available drawing area inside canvas
+      const maxDrawWidth = 1120;
+      const maxDrawHeight = 760;
+      const canvasAspect = maxDrawWidth / maxDrawHeight;
+
+      let drawW: number;
+      let drawH: number;
+      if (vbAspect > canvasAspect) {
+        drawW = maxDrawWidth;
+        drawH = maxDrawWidth / vbAspect;
+      } else {
+        drawH = maxDrawHeight;
+        drawW = maxDrawHeight * vbAspect;
       }
 
-      // Add Academic Watermark
+      const drawX = (exportCanvas.width - drawW) / 2;
+      const drawY = 40 + (maxDrawHeight - drawH) / 2;
+
+      // Draw SVG fills
+      ctx.drawImage(renderedSvgImg, drawX, drawY, drawW, drawH);
+
+      // If line art overlay exists, blend on top with multiply
+      if (overlayImg && overlayImg.complete) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.drawImage(overlayImg, drawX, drawY, drawW, drawH);
+        ctx.restore();
+      }
+
+      // Overlay freehand canvas
+      if (canvasRef.current) {
+        ctx.drawImage(canvasRef.current, drawX, drawY, drawW, drawH);
+      }
+
+      // Academic Watermark
       ctx.fillStyle = '#F8FAFC';
       ctx.font = 'bold 20px Inter, sans-serif';
-      ctx.fillText('ORBIT ACADEMY // EARTH DRAWING STUDIO', 40, 850);
+      ctx.fillText('ORBIT ACADEMY // COSMIC CREATIVE STUDIO', 40, 845);
 
       ctx.fillStyle = '#94A3B8';
       ctx.font = '14px JetBrains Mono, monospace';
       ctx.fillText(
-        `Activity: ${selectedActivity.title} | Certified Space Explorer | ${new Date().toLocaleDateString()}`,
+        `Plate: ${selectedActivity.title} | Certified Space Artist | ${new Date().toLocaleDateString()}`,
         40,
-        875
+        872
       );
 
-      // Trigger Download
+      // Clean up blob URL
+      URL.revokeObjectURL(blobURL);
+
+      // Download
       const link = document.createElement('a');
       link.download = `orbit-academy-${selectedActivity.id}.png`;
       link.href = exportCanvas.toDataURL('image/png');
       link.click();
     };
-    img.src = blobURL;
+
+    const svgImg = new Image();
+    svgImg.onload = () => {
+      if (selectedActivity.lineArtOverlayUrl) {
+        const overlayImg = new Image();
+        overlayImg.onload = () => finishExport(svgImg, overlayImg);
+        overlayImg.onerror = () => finishExport(svgImg);
+        overlayImg.src = selectedActivity.lineArtOverlayUrl;
+      } else {
+        finishExport(svgImg);
+      }
+    };
+    svgImg.src = blobURL;
   };
 
   // Filtered Activities
@@ -312,582 +378,743 @@ export const EarthDrawingScreen: React.FC = () => {
   });
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030712] font-sans text-[#F8FAFC]">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030611] font-sans text-[#F8FAFC]">
+      {/* Subtle Starfield & Ambient Glow Background */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,40,60,0.3),rgba(3,6,17,0.95))]"
+        aria-hidden="true"
+      />
+
       {/* Universal Master Header */}
       <MasterHeader />
 
-      <main className="relative flex-1 flex flex-col p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <main className="relative z-10 flex-1 flex flex-col p-4 sm:p-6 md:p-8 pb-20 sm:pb-28 max-w-7xl w-full mx-auto">
         <div className="flex flex-col gap-6 w-full">
-        {/* VIEW 1: Visual Illustration Gallery */}
-        {!selectedActivity && (
-          <div className="flex flex-col gap-6 w-full">
-            {/* Gallery Hero Banner */}
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-[#031A2A] via-[#05070D] to-[#0A2540] p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-2.5 w-2.5 rounded-full bg-[#10B981] animate-ping" />
-                    <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#10B981]">
-                      EARTH SCIENCE & ART STUDIO
-                    </span>
-                    <span className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 font-mono text-[9px] font-bold text-[#38BDF8]">
-                      8 EXPLORATION CATEGORIES
-                    </span>
+          {/* VIEW 1: Visual Illustration Gallery */}
+          {!selectedActivity && (
+            <div className="flex flex-col gap-8 w-full animate-fade-in">
+              {/* Gallery Hero Banner */}
+              <GlassCard
+                variant="elevated"
+                className="p-6 sm:p-8 flex flex-col justify-between border-white/10 bg-gradient-to-r from-[#031A2A]/90 via-[#070C1B]/95 to-[#0A2540]/80 shadow-2xl"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <TelemetryBadge
+                        label="COSMIC CREATIVE STUDIO"
+                        tone="emerald"
+                        pulsing
+                        size="sm"
+                      />
+                      <TelemetryBadge
+                        label={`${DRAWING_ACTIVITIES.length} COLORING PLATES`}
+                        tone="cyan"
+                        size="sm"
+                      />
+                      <TelemetryBadge
+                        label="FREEHAND & VECTOR"
+                        tone="amber"
+                        size="sm"
+                      />
+                    </div>
+
+                    <h1 className="mt-3 font-sans text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#F8FAFC]">
+                      Cosmic Creative Studio & Color-by-Number
+                    </h1>
+
+                    <p className="mt-2 font-sans text-xs sm:text-sm text-[#94A3B8] max-w-2xl leading-relaxed">
+                      Explore aerospace illustrations across {DRAWING_CATEGORIES.length} dedicated categories. 
+                      Fill closed vector regions with spectral pigments, sketch freehand with brushes, 
+                      and export certified space artwork!
+                    </p>
                   </div>
 
-                  <h1 className="mt-2 font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
-                    Cosmic Illustration & Color-by-Number Studio
-                  </h1>
-
-                  <p className="mt-1 font-sans text-xs sm:text-sm text-[#94A3B8] max-w-2xl leading-relaxed">
-                    Explore original space science illustrations across 8 dedicated categories. 
-                    Fill closed scientific vector regions with verified spectral colors, paint freely with brushes, 
-                    and earn academic space exploration badges!
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 font-mono text-xs text-[#94A3B8]">
-                    <Award className="h-4 w-4 text-[#F59E0B]" />
-                    <span>8 Certifications Available</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0B1226]/80 px-4 py-2.5 font-mono text-xs text-[#94A3B8]">
+                      <Award className="h-4 w-4 text-[#F59E0B]" />
+                      <span className="text-[#F8FAFC] font-bold">{DRAWING_ACTIVITIES.length} Badges</span>
+                      <span>Available</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Category Filter Tabs */}
-              <div className="mt-6 flex flex-wrap gap-1.5 border-t border-white/5 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('all')}
-                  className={`rounded-full px-3 py-1 font-mono text-xs transition-all ${
-                    activeCategory === 'all'
-                      ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC]'
-                      : 'border border-transparent text-[#94A3B8] hover:bg-white/5 hover:text-[#F8FAFC]'
-                  }`}
-                >
-                  All Categories ({DRAWING_ACTIVITIES.length})
-                </button>
-                {DRAWING_CATEGORIES.map((cat) => (
+                {/* Category Filter Pills */}
+                <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-white/5 pt-4">
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-xs transition-all ${
-                      activeCategory === cat.id
-                        ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC]'
-                        : 'border border-transparent text-[#94A3B8] hover:bg-white/5 hover:text-[#F8FAFC]'
+                    onClick={() => setActiveCategory('all')}
+                    className={`rounded-full px-3.5 py-1.5 font-mono text-xs transition-all whitespace-nowrap ${
+                      activeCategory === 'all'
+                        ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC] shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                        : 'border border-transparent bg-white/[0.02] text-[#94A3B8] hover:bg-white/5 hover:text-[#F8FAFC]'
                     }`}
                   >
-                    <span>{cat.icon}</span>
-                    <span>{cat.label}</span>
+                    All Plates ({DRAWING_ACTIVITIES.length})
                   </button>
-                ))}
+
+                  {DRAWING_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-mono text-xs transition-all whitespace-nowrap ${
+                        activeCategory === cat.id
+                          ? 'border border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC] shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                          : 'border border-transparent bg-white/[0.02] text-[#94A3B8] hover:bg-white/5 hover:text-[#F8FAFC]'
+                      }`}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </GlassCard>
+
+              {/* Illustration Gallery Grid */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
+                    Creative Plates ({filteredActivities.length})
+                  </span>
+                  <span className="font-mono text-[10px] text-[#64748B]">
+                    Select a plate to open studio
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {filteredActivities.map((act) => (
+                    <GlassCard
+                      key={act.id}
+                      variant="interactive"
+                      onClick={() => handleSelectActivity(act)}
+                      className="group p-4 flex flex-col justify-between border-white/10 bg-[#070C1B]/80 hover:bg-[#0B1528]/90 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    >
+                      {/* Scaled Preview Container */}
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#040814] flex items-center justify-center border border-white/5 p-2 group-hover:border-[#38BDF8]/30 transition-colors">
+                        {act.thumbnailUrl ? (
+                          <div className="relative h-full w-full flex items-center justify-center bg-white rounded-lg p-1 overflow-hidden">
+                            <img
+                              src={act.thumbnailUrl}
+                              alt={act.title}
+                              className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : (
+                          <svg
+                            viewBox={act.viewBox}
+                            className="h-full w-full object-contain opacity-85 transition-transform duration-500 group-hover:scale-105"
+                          >
+                            {act.regions.map((r) => {
+                              const defaultCol =
+                                act.palette.find((p) => p.number === r.targetColorNumber)?.hex ||
+                                '#334155';
+                              return (
+                                <path
+                                  key={r.id}
+                                  d={r.path}
+                                  fill={defaultCol}
+                                  stroke="#040814"
+                                  strokeWidth="1.5"
+                                />
+                              );
+                            })}
+                          </svg>
+                        )}
+
+                        {/* Difficulty Badge */}
+                        <div className="absolute top-2 right-2">
+                          <TelemetryBadge
+                            label={act.difficulty}
+                            tone={
+                              act.difficulty === 'Beginner'
+                                ? 'emerald'
+                                : act.difficulty === 'Intermediate'
+                                ? 'amber'
+                                : 'violet'
+                            }
+                            size="sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Card Meta Content */}
+                      <div className="mt-3.5 flex flex-col gap-1 flex-1">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-[#94A3B8]">
+                          <span className="uppercase tracking-wider">{act.categoryLabel}</span>
+                          <span className="text-[#38BDF8]">{act.regions.length} Regions</span>
+                        </div>
+
+                        <h3 className="font-sans text-sm sm:text-base font-bold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors line-clamp-1">
+                          {act.title}
+                        </h3>
+
+                        <p className="font-sans text-xs text-[#94A3B8] line-clamp-2 leading-relaxed">
+                          {act.description}
+                        </p>
+                      </div>
+
+                      {/* Card Footer CTA */}
+                      <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
+                        <span className="font-mono text-[10px] text-[#F59E0B] flex items-center gap-1 font-bold">
+                          <Sparkles className="h-3 w-3" />
+                          <span>{act.badgeReward}</span>
+                        </span>
+
+                        <span className="rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/30 px-3 py-1 font-mono text-[10.5px] font-bold text-[#38BDF8] group-hover:bg-[#38BDF8] group-hover:text-[#030611] transition-colors tracking-wide">
+                          OPEN STUDIO →
+                        </span>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Illustration Gallery Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {filteredActivities.map((act) => (
+          {/* VIEW 2: Interactive SVG Colour-by-Number Studio */}
+          {selectedActivity && (
+            <div className="flex flex-col gap-5 w-full animate-fade-in">
+              {/* Studio Header Bar */}
+              <GlassCard
+                variant="elevated"
+                className="p-3.5 flex flex-wrap items-center justify-between gap-4 border-white/10"
+              >
+                <div className="flex items-center gap-3">
+                  <SpaceButton
+                    variant="secondary"
+                    size="sm"
+                    icon={ArrowLeft}
+                    onClick={() => setSelectedActivity(null)}
+                  >
+                    Gallery
+                  </SpaceButton>
+
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-sans text-sm sm:text-base font-bold text-[#F8FAFC]">
+                        {selectedActivity.title}
+                      </h2>
+                      <TelemetryBadge
+                        label="COLORED"
+                        value={`${Object.keys(filledRegions).length} / ${selectedActivity.regions.length}`}
+                        tone={
+                          Object.keys(filledRegions).length === selectedActivity.regions.length
+                            ? 'emerald'
+                            : 'cyan'
+                        }
+                        size="sm"
+                      />
+                    </div>
+                    <span className="font-mono text-[10px] text-[#94A3B8]">
+                      {selectedActivity.categoryLabel} // {selectedActivity.difficulty} Plate
+                    </span>
+                  </div>
+                </div>
+
+                {/* Studio Actions: Undo, Redo, Numbers Toggle, Reset, Export */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={undoStack.length === 0}
+                    title="Undo last action"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#0B1226]/80 text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC] disabled:opacity-30"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRedo}
+                    disabled={redoStack.length === 0}
+                    title="Redo action"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#0B1226]/80 text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC] disabled:opacity-30"
+                  >
+                    <Redo2 className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowNumbers((prev) => !prev)}
+                    title="Toggle Region Numbers"
+                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 font-mono text-xs transition-colors ${
+                      showNumbers
+                        ? 'border-[#38BDF8] bg-[#38BDF8]/15 text-[#38BDF8]'
+                        : 'border-white/10 bg-[#0B1226]/80 text-[#94A3B8]'
+                    }`}
+                  >
+                    <Layers className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Numbers</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    title="Reset illustration"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#0B1226]/80 text-[#94A3B8] transition-colors hover:border-red-400 hover:text-red-400"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+
+                  <SpaceButton
+                    variant="primary"
+                    size="sm"
+                    icon={Download}
+                    onClick={handleExportPng}
+                  >
+                    Export PNG
+                  </SpaceButton>
+                </div>
+              </GlassCard>
+
+              {/* Main Interactive Studio Canvas Workspace */}
+              <div className="relative flex flex-col lg:flex-row gap-5 w-full">
+                {/* Left/Main Canvas Viewer */}
                 <div
-                  key={act.id}
-                  onClick={() => handleSelectActivity(act)}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#05070D]/85 p-4 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-[#38BDF8]/50 hover:bg-white/[0.04] hover:-translate-y-1 cursor-pointer"
+                  onMouseDown={handleMouseDownPan}
+                  onMouseMove={handleMouseMovePan}
+                  onMouseUp={handleMouseUpPan}
+                  className="relative flex-1 aspect-[4/3] min-h-[380px] sm:min-h-[460px] overflow-hidden rounded-2xl border border-white/10 bg-[#040814] shadow-2xl flex items-center justify-center select-none"
                 >
-                  {/* Thumbnail Preview Banner */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#080C1A] flex items-center justify-center border border-white/5 p-2">
-                    {/* Embedded Scaled Preview */}
+                  {/* Scalable Container for SVG & Canvas Overlay */}
+                  <div
+                    style={{
+                      transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+                      transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+                      transformOrigin: 'center center',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    className="relative flex items-center justify-center"
+                  >
+                    {/* 1. Underlying Interactive SVG Color-by-Number Vector */}
                     <svg
-                      viewBox={act.viewBox}
-                      className="h-full w-full object-contain opacity-85 transition-transform duration-500 group-hover:scale-105"
+                      id="coloring-svg-canvas"
+                      viewBox={selectedActivity.viewBox}
+                      className="w-full h-full max-h-[90%] max-w-[95%] pointer-events-auto"
                     >
-                      {act.regions.map((r) => {
-                        const defaultCol = act.palette.find((p) => p.number === r.targetColorNumber)?.hex || '#334155';
+                      {/* Base Paper Surface for line art overlay artwork */}
+                      {selectedActivity.lineArtOverlayUrl && (
+                        <rect
+                          x="0"
+                          y="0"
+                          width="100%"
+                          height="100%"
+                          fill="#FFFFFF"
+                          rx="4"
+                        />
+                      )}
+
+                      {/* SVG Closed Regions */}
+                      {selectedActivity.regions.map((region) => {
+                        const isFilled = Boolean(filledRegions[region.id]);
+                        const defaultUnfilled = selectedActivity.lineArtOverlayUrl ? '#FFFFFF' : '#0B1226';
+                        const fillColor = isFilled
+                          ? filledRegions[region.id]
+                          : defaultUnfilled;
+                        const isTargetColor =
+                          selectedColor?.number === region.targetColorNumber;
+                        const strokeCol = isTargetColor && !isFilled
+                          ? '#38BDF8'
+                          : selectedActivity.lineArtOverlayUrl
+                          ? 'transparent'
+                          : '#1E293B';
+
                         return (
                           <path
-                            key={r.id}
-                            d={r.path}
-                            fill={defaultCol}
-                            stroke="#05070D"
-                            strokeWidth="1.5"
+                            key={region.id}
+                            d={region.path}
+                            fill={fillColor}
+                            stroke={strokeCol}
+                            strokeWidth={isTargetColor && !isFilled ? '2.5' : '1.5'}
+                            onClick={() =>
+                              handleRegionClick(region.id, region.targetColorNumber)
+                            }
+                            className="transition-colors duration-200 cursor-pointer hover:opacity-90"
+                            style={{
+                              filter:
+                                isTargetColor && !isFilled
+                                  ? 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))'
+                                  : undefined,
+                            }}
                           />
                         );
                       })}
+
+                      {/* Line Art Overlay on top of colorable regions */}
+                      {selectedActivity.lineArtOverlayUrl && (
+                        <image
+                          href={selectedActivity.lineArtOverlayUrl}
+                          x="0"
+                          y="0"
+                          width="100%"
+                          height="100%"
+                          preserveAspectRatio="xMidYMid meet"
+                          style={{ mixBlendMode: 'multiply', pointerEvents: 'none' }}
+                        />
+                      )}
+
+                      {/* Number Labels for Closed Regions */}
+                      {showNumbers &&
+                        selectedActivity.regions.map((region) => {
+                          const isFilled = Boolean(filledRegions[region.id]);
+                          if (isFilled) return null; // Hide number once colored
+
+                          const isTargetColor =
+                            selectedColor?.number === region.targetColorNumber;
+
+                          const circleFill = isTargetColor
+                            ? '#38BDF8'
+                            : selectedActivity.lineArtOverlayUrl
+                            ? '#FFFFFF'
+                            : '#0B1226';
+                          const circleStroke = isTargetColor
+                            ? '#FFFFFF'
+                            : selectedActivity.lineArtOverlayUrl
+                            ? '#64748B'
+                            : '#475569';
+                          const textFill = isTargetColor
+                            ? '#030611'
+                            : selectedActivity.lineArtOverlayUrl
+                            ? '#0F172A'
+                            : '#F8FAFC';
+
+                          return (
+                            <g
+                              key={`label-${region.id}`}
+                              className="pointer-events-none select-none"
+                            >
+                              <circle
+                                cx={region.labelPos.x}
+                                cy={region.labelPos.y}
+                                r={isTargetColor ? '11' : '9'}
+                                fill={circleFill}
+                                stroke={circleStroke}
+                                strokeWidth={selectedActivity.lineArtOverlayUrl ? '1.5' : '1'}
+                              />
+                              <text
+                                x={region.labelPos.x}
+                                y={region.labelPos.y + 3.5}
+                                textAnchor="middle"
+                                fill={textFill}
+                                fontSize={isTargetColor ? '10' : '9'}
+                                fontFamily="JetBrains Mono, monospace"
+                                fontWeight="bold"
+                              >
+                                {region.targetColorNumber}
+                              </text>
+                            </g>
+                          );
+                        })}
                     </svg>
 
-                    {/* Difficulty Badge */}
-                    <span className="absolute top-2 right-2 rounded-full border border-white/10 bg-black/60 px-2 py-0.5 font-mono text-[9px] font-bold text-[#38BDF8] backdrop-blur-md">
-                      {act.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Card Content */}
-                  <div className="mt-3 flex flex-col gap-1.5 flex-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-[#94A3B8]">
-                      <span>{act.categoryLabel}</span>
-                      <span>{act.regions.length} Regions</span>
-                    </div>
-
-                    <h3 className="font-sans text-sm font-bold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">
-                      {act.title}
-                    </h3>
-
-                    <p className="font-sans text-xs text-[#94A3B8] line-clamp-2 leading-relaxed">
-                      {act.description}
-                    </p>
-                  </div>
-
-                  {/* Card Footer CTA */}
-                  <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
-                    <span className="font-mono text-[10px] text-[#F59E0B] flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" />
-                      <span>{act.badgeReward}</span>
-                    </span>
-
-                    <span className="rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/30 px-2.5 py-1 font-mono text-[10px] font-bold text-[#38BDF8] group-hover:bg-[#38BDF8] group-hover:text-[#05070D] transition-colors">
-                      Start Studio →
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* VIEW 2: Interactive SVG Colour-by-Number Studio */}
-        {selectedActivity && (
-          <div className="flex flex-col gap-4 w-full">
-            {/* Studio Header Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#05070D]/85 p-3.5 backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedActivity(null)}
-                  className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-xs text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC]"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Gallery</span>
-                </button>
-
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-sans text-sm font-bold text-[#F8FAFC] sm:text-base">
-                      {selectedActivity.title}
-                    </h2>
-                    <span className="rounded-full bg-[#10B981]/15 px-2 py-0.2 font-mono text-[9px] font-bold text-[#10B981]">
-                      {Object.keys(filledRegions).length} / {selectedActivity.regions.length} Colored
-                    </span>
-                  </div>
-                  <span className="font-mono text-[10px] text-[#94A3B8]">
-                    {selectedActivity.categoryLabel} // {selectedActivity.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              {/* Studio Actions: Undo, Redo, Reset, Numbers Toggle, Export */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  title="Undo last action"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC] disabled:opacity-30"
-                >
-                  <Undo2 className="h-4 w-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  title="Redo action"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#F8FAFC] disabled:opacity-30"
-                >
-                  <Redo2 className="h-4 w-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowNumbers((prev) => !prev)}
-                  title="Toggle Region Numbers"
-                  className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1 font-mono text-xs transition-colors ${
-                    showNumbers
-                      ? 'border-[#38BDF8] bg-[#38BDF8]/15 text-[#38BDF8]'
-                      : 'border-white/10 bg-white/5 text-[#94A3B8]'
-                  }`}
-                >
-                  <Layers className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Numbers</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  title="Reset illustration"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[#94A3B8] transition-colors hover:border-red-400 hover:text-red-400"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleExportPng}
-                  title="Export PNG Artwork"
-                  className="flex items-center gap-1.5 rounded-xl bg-[#38BDF8] px-3 py-1 font-mono text-xs font-bold text-[#05070D] shadow-md transition-all hover:bg-[#7DD3FC]"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Export PNG</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Main Interactive Studio Canvas Workspace */}
-            <div className="relative flex flex-col lg:flex-row gap-4 w-full">
-              {/* Left/Main Canvas Viewer */}
-              <div
-                onMouseDown={handleMouseDownPan}
-                onMouseMove={handleMouseMovePan}
-                onMouseUp={handleMouseUpPan}
-                className="relative flex-1 aspect-[4/3] min-h-[380px] sm:min-h-[460px] overflow-hidden rounded-2xl border border-white/10 bg-[#080C1A] shadow-2xl flex items-center justify-center select-none"
-              >
-                {/* Scalable Container for SVG & Canvas Overlay */}
-                <div
-                  style={{
-                    transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-                    transition: isPanning ? 'none' : 'transform 0.15s ease-out',
-                    transformOrigin: 'center center',
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  className="relative flex items-center justify-center"
-                >
-                  {/* 1. Underlying Interactive SVG Color-by-Number Vector */}
-                  <svg
-                    id="coloring-svg-canvas"
-                    viewBox={selectedActivity.viewBox}
-                    className="w-full h-full max-h-[90%] max-w-[95%] pointer-events-auto"
-                  >
-                    {/* SVG Closed Regions */}
-                    {selectedActivity.regions.map((region) => {
-                      const isFilled = Boolean(filledRegions[region.id]);
-                      const fillColor = isFilled
-                        ? filledRegions[region.id]
-                        : '#111827';
-                      const isTargetColor =
-                        selectedColor?.number === region.targetColorNumber;
-
-                      return (
-                        <path
-                          key={region.id}
-                          d={region.path}
-                          fill={fillColor}
-                          stroke={isTargetColor && !isFilled ? '#38BDF8' : '#334155'}
-                          strokeWidth={isTargetColor && !isFilled ? '2.5' : '1.5'}
-                          onClick={() =>
-                            handleRegionClick(region.id, region.targetColorNumber)
-                          }
-                          className="transition-colors duration-200 cursor-pointer hover:opacity-90"
-                          style={{
-                            filter:
-                              isTargetColor && !isFilled
-                                ? 'drop-shadow(0 0 4px rgba(56, 189, 248, 0.4))'
-                                : undefined,
-                          }}
-                        />
-                      );
-                    })}
-
-                    {/* Number Labels for Closed Regions */}
-                    {showNumbers &&
-                      selectedActivity.regions.map((region) => {
-                        const isFilled = Boolean(filledRegions[region.id]);
-                        if (isFilled) return null; // Hide number once colored
-
-                        const isTargetColor =
-                          selectedColor?.number === region.targetColorNumber;
-
-                        return (
-                          <g
-                            key={`label-${region.id}`}
-                            className="pointer-events-none select-none"
-                          >
-                            <circle
-                              cx={region.labelPos.x}
-                              cy={region.labelPos.y}
-                              r={isTargetColor ? '11' : '9'}
-                              fill={isTargetColor ? '#38BDF8' : '#0F172A'}
-                              stroke={isTargetColor ? '#FFFFFF' : '#475569'}
-                              strokeWidth="1"
-                            />
-                            <text
-                              x={region.labelPos.x}
-                              y={region.labelPos.y + 3.5}
-                              textAnchor="middle"
-                              fill={isTargetColor ? '#05070D' : '#F8FAFC'}
-                              fontSize={isTargetColor ? '10' : '9'}
-                              fontFamily="JetBrains Mono, monospace"
-                              fontWeight="bold"
-                            >
-                              {region.targetColorNumber}
-                            </text>
-                          </g>
-                        );
-                      })}
-                  </svg>
-
-                  {/* 2. Freehand Brush & Eraser Overlay Canvas */}
-                  <canvas
-                    ref={canvasRef}
-                    width={800}
-                    height={600}
-                    onMouseDown={startBrushDraw}
-                    onMouseMove={drawBrush}
-                    onMouseUp={stopBrushDraw}
-                    onMouseLeave={stopBrushDraw}
-                    className={`absolute inset-0 h-full w-full ${
-                      activeTool === 'bucket' ? 'pointer-events-none' : 'pointer-events-auto cursor-crosshair'
-                    }`}
-                  />
-                </div>
-
-                {/* Floating Zoom & Pan Controls */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-1 rounded-full border border-white/10 bg-[#05070D]/80 p-1 backdrop-blur-md">
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
-                    title="Zoom in"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
-                  >
-                    <ZoomIn className="h-3.5 w-3.5" />
-                  </button>
-                  <span className="font-mono text-[10px] text-[#94A3B8] px-1 tabular-nums">
-                    {Math.round(zoomLevel * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel((z) => Math.max(0.6, z - 0.25))}
-                    title="Zoom out"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
-                  >
-                    <ZoomOut className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setZoomLevel(1.0);
-                      setPanOffset({ x: 0, y: 0 });
-                    }}
-                    title="Reset view"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
-                  >
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Side: Tools & Numbered Color Palette */}
-              <div className="lg:w-80 flex flex-col gap-4">
-                {/* Tool Selector Bar */}
-                <div className="rounded-2xl border border-white/10 bg-[#05070D]/85 p-3 backdrop-blur-xl">
-                  <span className="font-mono text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider">
-                    Creative Tools
-                  </span>
-
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTool('bucket')}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
+                    {/* 2. Freehand Brush & Eraser Overlay Canvas */}
+                    <canvas
+                      ref={canvasRef}
+                      width={800}
+                      height={600}
+                      onMouseDown={(e) => startBrushDraw(getCanvasPos(e))}
+                      onMouseMove={(e) => drawBrush(getCanvasPos(e))}
+                      onMouseUp={stopBrushDraw}
+                      onMouseLeave={stopBrushDraw}
+                      onTouchStart={(e) => {
+                        startBrushDraw(getTouchPos(e));
+                      }}
+                      onTouchMove={(e) => {
+                        drawBrush(getTouchPos(e));
+                      }}
+                      onTouchEnd={stopBrushDraw}
+                      className={`absolute inset-0 h-full w-full ${
                         activeTool === 'bucket'
-                          ? 'border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC]'
-                          : 'border-white/5 bg-white/[0.02] text-[#94A3B8] hover:bg-white/5'
+                          ? 'pointer-events-none'
+                          : 'pointer-events-auto cursor-crosshair touch-none'
                       }`}
-                    >
-                      <PaintBucket className="h-4 w-4 text-[#38BDF8]" />
-                      <span>Bucket</span>
-                    </button>
+                    />
+                  </div>
 
+                  {/* Floating Zoom & Pan Controls */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-1 rounded-full border border-white/10 bg-[#070C1B]/85 p-1 backdrop-blur-md shadow-lg">
                     <button
                       type="button"
-                      onClick={() => setActiveTool('brush')}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
-                        activeTool === 'brush'
-                          ? 'border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC]'
-                          : 'border-white/5 bg-white/[0.02] text-[#94A3B8] hover:bg-white/5'
-                      }`}
+                      onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
+                      title="Zoom in"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
                     >
-                      <Paintbrush className="h-4 w-4 text-[#F59E0B]" />
-                      <span>Brush</span>
+                      <ZoomIn className="h-3.5 w-3.5" />
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveTool('eraser')}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
-                        activeTool === 'eraser'
-                          ? 'border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC]'
-                          : 'border-white/5 bg-white/[0.02] text-[#94A3B8] hover:bg-white/5'
-                      }`}
-                    >
-                      <Eraser className="h-4 w-4 text-red-400" />
-                      <span>Eraser</span>
-                    </button>
-                  </div>
-
-                  {/* Brush Size Slider (if brush/eraser active) */}
-                  {activeTool !== 'bucket' && (
-                    <div className="mt-3 flex flex-col gap-1 border-t border-white/5 pt-2">
-                      <div className="flex justify-between font-mono text-[10px] text-[#94A3B8]">
-                        <span>Stroke Width</span>
-                        <span>{brushSize}px</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="2"
-                        max="28"
-                        value={brushSize}
-                        onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
-                        className="h-1.5 w-full appearance-none rounded-lg bg-white/10 accent-[#38BDF8] cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Numbered Scientific Color Palette */}
-                <div className="rounded-2xl border border-white/10 bg-[#05070D]/85 p-3.5 backdrop-blur-xl flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider">
-                        Color-By-Number Palette
-                      </span>
-                      <span className="font-mono text-[9px] text-[#38BDF8]">
-                        Tap number to highlight
-                      </span>
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-2">
-                      {selectedActivity.palette.map((colorDef) => {
-                        const isSelected = selectedColor?.number === colorDef.number;
-                        const matchingRegions = selectedActivity.regions.filter(
-                          (r) => r.targetColorNumber === colorDef.number
-                        );
-                        const filledMatches = matchingRegions.filter(
-                          (r) => filledRegions[r.id] === colorDef.hex
-                        );
-
-                        return (
-                          <button
-                            key={colorDef.number}
-                            type="button"
-                            onClick={() => setSelectedColor(colorDef)}
-                            className={`group flex items-center justify-between rounded-xl border p-2 transition-all ${
-                              isSelected
-                                ? 'border-[#38BDF8] bg-[#38BDF8]/15 shadow-md'
-                                : 'border-white/5 bg-white/[0.02] hover:bg-white/5'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              {/* Number Badge */}
-                              <span
-                                className="flex h-6 w-6 items-center justify-center rounded-lg font-mono text-xs font-bold text-[#05070D]"
-                                style={{ backgroundColor: colorDef.hex }}
-                              >
-                                {colorDef.number}
-                              </span>
-
-                              <div className="flex flex-col text-left">
-                                <span className="font-sans text-xs font-semibold text-[#F8FAFC]">
-                                  {colorDef.name}
-                                </span>
-                                <span className="font-mono text-[9px] text-[#94A3B8]">
-                                  {colorDef.hex}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Region Progress for this Color */}
-                            <span className="font-mono text-[10px] text-[#94A3B8]">
-                              {filledMatches.length}/{matchingRegions.length}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Educational Fact Callout */}
-                  <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.02] p-3 text-left">
-                    <div className="flex items-center gap-1.5 font-mono text-[9.5px] text-[#F59E0B]">
-                      <Sparkles className="h-3 w-3" />
-                      <span>ASTROPHYSICS FACT</span>
-                    </div>
-                    <p className="mt-1 font-sans text-xs text-[#94A3B8] leading-relaxed">
-                      {selectedActivity.educationalFact}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* COMPLETION MODAL & EDUCATIONAL REWARD */}
-            {showRewardModal && (
-              <div
-                role="dialog"
-                aria-modal="true"
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in"
-              >
-                <div className="relative flex max-w-md w-full flex-col items-center rounded-3xl border border-[#F59E0B]/40 bg-[#05070D]/95 p-6 sm:p-8 text-center shadow-2xl backdrop-blur-2xl">
-                  {/* Glowing Award Star */}
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F59E0B]/15 border border-[#F59E0B]/40 text-[#F59E0B] shadow-[0_0_24px_rgba(245,158,11,0.5)]">
-                    <Award className="h-8 w-8 animate-bounce" />
-                  </div>
-
-                  <span className="mt-4 font-mono text-xs uppercase tracking-widest text-[#F59E0B]">
-                    ACTIVITY COMPLETE!
-                  </span>
-
-                  <h3 className="mt-1 font-sans text-2xl font-extrabold text-[#F8FAFC]">
-                    {selectedActivity.badgeReward}
-                  </h3>
-
-                  <p className="mt-2 font-sans text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
-                    Splendid work, Explorer! You have accurately rendered the{' '}
-                    <strong className="text-[#F8FAFC]">{selectedActivity.title}</strong>{' '}
-                    scientific illustration with verified astronomical pigments.
-                  </p>
-
-                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-left">
-                    <span className="font-mono text-[9.5px] text-[#38BDF8] font-bold">
-                      ACQUIRED KNOWLEDGE:
+                    <span className="font-mono text-[10px] text-[#94A3B8] px-1 tabular-nums font-bold">
+                      {Math.round(zoomLevel * 100)}%
                     </span>
-                    <p className="mt-1 font-sans text-xs text-[#CBD5E1]">
-                      {selectedActivity.educationalFact}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 flex items-center gap-3 w-full">
                     <button
                       type="button"
-                      onClick={() => setShowRewardModal(false)}
-                      className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2.5 font-mono text-xs text-[#94A3B8] hover:text-[#F8FAFC]"
+                      onClick={() => setZoomLevel((z) => Math.max(0.6, z - 0.25))}
+                      title="Zoom out"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
                     >
-                      Keep Refining
+                      <ZoomOut className="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        setShowRewardModal(false);
-                        handleExportPng();
+                        setZoomLevel(1.0);
+                        setPanOffset({ x: 0, y: 0 });
                       }}
-                      className="flex-1 rounded-xl bg-[#F59E0B] py-2.5 font-mono text-xs font-bold text-[#05070D] hover:bg-[#FBBF24] shadow-lg"
+                      title="Reset view"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-white/10 hover:text-[#F8FAFC]"
                     >
-                      Export & Claim
+                      <Maximize2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
+
+                {/* Right Side: Tools & Numbered Color Palette */}
+                <div className="lg:w-84 flex flex-col gap-4">
+                  {/* Tool Selector Card */}
+                  <GlassCard variant="elevated" className="p-4 border-white/10">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider">
+                        Studio Tools
+                      </span>
+                      <TelemetryBadge
+                        label={activeTool.toUpperCase()}
+                        tone="cyan"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTool('bucket')}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
+                          activeTool === 'bucket'
+                            ? 'border-[#38BDF8] bg-[#38BDF8]/15 font-bold text-[#F8FAFC] shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                            : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8] hover:bg-white/5'
+                        }`}
+                      >
+                        <PaintBucket className="h-4 w-4 text-[#38BDF8]" />
+                        <span>Bucket</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTool('brush')}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
+                          activeTool === 'brush'
+                            ? 'border-[#F59E0B] bg-[#F59E0B]/15 font-bold text-[#F8FAFC] shadow-[0_0_12px_rgba(245,158,11,0.25)]'
+                            : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8] hover:bg-white/5'
+                        }`}
+                      >
+                        <Paintbrush className="h-4 w-4 text-[#F59E0B]" />
+                        <span>Brush</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTool('eraser')}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 font-mono text-xs transition-all ${
+                          activeTool === 'eraser'
+                            ? 'border-red-400 bg-red-400/15 font-bold text-[#F8FAFC] shadow-[0_0_12px_rgba(248,113,113,0.25)]'
+                            : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8] hover:bg-white/5'
+                        }`}
+                      >
+                        <Eraser className="h-4 w-4 text-red-400" />
+                        <span>Eraser</span>
+                      </button>
+                    </div>
+
+                    {/* Brush Size Slider (if brush/eraser active) */}
+                    {activeTool !== 'bucket' && (
+                      <div className="mt-4 flex flex-col gap-2 border-t border-white/5 pt-3 animate-fade-in">
+                        <div className="flex justify-between items-center font-mono text-[10px] text-[#94A3B8]">
+                          <span>Stroke Width: {brushSize}px</span>
+                          <span
+                            className="inline-block rounded-full bg-white transition-all"
+                            style={{
+                              width: `${Math.max(4, brushSize)}px`,
+                              height: `${Math.max(4, brushSize)}px`,
+                            }}
+                          />
+                        </div>
+                        <input
+                          type="range"
+                          min="2"
+                          max="28"
+                          value={brushSize}
+                          onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
+                          className="h-1.5 w-full appearance-none rounded-lg bg-white/10 accent-[#38BDF8] cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </GlassCard>
+
+                  {/* Numbered Scientific Color Palette */}
+                  <GlassCard
+                    variant="elevated"
+                    className="p-4 border-white/10 flex-1 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                        <span className="font-mono text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider">
+                          Color Palette ({selectedActivity.palette.length})
+                        </span>
+                        <span className="font-mono text-[9px] text-[#38BDF8]">
+                          Tap to select
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-col gap-2">
+                        {selectedActivity.palette.map((colorDef) => {
+                          const isSelected = selectedColor?.number === colorDef.number;
+                          const matchingRegions = selectedActivity.regions.filter(
+                            (r) => r.targetColorNumber === colorDef.number
+                          );
+                          const filledMatches = matchingRegions.filter(
+                            (r) => filledRegions[r.id] === colorDef.hex
+                          );
+                          const isColorDone =
+                            matchingRegions.length > 0 &&
+                            filledMatches.length === matchingRegions.length;
+
+                          return (
+                            <button
+                              key={colorDef.number}
+                              type="button"
+                              onClick={() => setSelectedColor(colorDef)}
+                              className={`group flex items-center justify-between rounded-xl border p-2.5 transition-all text-left ${
+                                isSelected
+                                  ? 'border-[#38BDF8] bg-[#38BDF8]/15 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                                  : 'border-white/5 bg-[#0B1226]/50 hover:bg-white/5'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                {/* Number Swatch */}
+                                <span
+                                  className="flex h-6 w-6 items-center justify-center rounded-lg font-mono text-xs font-bold text-[#030611] shadow-sm"
+                                  style={{
+                                    backgroundColor: colorDef.hex,
+                                    border: isSelected ? '2px solid #FFFFFF' : '1px solid rgba(255,255,255,0.2)',
+                                  }}
+                                >
+                                  {colorDef.number}
+                                </span>
+
+                                <div className="flex flex-col">
+                                  <span className="font-sans text-xs font-semibold text-[#F8FAFC]">
+                                    {colorDef.name}
+                                  </span>
+                                  <span className="font-mono text-[9px] text-[#94A3B8]">
+                                    {colorDef.hex}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Progress for this Color */}
+                              <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                {isColorDone ? (
+                                  <span className="flex items-center gap-1 text-[#10B981] font-bold">
+                                    <Check className="h-3 w-3" />
+                                    <span>Done</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[#94A3B8]">
+                                    {filledMatches.length}/{matchingRegions.length}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Educational Astrophysics Fact Callout */}
+                    <div className="mt-4 rounded-xl border border-white/5 bg-[#0B1226]/60 p-3 text-left">
+                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] text-[#F59E0B] font-bold">
+                        <Sparkles className="h-3 w-3" />
+                        <span>ASTROPHYSICS FACT</span>
+                      </div>
+                      <p className="mt-1 font-sans text-xs text-[#CBD5E1] leading-relaxed">
+                        {selectedActivity.educationalFact}
+                      </p>
+                    </div>
+                  </GlassCard>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* COMPLETION MODAL & EDUCATIONAL REWARD */}
+              {showRewardModal && (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+                >
+                  <GlassCard
+                    variant="elevated"
+                    glowingBorder="amber"
+                    className="relative flex max-w-md w-full flex-col items-center p-6 sm:p-8 text-center bg-[#070C1B]/95 border-[#F59E0B]/40 shadow-2xl"
+                  >
+                    {/* Glowing Award Star */}
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F59E0B]/15 border border-[#F59E0B]/40 text-[#F59E0B] shadow-[0_0_24px_rgba(245,158,11,0.5)]">
+                      <Award className="h-8 w-8 animate-bounce" />
+                    </div>
+
+                    <TelemetryBadge
+                      label="ACTIVITY COMPLETE"
+                      tone="amber"
+                      size="sm"
+                      className="mt-4"
+                    />
+
+                    <h3 className="mt-2 font-sans text-2xl font-extrabold text-[#F8FAFC]">
+                      {selectedActivity.badgeReward}
+                    </h3>
+
+                    <p className="mt-2 font-sans text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
+                      Splendid work, Explorer! You have accurately rendered the{' '}
+                      <strong className="text-[#F8FAFC]">{selectedActivity.title}</strong>{' '}
+                      space science illustration with verified astronomical pigments.
+                    </p>
+
+                    <div className="mt-4 rounded-xl border border-white/10 bg-[#0B1226]/80 p-3 text-left w-full">
+                      <span className="font-mono text-[9.5px] text-[#38BDF8] font-bold block mb-1">
+                        ACQUIRED KNOWLEDGE:
+                      </span>
+                      <p className="font-sans text-xs text-[#CBD5E1]">
+                        {selectedActivity.educationalFact}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 flex items-center gap-3 w-full">
+                      <SpaceButton
+                        variant="secondary"
+                        size="md"
+                        className="flex-1"
+                        onClick={() => setShowRewardModal(false)}
+                      >
+                        Keep Refining
+                      </SpaceButton>
+
+                      <SpaceButton
+                        variant="primary"
+                        size="md"
+                        icon={Download}
+                        className="flex-1"
+                        onClick={() => {
+                          setShowRewardModal(false);
+                          handleExportPng();
+                        }}
+                      >
+                        Export & Claim
+                      </SpaceButton>
+                    </div>
+                  </GlassCard>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>

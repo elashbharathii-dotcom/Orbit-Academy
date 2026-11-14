@@ -67,11 +67,15 @@ const AppViewport: React.FC = () => {
   const isHome = currentRoute === ROUTES.HOME;
 
   return (
-    <div className="relative min-h-screen w-screen overflow-x-hidden bg-[#05070D] font-sans text-[#F8FAFC]">
+    <div
+      className={`relative w-full bg-[#030611] font-sans text-[#F8FAFC] ${
+        isHome ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden'
+      }`}
+    >
       {/* 1. Persistent 3D Solar System Canvas (Always kept warm in DOM) */}
       <div
         style={{ display: isHome ? 'block' : 'none' }}
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-0 overflow-hidden"
       >
         <MissionControlScreen
           speedScale={speedScale}
@@ -81,7 +85,7 @@ const AppViewport: React.FC = () => {
 
       {/* 2. Educational Learning Module Views */}
       {!isHome && (
-        <div className="relative z-10 min-h-screen w-full">
+        <div className="relative z-10 w-full min-h-screen flex flex-col">
           <Suspense fallback={<ScreenSuspenseFallback />}>
             {/* Six Primary Core Experiences */}
             {currentRoute === ROUTES.LEARN && <LearnPortalScreen />}

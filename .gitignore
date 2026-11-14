@@ -30,3 +30,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Visual verification screenshots
+screenshots/
+explore-*.png
+
+

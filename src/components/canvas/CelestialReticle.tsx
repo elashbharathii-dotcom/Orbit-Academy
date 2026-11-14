@@ -9,12 +9,12 @@ interface CelestialReticleProps {
 }
 
 /**
- * Ultra-Minimalist Scientific Celestial Reticle & Label (Phase 7 Elite Redesign)
+ * Ultra-Minimalist Scientific Celestial Reticle & Label (Phase 8 Design System)
  * 
  * Design Principles:
- * - Eliminates all full-screen label clutter
- * - Default: Tiny 2.5px pinpoint astronomical marker (virtually invisible until needed)
- * - Hover / Selection: Expands into razor-sharp targeting reticle and discreet 9px monospace label
+ * - Eliminates full-screen label clutter
+ * - Default: Tiny 2px pinpoint astronomical marker (virtually invisible until needed)
+ * - Hover / Selection: Expands into precision targeting brackets and discreet 9px monospace telemetry tag
  * - Retains full keyboard accessibility & screen-reader semantics
  */
 export const CelestialReticle: React.FC<CelestialReticleProps> = ({ data, yOffset }) => {
@@ -62,7 +62,7 @@ export const CelestialReticle: React.FC<CelestialReticleProps> = ({ data, yOffse
             <div
               className={`absolute h-5 w-5 rounded-full border transition-all duration-300 ${
                 isSelected
-                  ? 'border-[#F59E0B] scale-100 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                  ? 'border-[#F59E0B] scale-100 shadow-[0_0_10px_rgba(245,158,11,0.45)]'
                   : 'border-[#38BDF8]/60 scale-95 animate-pulse'
               }`}
             />
@@ -72,10 +72,10 @@ export const CelestialReticle: React.FC<CelestialReticleProps> = ({ data, yOffse
           <div
             className={`rounded-full transition-all duration-200 ${
               isSelected
-                ? 'h-2 w-2 bg-[#F59E0B]'
+                ? 'h-2 w-2 bg-[#F59E0B] shadow-[0_0_6px_#F59E0B]'
                 : isHovered
-                ? 'h-2 w-2 bg-[#38BDF8]'
-                : 'h-1.5 w-1.5 bg-[#64748B]/50'
+                ? 'h-2 w-2 bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]'
+                : 'h-1.5 w-1.5 bg-[#64748B]/40'
             }`}
           />
         </div>
@@ -83,14 +83,14 @@ export const CelestialReticle: React.FC<CelestialReticleProps> = ({ data, yOffse
         {/* Minimal Label — Only revealed when hovered or selected */}
         {isTargeted && (
           <div
-            className={`mt-1.5 flex items-center gap-1 rounded-full px-2 py-0.5 backdrop-blur-md transition-all duration-200 animate-fade-in ${
+            className={`mt-1.5 flex items-center gap-1.5 rounded-full px-2.5 py-0.5 backdrop-blur-md transition-all duration-200 animate-fade-in ${
               isSelected
-                ? 'border border-[#F59E0B]/40 bg-[#0A0F1D]/90 text-[#F59E0B]'
-                : 'border border-[rgba(148,163,184,0.15)] bg-[#0A0F1D]/80 text-[#38BDF8]'
+                ? 'border border-[#F59E0B]/40 bg-[#070C1B]/90 text-[#F59E0B] shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                : 'border border-white/10 bg-[#070C1B]/85 text-[#38BDF8]'
             }`}
           >
             <span
-              className="h-1 w-1 rounded-full"
+              className="h-1.5 w-1.5 rounded-full shadow-sm"
               style={{ backgroundColor: data.visual.primaryColor }}
             />
             <span className="font-mono text-[9px] font-semibold tracking-widest uppercase">

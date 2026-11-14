@@ -3,8 +3,26 @@ import { CelestialId, SolarSystemInteractionState } from '../types';
 
 const SolarSystemContext = createContext<SolarSystemInteractionState | null>(null);
 
+function getInitialPlanet(): CelestialId | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const p = params.get('planet');
+  const validIds: CelestialId[] = [
+    'sun',
+    'mercury',
+    'venus',
+    'earth',
+    'mars',
+    'jupiter',
+    'saturn',
+    'uranus',
+    'neptune',
+  ];
+  return p && validIds.includes(p as CelestialId) ? (p as CelestialId) : null;
+}
+
 export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedPlanetId, setSelectedPlanetId] = useState<CelestialId | null>(null);
+  const [selectedPlanetId, setSelectedPlanetId] = useState<CelestialId | null>(getInitialPlanet);
   const [hoveredPlanetId, setHoveredPlanetId] = useState<CelestialId | null>(null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
@@ -12,6 +30,18 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setSelectedPlanetId((prev) => {
       if (prev === id) return prev;
       setIsTransitioning(true);
+
+      // Synchronize search params for shareable URLs
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        if (id) {
+          url.searchParams.set('planet', id);
+        } else {
+          url.searchParams.delete('planet');
+        }
+        window.history.replaceState({}, '', url.toString());
+      }
+
       return id;
     });
   }, []);
