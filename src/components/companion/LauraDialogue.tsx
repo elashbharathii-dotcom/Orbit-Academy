@@ -91,7 +91,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
     <div
       role="region"
       aria-label="LAURA Companion Mission Dialogue"
-      className="pointer-events-auto fixed bottom-20 right-4 sm:right-6 z-40 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-white/10 bg-[#05070D]/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 animate-fade-in sm:w-[380px]"
+      className="pointer-events-auto fixed bottom-20 right-4 sm:right-6 z-40 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-white/[0.12] bg-[#0B1226]/90 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-300 animate-fade-in sm:w-[380px]"
     >
       {/* 1. Header with Status Telemetry & Controls */}
       <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">

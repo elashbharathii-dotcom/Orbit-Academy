@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../../navigation/NavigationProvider';
-import { ROUTES } from '../../navigation/routes';
+import { ROUTES, AppRoute } from '../../navigation/routes';
 import {
   Compass,
   BookOpen,
@@ -11,9 +11,18 @@ import {
   Clock,
   Sparkles,
   ListFilter,
+  RotateCcw,
 } from 'lucide-react';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 import { AccessibleDirectory } from '../common/AccessibleDirectory';
+
+interface NavItem {
+  id: string;
+  label: string;
+  route: AppRoute;
+  icon: React.ComponentType<{ className?: string }>;
+  accentColor: string;
+}
 
 export const MasterHeader: React.FC = () => {
   const { currentRoute, navigate } = useNavigation();
@@ -31,55 +40,64 @@ export const MasterHeader: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const NAV_ITEMS = [
-    { label: 'Explore', route: ROUTES.HOME, icon: Compass },
-    { label: 'Learn', route: ROUTES.LEARN, icon: BookOpen },
-    { label: 'Draw', route: ROUTES.DRAW, icon: Palette },
-    { label: 'Lab', route: ROUTES.LAB, icon: FlaskConical },
-    { label: 'Quiz', route: ROUTES.QUIZ, icon: Award },
-    { label: 'Build', route: ROUTES.BUILD, icon: Hammer },
+  const NAV_ITEMS: NavItem[] = [
+    { id: 'explore', label: 'Explore', route: ROUTES.HOME, icon: Compass, accentColor: '#38BDF8' },
+    { id: 'learn', label: 'Learn', route: ROUTES.LEARN, icon: BookOpen, accentColor: '#818CF8' },
+    { id: 'draw', label: 'Draw', route: ROUTES.DRAW, icon: Palette, accentColor: '#34D399' },
+    { id: 'lab', label: 'Lab', route: ROUTES.LAB, icon: FlaskConical, accentColor: '#F472B6' },
+    { id: 'quiz', label: 'Quiz', route: ROUTES.QUIZ, icon: Award, accentColor: '#FBBF24' },
+    { id: 'build', label: 'Build', route: ROUTES.BUILD, icon: Hammer, accentColor: '#FB923C' },
   ];
 
   return (
-    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/5 bg-[#030712]/85 px-4 py-2.5 backdrop-blur-2xl sm:px-6">
-      {/* 1. Brand Logo & Celestial Breadcrumb */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/[0.08] bg-[#070C1B]/80 px-3 py-2 backdrop-blur-2xl sm:px-6">
+      {/* 1. Left Cluster: Brand Logo & Celestial Breadcrumb */}
+      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
         <button
           type="button"
           onClick={() => {
             selectPlanet(null);
             navigate(ROUTES.HOME);
           }}
-          className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 transition-all hover:border-[#38BDF8]/40 hover:bg-white/10"
+          title="Return to System Overview"
+          className="group flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 transition-all duration-200 hover:border-[#38BDF8]/40 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#38BDF8]"
         >
-          <span className="relative flex h-2 w-2">
+          {/* Pulsing Core Sensor Emblem */}
+          <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#38BDF8] opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#38BDF8]" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-gradient-to-tr from-[#0284C7] to-[#38BDF8] shadow-[0_0_8px_#38BDF8]" />
           </span>
-          <span className="font-sans text-xs font-bold tracking-[0.2em] uppercase text-[#F8FAFC]">
-            ORBIT ACADEMY
-          </span>
+
+          <div className="flex flex-col text-left">
+            <span className="font-sans text-[11px] font-bold tracking-[0.22em] uppercase text-[#F8FAFC] transition-colors group-hover:text-white">
+              <span className="sm:hidden">ORBIT</span>
+              <span className="hidden sm:inline">ORBIT ACADEMY</span>
+            </span>
+          </div>
         </button>
 
+        {/* Selected Planet Active Context Breadcrumb */}
         {selectedPlanetId && currentRoute === ROUTES.HOME && (
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-3 py-0.5 font-mono text-[11px] text-[#F59E0B] animate-fade-in">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
-            <span className="font-semibold uppercase">{selectedPlanetId}</span>
+          <div className="hidden lg:flex items-center gap-2 rounded-full border border-[#F59E0B]/35 bg-[#F59E0B]/10 px-3 py-1 font-mono text-[11px] text-[#F59E0B] shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-fade-in">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] shadow-[0_0_6px_#F59E0B]" />
+            <span className="font-semibold uppercase tracking-wider">{selectedPlanetId}</span>
             <button
               type="button"
               onClick={() => selectPlanet(null)}
-              className="ml-1 text-[10px] text-[#94A3B8] hover:text-[#F8FAFC]"
+              title="Return to Solar Overview [Esc]"
+              className="ml-1 flex items-center gap-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[9.5px] text-[#94A3B8] transition-colors hover:bg-white/20 hover:text-[#F8FAFC]"
             >
-              [ESC]
+              <RotateCcw className="h-2.5 w-2.5" />
+              <span>ESC</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* 2. Six Primary Core Experiences Navigation Bar */}
+      {/* 2. Center: Six Core Modes Navigation Bar */}
       <nav
         aria-label="Orbit Academy Core Experiences"
-        className="flex items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-[#080F1D]/80 p-1 shadow-lg backdrop-blur-xl scrollbar-none"
+        className="flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/[0.08] bg-[#0B1226]/85 p-1 shadow-2xl backdrop-blur-xl scrollbar-none mx-1 sm:mx-2"
       >
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -88,35 +106,47 @@ export const MasterHeader: React.FC = () => {
             (item.route === ROUTES.HOME && currentRoute === '/') ||
             (item.route === ROUTES.DRAW && currentRoute === ROUTES.EARTH_DRAWING) ||
             (item.route === ROUTES.QUIZ && currentRoute === ROUTES.URANUS_QUIZ) ||
-            (item.route === ROUTES.LAB && (currentRoute === ROUTES.VENUS_CLIMATE || currentRoute === ROUTES.JUPITER_LAB));
+            (item.route === ROUTES.LAB &&
+              (currentRoute === ROUTES.VENUS_CLIMATE || currentRoute === ROUTES.JUPITER_LAB));
 
           return (
             <button
-              key={item.label}
+              key={item.id}
               type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => {
                 if (item.route === ROUTES.HOME && currentRoute === ROUTES.HOME && selectedPlanetId) {
                   selectPlanet(null);
                 }
                 navigate(item.route);
               }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-sans text-xs transition-all duration-200 ${
+              className={`group relative flex shrink-0 items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 font-sans text-xs transition-all duration-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#38BDF8] ${
                 isActive
-                  ? 'border border-[#38BDF8]/50 bg-[#38BDF8]/15 font-semibold text-[#F8FAFC] shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                  : 'border border-transparent text-[#94A3B8] hover:bg-white/5 hover:text-[#F8FAFC]'
+                  ? 'border border-[#38BDF8]/40 bg-gradient-to-r from-[#38BDF8]/15 via-[#818CF8]/12 to-[#38BDF8]/15 font-semibold text-[#F8FAFC] shadow-[0_0_16px_rgba(56,189,248,0.22)]'
+                  : 'border border-transparent text-[#94A3B8] hover:bg-white/[0.05] hover:text-[#F8FAFC]'
               }`}
             >
-              <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#38BDF8]' : 'text-[#94A3B8]'}`} />
-              <span>{item.label}</span>
+              <Icon
+                className={`h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110 ${
+                  isActive ? 'text-[#38BDF8]' : 'text-[#94A3B8]'
+                }`}
+              />
+              <span className="tracking-wide text-[11.5px]">{item.label}</span>
+
+              {/* Active Indicator Pip */}
+              {isActive && (
+                <span className="h-1 w-1 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
+              )}
             </button>
           );
         })}
       </nav>
 
-      {/* 3. Right Status: Student XP Progress & UTC Time */}
-      <div className="flex items-center gap-3">
-        {/* Student Progression Badge */}
-        <div className="hidden md:flex items-center gap-2 rounded-full border border-[#F59E0B]/20 bg-[#F59E0B]/5 px-3 py-1 font-mono text-[11px] text-[#F8FAFC]">
+      {/* 3. Right Cluster: Cadet Status, UTC Clock, 2D Accessible Directory */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Student Level & XP Telemetry */}
+        <div className="hidden md:flex items-center gap-2 rounded-full border border-[#F59E0B]/25 bg-[#F59E0B]/5 px-3 py-1 font-mono text-[11px] text-[#F8FAFC] shadow-sm">
           <Sparkles className="h-3 w-3 text-[#F59E0B]" />
           <span className="font-bold text-[#F59E0B]">Level 3</span>
           <span className="text-[#94A3B8]">•</span>
@@ -124,25 +154,25 @@ export const MasterHeader: React.FC = () => {
         </div>
 
         {/* Astronomical UTC Clock */}
-        <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 py-1 font-mono text-[11px] text-[#94A3B8] tabular-nums">
+        <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[11px] text-[#94A3B8] tabular-nums">
           <Clock className="h-3 w-3 text-[#38BDF8]" />
           <span>{utcTime || '00:00:00 UTC'}</span>
         </div>
 
-        {/* 2D Accessible Celestial Directory Button */}
+        {/* Accessible 2D Celestial Directory Modal Trigger */}
         <button
           type="button"
           onClick={() => setIsDirectoryOpen(true)}
           aria-label="Open 2D accessible celestial directory"
           title="Open 2D Celestial Directory [Accessible]"
-          className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-xs text-[#94A3B8] shadow-sm transition-all hover:border-[#38BDF8]/40 hover:text-[#F8FAFC]"
+          className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 sm:px-3 py-1 font-mono text-xs text-[#94A3B8] shadow-sm transition-all duration-200 hover:border-[#38BDF8]/40 hover:bg-white/[0.06] hover:text-[#F8FAFC] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#38BDF8]"
         >
           <ListFilter className="h-3.5 w-3.5 text-[#38BDF8]" />
-          <span className="hidden xl:inline">2D Directory</span>
+          <span className="hidden sm:inline text-[11px]">Directory</span>
         </button>
       </div>
 
-      {/* Accessible Directory Modal */}
+      {/* Full-Screen Accessible 2D Solar System Directory Modal */}
       <AccessibleDirectory
         isOpen={isDirectoryOpen}
         onClose={() => setIsDirectoryOpen(false)}

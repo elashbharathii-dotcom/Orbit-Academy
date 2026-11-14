@@ -24,7 +24,7 @@ const OVERVIEW_TARGET = new THREE.Vector3(0, 0, 0);
  * - Adaptive OrbitControls distance clamps tailored to individual planet geometry
  */
 export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef }) => {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const { selectedPlanetId } = useSolarSystem();
 
   // Animation transition state
@@ -45,6 +45,10 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
     // Snapshot starting positions
     startCamPosRef.current.copy(camera.position);
     startTargetRef.current.copy(controlsRef.current.target);
+
+    // Compute aspect ratio scaling for mobile portrait vs desktop widescreen
+    const aspect = size.width / Math.max(1, size.height);
+    const portraitMultiplier = aspect < 1.0 ? Math.min(2.4, 0.92 / aspect) : 1.0;
 
     // Determine destination target & camera offset
     const destTarget = selectedPlanetId
@@ -72,21 +76,30 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
         heightMultiplier = 1.35;
       }
 
-      const offset = new THREE.Vector3(
-        radius * framingMultiplier,
-        radius * heightMultiplier,
-        radius * framingMultiplier
-      );
+      // Compute outward radial & tangent vectors from Sol to ensure camera looks at illuminated day-side
+      const radialDir = destTarget.lengthSq() > 0.001
+        ? destTarget.clone().setY(0).normalize()
+        : new THREE.Vector3(0.707, 0, 0.707);
+      const tangentDir = new THREE.Vector3(-radialDir.z, 0, radialDir.x);
+
+      const offset = radialDir.clone().multiplyScalar(radius * framingMultiplier * 0.75)
+        .add(tangentDir.clone().multiplyScalar(radius * framingMultiplier * 0.65))
+        .add(new THREE.Vector3(0, radius * heightMultiplier * (aspect < 1.0 ? 1.4 : 1.1), 0))
+        .multiplyScalar(portraitMultiplier);
+
       destCamPos = destTarget.clone().add(offset);
 
       // Adapt controls zoom limits to the focused body
       controlsRef.current.minDistance = radius * (planetDef.id === 'saturn' ? 2.5 : 1.6);
-      controlsRef.current.maxDistance = radius * (planetDef.id === 'saturn' ? 16.0 : 12.0);
+      controlsRef.current.maxDistance = radius * (planetDef.id === 'saturn' ? 16.0 : 12.0) * portraitMultiplier;
     } else {
-      // Return to Macro System Overview
+      // Return to Macro System Overview with portrait compensation
       destCamPos = OVERVIEW_CAMERA_POS.clone();
+      if (aspect < 1.0) {
+        destCamPos.multiplyScalar(Math.min(1.75, 0.9 / aspect));
+      }
       controlsRef.current.minDistance = 8.0;
-      controlsRef.current.maxDistance = 140.0;
+      controlsRef.current.maxDistance = 140.0 * portraitMultiplier;
     }
 
     // Compute arched Bezier midpoint for cinematic swoop

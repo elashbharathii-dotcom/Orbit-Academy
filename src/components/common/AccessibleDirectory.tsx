@@ -57,7 +57,7 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
     >
       <div
         ref={modalRef}
-        className="relative flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[#0A0F1D]/98 shadow-2xl backdrop-blur-2xl"
+        className="relative flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#0B1226]/98 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.14)] p-6">

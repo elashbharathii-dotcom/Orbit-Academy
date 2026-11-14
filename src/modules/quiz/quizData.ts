@@ -71,6 +71,36 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
     explanation: 'Solar wind protons and electrons guided by Earth’s magnetic field collide with oxygen and nitrogen atoms in the thermosphere, exciting them into emitting green and purple photons.',
     xpReward: 50,
   },
+  {
+    id: 'q-es-2',
+    category: 'earth-science',
+    difficulty: 'Commander',
+    question: 'What is the primary heat transport mechanism driving plate tectonics inside Earth’s mantle?',
+    options: [
+      'Radiative photon emission',
+      'Thermal mantle convection currents',
+      'Centrifugal rotational forcing',
+      'Solar gravitational tidal kneading',
+    ],
+    correctIndex: 1,
+    explanation: 'Sub-surface heat from primordial accretion and radioactive decay (U-238, Th-232, K-40) drives slow plastic convection in the asthenosphere, moving tectonic lithospheric plates.',
+    xpReward: 75,
+  },
+  {
+    id: 'q-es-3',
+    category: 'earth-science',
+    difficulty: 'Astrophysicist',
+    question: 'What is the geomagnetic geodynamo effect responsible for generating Earth’s dipole magnetic field?',
+    options: [
+      'Magnetized solid iron crystals locked in the inner core',
+      'Convective swirling currents of molten iron-nickel fluid in the outer core powered by Coriolis forces',
+      'Piezoelectric tension in the crust under ocean ridges',
+      'Cosmic rays ionizing atmospheric argon gas',
+    ],
+    correctIndex: 1,
+    explanation: 'Thermal convection coupled with Earth’s rapid rotation (Coriolis acceleration) organizes liquid iron flows in the outer core into helical columns, generating a self-sustaining planetary magnetic dipole.',
+    xpReward: 100,
+  },
 
   // 3. Planetary Science
   {
@@ -82,6 +112,31 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
     correctIndex: 1,
     explanation: 'Olympus Mons on Mars rises 21.9 km (72,000 ft) high—nearly three times the height of Mount Everest—spanning a base the size of the state of Arizona.',
     xpReward: 75,
+  },
+  {
+    id: 'q-ps-2',
+    category: 'planetary-science',
+    difficulty: 'Cadet',
+    question: 'Which Jovian moon is considered one of the most promising candidates in the search for extraterrestrial life due to its vast subsurface saltwater ocean?',
+    options: ['Io', 'Europa', 'Callisto', 'Phobos'],
+    correctIndex: 1,
+    explanation: 'Europa hides a global liquid ocean containing more water than all of Earth’s oceans combined, shielded beneath an icy crust 15 to 25 km thick and warmed by tidal flexure.',
+    xpReward: 50,
+  },
+  {
+    id: 'q-ps-3',
+    category: 'planetary-science',
+    difficulty: 'Astrophysicist',
+    question: 'Why does Saturn’s moon Enceladus produce continuous cryogenic plumes erupting from its south polar fractures (Tiger Stripes)?',
+    options: [
+      'Chemical ignition of hydrogen peroxide caverns',
+      'Orbital orbital eccentricity resonance with Dione causing cyclical tidal frictional heating',
+      'Direct solar radiation boiling surface nitrogen frost',
+      'Mantle tectonic subduction zones',
+    ],
+    correctIndex: 1,
+    explanation: 'A 2:1 mean-motion orbital resonance with Dione excites Enceladus’s orbital eccentricity, producing ongoing tidal dissipation that melts basal ice and vents supersonic saltwater plumes through fractures.',
+    xpReward: 100,
   },
 
   // 4. Astrophysics
@@ -117,6 +172,36 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
     explanation: 'Launched in 1977, NASA’s Voyager 1 crossed the heliopause in August 2012 at a distance of 121 AU, entering pristine interstellar plasma space.',
     xpReward: 50,
   },
+  {
+    id: 'q-sm-2',
+    category: 'space-missions',
+    difficulty: 'Commander',
+    question: 'What revolutionary gravitational maneuver did the Cassini-Huygens spacecraft use to reach Saturn with fuel efficiency?',
+    options: [
+      'Single direct ion propulsion burn from low-Earth orbit',
+      'Venus-Venus-Earth-Jupiter Gravity Assist (VVEJGA) trajectory',
+      'Solar photon sail deployment at 0.5 AU',
+      'Lunar orbital tether slingshot',
+    ],
+    correctIndex: 1,
+    explanation: 'Cassini performed multiple gravity-assist flybys (twice past Venus, once past Earth, and once past Jupiter) stealing orbital momentum to gain over 18 km/s without consuming propellant.',
+    xpReward: 75,
+  },
+  {
+    id: 'q-sm-3',
+    category: 'space-missions',
+    difficulty: 'Astrophysicist',
+    question: 'Why is the James Webb Space Telescope (JWST) positioned in a halo orbit around the Sun-Earth Lagrange Point 2 (L2)?',
+    options: [
+      'To remain in continuous direct radio contact with Mars rovers',
+      'To keep the Sun, Earth, and Moon simultaneously behind its five-layer thermal sunshield, maintaining cryogenic ~40 K infrared detectors',
+      'To recharge its lithium-sulfur batteries inside Earth’s Van Allen belt',
+      'To harvest lunar solar flare ejecta',
+    ],
+    correctIndex: 1,
+    explanation: 'At L2 (1.5 million km behind Earth), a single orientation shields JWST’s mirrors and NIRCam from the thermal radiation of the Sun, Earth, and Moon simultaneously, chilling instruments below 40 Kelvin.',
+    xpReward: 100,
+  },
 
   // 6. Galaxies
   {
@@ -128,6 +213,31 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
     correctIndex: 1,
     explanation: 'The Andromeda Galaxy (M31) is approaching the Milky Way at approximately 110 km/s. In 4.5 billion years, their stellar envelopes will merge into a giant elliptical galaxy dubbed Milkomeda.',
     xpReward: 75,
+  },
+  {
+    id: 'q-gx-2',
+    category: 'galaxies',
+    difficulty: 'Cadet',
+    question: 'What classification shape does our home galaxy, the Milky Way, belong to?',
+    options: ['Irregular dwarf galaxy', 'Barred spiral galaxy (SBbc)', 'Peculiar ring galaxy', 'Giant elliptical galaxy (E0)'],
+    correctIndex: 1,
+    explanation: 'Modern infrared surveys (Spitzer & Gaia) confirm that the Milky Way is a barred spiral galaxy with a central stellar bar spanning ~27,000 light-years and four major spiral arms.',
+    xpReward: 50,
+  },
+  {
+    id: 'q-gx-3',
+    category: 'galaxies',
+    difficulty: 'Astrophysicist',
+    question: 'What empirical astrophysical relation links the flat rotational velocity of stars in spiral galaxies to their total intrinsic baryonic luminosity?',
+    options: [
+      'The Faber-Jackson relation',
+      'The Tully-Fisher relation',
+      'The Hertzsprung-Russell relation',
+      'The Wien displacement law',
+    ],
+    correctIndex: 1,
+    explanation: 'The Tully-Fisher relation states that L ∝ V_max^4 for spiral galaxies, providing a powerful cosmic distance indicator and early evidence for dark matter halos enveloping galactic disks.',
+    xpReward: 100,
   },
 
   // 7. Advanced Astronomy
@@ -145,6 +255,26 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
     correctIndex: 2,
     explanation: 'Because Type Ia supernovae detonate with nearly uniform peak luminosity, their measured dimness revealed cosmic acceleration driven by Dark Energy (Nobel Prize in Physics 2011).',
     xpReward: 100,
+  },
+  {
+    id: 'q-aa-2',
+    category: 'advanced-astronomy',
+    difficulty: 'Cadet',
+    question: 'What is a light-year fundamentally a measurement of?',
+    options: ['Time elapsed in deep space', 'Distance traveled by light in vacuum in one Julian year', 'Brightness of stellar flares', 'Speed of cosmic rays'],
+    correctIndex: 1,
+    explanation: 'A light-year is a unit of astronomical distance equal to approximately 9.46 trillion kilometers (5.88 trillion miles), the span light travels across vacuum in 365.25 days.',
+    xpReward: 50,
+  },
+  {
+    id: 'q-aa-3',
+    category: 'advanced-astronomy',
+    difficulty: 'Commander',
+    question: 'What optical phenomenon occurs when light from a distant quasar is curved around a foreground massive galaxy cluster?',
+    options: ['Gravitational lensing (Einstein Ring)', 'Synchrotron emission', 'Zeeman splitting', 'Rayleigh atmospheric scattering'],
+    correctIndex: 0,
+    explanation: 'As predicted by Einstein’s General Relativity, immense spacetime curvature warped by mass acts as an astronomical lens, producing magnified arcs, multiple images, and Einstein rings.',
+    xpReward: 75,
   },
 ];
 

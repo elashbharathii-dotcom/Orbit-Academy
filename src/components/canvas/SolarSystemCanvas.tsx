@@ -15,13 +15,13 @@ interface SolarSystemCanvasProps {
  * - THREE.SRGBColorSpace output gamma for authentic photographic planetary maps
  * - PCFSoftShadowMap for natural soft contact shadows and ring shadows
  * - Adaptive DPR clamping [1, 2] preventing GPU overheating on Retina and 4K displays
- * - Deep-space void clear color (#05070D)
+ * - Deep-space void clear color (#030611)
  */
 export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
   speedScale = 0.45,
 }) => {
   return (
-    <div className="absolute inset-0 h-full w-full bg-[#05070D]">
+    <div className="absolute inset-0 h-full w-full bg-[#030611]">
       <Canvas
         shadows
         camera={{
@@ -38,7 +38,7 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
           toneMappingExposure: 1.12,
         }}
         onCreated={({ gl, scene }) => {
-          gl.setClearColor('#05070D');
+          gl.setClearColor('#030611');
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
