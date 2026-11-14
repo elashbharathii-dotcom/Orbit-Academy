@@ -688,7 +688,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
               </div>
 
               {/* Component Items List */}
-              <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+              <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
                 {filteredCatalog.map((item) => (
                   <div
                     key={item.id}
@@ -731,7 +731,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                 {assembledParts.map((part, idx) => (
                   <div
                     key={`${part.id}-${idx}`}

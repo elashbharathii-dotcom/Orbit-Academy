@@ -64,7 +64,7 @@ export const InventoryDrawer: React.FC<InventoryDrawerProps> = ({ onClose }) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[85vh] w-full max-w-xl flex-col rounded-3xl border border-white/10 bg-[#0A0F1D]/95 p-6 shadow-2xl font-mono text-slate-100">
+      <div className="relative flex max-h-[90vh] w-full max-w-xl flex-col rounded-3xl border border-white/10 bg-[#0A0F1D]/95 p-6 shadow-2xl font-mono text-slate-100 overflow-y-auto custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2">
@@ -92,13 +92,12 @@ export const InventoryDrawer: React.FC<InventoryDrawerProps> = ({ onClose }) => 
           <div className="w-40">
             <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
               <div
-                className={`h-full transition-all duration-300 ${
-                  weightPercent > 90
+                className={`h-full transition-all duration-300 ${weightPercent > 90
                     ? 'bg-red-500'
                     : weightPercent > 70
-                    ? 'bg-amber-400'
-                    : 'bg-cyan-400'
-                }`}
+                      ? 'bg-amber-400'
+                      : 'bg-cyan-400'
+                  }`}
                 style={{ width: `${weightPercent}%` }}
               />
             </div>
@@ -109,15 +108,14 @@ export const InventoryDrawer: React.FC<InventoryDrawerProps> = ({ onClose }) => 
         </div>
 
         {/* Resources Grid */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto pr-1">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[46vh] overflow-y-auto pr-1 custom-scrollbar">
           {Object.values(inventory).map((item) => (
             <div
               key={item.id}
-              className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-all ${
-                item.count > 0
+              className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-all ${item.count > 0
                   ? 'border-white/10 bg-[#11182E] hover:border-white/20'
                   : 'border-white/5 bg-[#0D1322]/50 opacity-50'
-              }`}
+                }`}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5">
                 {getIcon(item.id)}
@@ -126,9 +124,8 @@ export const InventoryDrawer: React.FC<InventoryDrawerProps> = ({ onClose }) => 
                 <div className="flex items-center justify-between gap-1">
                   <span className="text-xs font-bold text-white truncate">{item.name}</span>
                   <span
-                    className={`rounded px-2 py-0.5 text-xs font-bold shrink-0 ${
-                      item.count > 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-slate-800 text-slate-500'
-                    }`}
+                    className={`rounded px-2 py-0.5 text-xs font-bold shrink-0 ${item.count > 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-slate-800 text-slate-500'
+                      }`}
                   >
                     x{item.count}
                   </span>

@@ -14,7 +14,7 @@ export const MissionLogModal: React.FC<MissionLogModalProps> = ({ onClose }) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[88vh] w-full max-w-xl flex-col rounded-3xl border border-white/10 bg-[#0A0F1D]/95 p-6 shadow-2xl font-mono text-slate-100">
+      <div className="relative flex max-h-[90vh] w-full max-w-xl flex-col rounded-3xl border border-white/10 bg-[#0A0F1D]/95 p-6 shadow-2xl font-mono text-slate-100 overflow-y-auto custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export const MissionLogModal: React.FC<MissionLogModalProps> = ({ onClose }) => 
         </div>
 
         {/* Objectives List */}
-        <div className="mt-4 flex flex-col gap-2.5 overflow-y-auto pr-1">
+        <div className="mt-4 flex flex-col gap-2.5 max-h-[48vh] overflow-y-auto pr-1 custom-scrollbar">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Survival Protocols & Field Operations:
           </span>
@@ -61,11 +61,10 @@ export const MissionLogModal: React.FC<MissionLogModalProps> = ({ onClose }) => 
           {objectives.map((obj) => (
             <div
               key={obj.id}
-              className={`flex items-start gap-3 rounded-xl border p-3 transition-colors ${
-                obj.completed
+              className={`flex items-start gap-3 rounded-xl border p-3 transition-colors ${obj.completed
                   ? 'border-emerald-500/30 bg-emerald-500/10'
                   : 'border-white/5 bg-[#11182E]'
-              }`}
+                }`}
             >
               <div className="mt-0.5">
                 {obj.completed ? (
@@ -76,9 +75,8 @@ export const MissionLogModal: React.FC<MissionLogModalProps> = ({ onClose }) => 
               </div>
               <div className="flex flex-col">
                 <span
-                  className={`text-xs font-bold ${
-                    obj.completed ? 'text-emerald-300 line-through' : 'text-slate-100'
-                  }`}
+                  className={`text-xs font-bold ${obj.completed ? 'text-emerald-300 line-through' : 'text-slate-100'
+                    }`}
                 >
                   {obj.title}
                 </span>

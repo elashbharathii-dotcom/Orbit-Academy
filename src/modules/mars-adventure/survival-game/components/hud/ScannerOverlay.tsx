@@ -79,7 +79,7 @@ export const ScannerOverlay: React.FC = () => {
       </div>
 
       {/* Detected Mineral Signatures List on Top-Right */}
-      <div className="pointer-events-auto absolute top-28 right-6 flex flex-col gap-2 max-w-xs w-full max-h-[60vh] overflow-y-auto pr-1">
+      <div className="pointer-events-auto absolute top-28 right-6 flex flex-col gap-2 max-w-xs w-full max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
         {detected.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-[#0A0F1D]/80 p-3 text-center text-xs text-slate-400 backdrop-blur-md">
             No mineral signatures within 35m. Traverse towards craters or dunes.

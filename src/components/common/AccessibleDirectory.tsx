@@ -86,7 +86,7 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
         </div>
 
         {/* Semantic Table */}
-        <div className="overflow-x-auto overflow-y-auto p-6 scrollbar-none">
+        <div className="overflow-x-auto overflow-y-auto p-6 custom-scrollbar">
           <table className="w-full text-left font-mono text-xs">
             <caption className="sr-only">
               Astronomical and educational directory of the Sun and the eight planets in the Solar System

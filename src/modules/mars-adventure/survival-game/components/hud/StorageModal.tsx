@@ -91,7 +91,7 @@ export const StorageModal: React.FC = () => {
         </div>
 
         {/* Dual Storage Pane Container */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 overflow-y-auto">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 overflow-y-auto custom-scrollbar">
           {/* Left Column: Backpack Cargo */}
           <div className="flex flex-col rounded-2xl border border-slate-800 bg-[#0D1527]/80 p-4">
             <div className="flex items-center justify-between border-b border-slate-700/50 pb-3 mb-3">
@@ -105,20 +105,19 @@ export const StorageModal: React.FC = () => {
                 </span>
                 <div className="w-28 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-300 ${
-                      weightPercent > 90
-                        ? 'bg-red-500'
-                        : weightPercent > 70
+                    className={`h-full transition-all duration-300 ${weightPercent > 90
+                      ? 'bg-red-500'
+                      : weightPercent > 70
                         ? 'bg-amber-400'
                         : 'bg-cyan-400'
-                    }`}
+                      }`}
                     style={{ width: `${weightPercent}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1">
+            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1 custom-scrollbar">
               {resourceKeys.map((key) => {
                 const item = inventory[key];
                 if (!item || item.count <= 0) return null;
@@ -191,7 +190,7 @@ export const StorageModal: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1">
+            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1 custom-scrollbar">
               {resourceKeys.map((key) => {
                 const storedCount = vaultStorage[key] || 0;
                 if (storedCount <= 0) return null;
@@ -225,11 +224,10 @@ export const StorageModal: React.FC = () => {
                       <button
                         onClick={() => withdrawFromStorage(key, 1)}
                         disabled={!canWithdraw}
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-bold transition-all ${
-                          canWithdraw
-                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 active:scale-95'
-                            : 'border-slate-700 bg-slate-800/40 text-slate-600 cursor-not-allowed'
-                        }`}
+                        className={`rounded-lg border px-2 py-1 text-[11px] font-bold transition-all ${canWithdraw
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 active:scale-95'
+                          : 'border-slate-700 bg-slate-800/40 text-slate-600 cursor-not-allowed'
+                          }`}
                         title={canWithdraw ? 'Withdraw 1 unit to backpack' : 'Backpack full'}
                       >
                         <ArrowLeft className="inline h-3 w-3 mr-0.5" /> -1
