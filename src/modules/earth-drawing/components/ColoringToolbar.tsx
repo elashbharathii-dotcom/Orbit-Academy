@@ -36,6 +36,8 @@ interface ColoringToolbarProps {
   onBackToGallery: () => void;
   progressPercent: number;
   coloredCount: number;
+  showNumberHints?: boolean;
+  onToggleNumberHints?: () => void;
 }
 
 export const ColoringToolbar: React.FC<ColoringToolbarProps> = ({
@@ -56,6 +58,8 @@ export const ColoringToolbar: React.FC<ColoringToolbarProps> = ({
   onBackToGallery,
   progressPercent,
   coloredCount,
+  showNumberHints = true,
+  onToggleNumberHints,
 }) => {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
 
@@ -125,6 +129,24 @@ export const ColoringToolbar: React.FC<ColoringToolbarProps> = ({
             <span className="hidden sm:inline">Eraser</span>
           </button>
         </div>
+
+        {/* Color-by-Number Hints Toggle */}
+        {onToggleNumberHints && (
+          <button
+            type="button"
+            onClick={onToggleNumberHints}
+            title={showNumberHints ? 'Hide Number Hints (1, 2, 3...)' : 'Show Number Hints (1, 2, 3...)'}
+            className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-mono transition-all ${
+              showNumberHints
+                ? 'border-[#38BDF8] bg-[#38BDF8]/20 font-bold text-[#38BDF8] shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                : 'border-white/10 bg-[#070C1B] text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <span className="font-bold text-[10px] bg-white/10 px-1 py-0.5 rounded text-[#F8FAFC]">123</span>
+            <span className="hidden md:inline">Numbers</span>
+            <span className="text-[10px] opacity-80">{showNumberHints ? 'ON' : 'OFF'}</span>
+          </button>
+        )}
 
         {/* Undo & Redo */}
         <div className="flex items-center gap-1">

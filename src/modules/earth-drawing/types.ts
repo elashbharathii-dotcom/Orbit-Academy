@@ -22,11 +22,22 @@ export interface ColoringCategory {
 
 export type DifficultyLevel = 'Easy' | 'Medium' | 'Explorer';
 
+export interface ColorSuggestion {
+  number: number;
+  name: string;
+  hex: string;
+  targetDescription: string;
+}
+
 export interface SvgColorRegion {
   id: string;
   path: string;
   name?: string;
   defaultFill?: string;
+  suggestedNumber?: number;
+  suggestedColor?: string;
+  suggestedColorName?: string;
+  centerPoint?: { x: number; y: number };
 }
 
 export interface ColoringArtwork {
@@ -43,6 +54,7 @@ export interface ColoringArtwork {
   underlaySvg?: string;
   overlaySvg?: string;
   recommendedPalette?: string[];
+  colorSuggestions?: ColorSuggestion[];
   thumbnailSvg?: string;
 }
 

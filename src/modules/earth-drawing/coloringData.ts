@@ -1,4 +1,10 @@
-import { ColoringCategory, ColoringArtwork, ColorDefinition } from './types';
+import {
+  ColoringCategory,
+  ColoringArtwork,
+  ColorDefinition,
+  ColorSuggestion,
+  SvgColorRegion,
+} from './types';
 
 // ============================================================================
 // 1. EIGHT CANONICAL COLORING CATEGORIES
@@ -117,6 +123,148 @@ export const ASTRONOMY_PRESET_COLORS: ColorDefinition[] = [
   { name: 'Lunar Regolith', hex: '#64748B' },
   { name: 'Nebula Violet', hex: '#D946EF' },
 ];
+
+// ============================================================================
+// 2B. NUMBERED COLOR SUGGESTIONS PALETTE (1-Red, 2-Orange, etc.)
+// ============================================================================
+
+export const NUMBERED_COLOR_PALETTE: ColorSuggestion[] = [
+  { number: 1, name: 'Red', hex: '#EF4444', targetDescription: 'Solar Corona Rays, Booster Fins, Martian Crust, Red Dwarf' },
+  { number: 2, name: 'Orange', hex: '#F97316', targetDescription: 'Sun Core, Jupiter Belts, Reentry Heat Shield, Accretion Ring' },
+  { number: 3, name: 'Yellow', hex: '#FBBF24', targetDescription: 'Saturn Rings, Twinkling Stars, Venusian Clouds, Telescope Mirrors' },
+  { number: 4, name: 'Green', hex: '#10B981', targetDescription: 'Earth Continents, Polar Auroras, Research Biodome Plants' },
+  { number: 5, name: 'Cyan', hex: '#06B6D4', targetDescription: 'Living Oceans, Astronaut Visors, Uranus Atmosphere, Solar Panels' },
+  { number: 6, name: 'Blue', hex: '#3B82F6', targetDescription: 'Neptune Deep Gas, Upper Atmospheric Halo, Ion Gas Trails' },
+  { number: 7, name: 'Purple', hex: '#A855F7', targetDescription: 'Galactic Spiral Arms, Cosmic Gas Nebulae, Relativistic Jets' },
+  { number: 8, name: 'Pink', hex: '#EC4899', targetDescription: 'Rosy Sun Cheeks, Stellar Nurseries, Visor Highlights' },
+  { number: 9, name: 'Slate Grey', hex: '#64748B', targetDescription: 'Moon Regolith, Impact Craters, Rover Wheels & Chassis' },
+  { number: 10, name: 'Brown', hex: '#854D0E', targetDescription: 'Rocky Asteroids, Martian Dunes, Continental Highlands' },
+  { number: 11, name: 'White', hex: '#F8FAFC', targetDescription: 'Pressurized Spacesuits, Shuttle Fuselage, Atmospheric Clouds' },
+  { number: 12, name: 'Space Black', hex: '#0F172A', targetDescription: 'Supermassive Black Hole Event Horizon, Deep Space Shadows' },
+];
+
+/**
+ * Calculates the visual geometric center of an SVG path from its coordinates
+ */
+export function computePathCenter(path: string): { x: number; y: number } {
+  const nums = path.match(/[-+]?\d*\.?\d+/g);
+  if (!nums || nums.length < 2) return { x: 250, y: 140 };
+
+  const xs: number[] = [];
+  const ys: number[] = [];
+
+  for (let i = 0; i < nums.length - 1; i += 2) {
+    const x = parseFloat(nums[i]);
+    const y = parseFloat(nums[i + 1]);
+    if (!isNaN(x) && !isNaN(y)) {
+      xs.push(x);
+      ys.push(y);
+    }
+  }
+
+  if (xs.length === 0 || ys.length === 0) return { x: 250, y: 140 };
+
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  return {
+    x: Math.round((minX + maxX) / 2),
+    y: Math.round((minY + maxY) / 2),
+  };
+}
+
+/**
+ * Maps any region to an astronomical color suggestion (1-Red, 2-Orange, etc.)
+ */
+export function getRegionColorSuggestion(
+  region: SvgColorRegion,
+  index: number = 0
+): { number: number; name: string; hex: string } {
+  if (region.suggestedNumber && region.suggestedColor) {
+    return {
+      number: region.suggestedNumber,
+      name: region.suggestedColorName || 'Color',
+      hex: region.suggestedColor,
+    };
+  }
+
+  const name = (region.name || region.id).toLowerCase();
+
+  if (name.includes('red') || name.includes('ray') || name.includes('fire') || name.includes('flame') || name.includes('fin') || name.includes('mars') || name.includes('rust') || name.includes('booster')) {
+    return { number: 1, name: 'Red', hex: '#EF4444' };
+  }
+  if (name.includes('orange') || name.includes('sun') || name.includes('core') || name.includes('belt') || name.includes('dune') || name.includes('amber') || name.includes('corona')) {
+    return { number: 2, name: 'Orange', hex: '#F97316' };
+  }
+  if (name.includes('yellow') || name.includes('star') || name.includes('ring') || name.includes('gold') || name.includes('venus') || name.includes('sol') || name.includes('mirror')) {
+    return { number: 3, name: 'Yellow', hex: '#FBBF24' };
+  }
+  if (name.includes('green') || name.includes('continent') || name.includes('land') || name.includes('aurora') || name.includes('plant') || name.includes('terra')) {
+    return { number: 4, name: 'Green', hex: '#10B981' };
+  }
+  if (name.includes('cyan') || name.includes('ocean') || name.includes('sky') || name.includes('visor') || name.includes('ice') || name.includes('uranus') || name.includes('dish') || name.includes('panel')) {
+    return { number: 5, name: 'Cyan', hex: '#06B6D4' };
+  }
+  if (name.includes('blue') || name.includes('neptune') || name.includes('deep') || name.includes('water') || name.includes('basin') || name.includes('horizon')) {
+    return { number: 6, name: 'Blue', hex: '#3B82F6' };
+  }
+  if (name.includes('purple') || name.includes('violet') || name.includes('galaxy') || name.includes('spiral') || name.includes('nebula') || name.includes('jet')) {
+    return { number: 7, name: 'Purple', hex: '#A855F7' };
+  }
+  if (name.includes('pink') || name.includes('cheek') || name.includes('magenta') || name.includes('blush')) {
+    return { number: 8, name: 'Pink', hex: '#EC4899' };
+  }
+  if (name.includes('grey') || name.includes('gray') || name.includes('slate') || name.includes('moon') || name.includes('crater') || name.includes('wheel') || name.includes('metal') || name.includes('chassis') || name.includes('rover') || name.includes('regolith')) {
+    return { number: 9, name: 'Slate Grey', hex: '#64748B' };
+  }
+  if (name.includes('brown') || name.includes('rock') || name.includes('asteroid') || name.includes('soil') || name.includes('crust')) {
+    return { number: 10, name: 'Brown', hex: '#854D0E' };
+  }
+  if (name.includes('white') || name.includes('suit') || name.includes('shuttle') || name.includes('cloud') || name.includes('smoke') || name.includes('dome') || name.includes('satellite') || name.includes('fuselage')) {
+    return { number: 11, name: 'White', hex: '#F8FAFC' };
+  }
+  if (name.includes('black') || name.includes('blackhole') || name.includes('void') || name.includes('horizon') || name.includes('shadow') || name.includes('singularity')) {
+    return { number: 12, name: 'Space Black', hex: '#0F172A' };
+  }
+
+  // Fallback to rotating among standard 1-8
+  const fallback = NUMBERED_COLOR_PALETTE[index % 8];
+  return { number: fallback.number, name: fallback.name, hex: fallback.hex };
+}
+
+export type AugmentedRegion = SvgColorRegion & {
+  suggestedNumber: number;
+  suggestedColor: string;
+  suggestedColorName: string;
+  centerPoint: { x: number; y: number };
+};
+
+/**
+ * Resolves all regions in any artwork into color-by-number annotated regions
+ */
+export function resolveArtworkSuggestions(artwork: ColoringArtwork): {
+  regionsWithSuggestions: AugmentedRegion[];
+  activeSuggestions: ColorSuggestion[];
+} {
+  const regionsWithSuggestions: AugmentedRegion[] = artwork.regions.map((region, idx) => {
+    const sug = getRegionColorSuggestion(region, idx);
+    const center = region.centerPoint || computePathCenter(region.path);
+    return {
+      ...region,
+      suggestedNumber: sug.number,
+      suggestedColor: sug.hex,
+      suggestedColorName: sug.name,
+      centerPoint: center,
+    };
+  });
+
+  const usedNumbers = new Set(regionsWithSuggestions.map((r) => r.suggestedNumber));
+  const activeSuggestions = NUMBERED_COLOR_PALETTE.filter((s) => usedNumbers.has(s.number));
+
+  return { regionsWithSuggestions, activeSuggestions };
+}
 
 // ============================================================================
 // 3. COLORING ARTWORKS (INCLUDING 8 SIGNATURE COLORABLE PLATES)

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ColoringArtwork } from '../types';
+import { resolveArtworkSuggestions } from '../coloringData';
 
 interface SvgColoringCanvasProps {
   artwork: ColoringArtwork;
@@ -16,6 +17,8 @@ interface SvgColoringCanvasProps {
   onTouchStartPan: (e: React.TouchEvent) => void;
   onTouchMovePan: (e: React.TouchEvent) => void;
   onTouchEndPan: () => void;
+  showNumberHints?: boolean;
+  hoveredSuggestionNumber?: number | null;
 }
 
 export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
@@ -33,8 +36,14 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
   onTouchStartPan,
   onTouchMovePan,
   onTouchEndPan,
+  showNumberHints = true,
+  hoveredSuggestionNumber = null,
 }) => {
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
+
+  const { regionsWithSuggestions } = useMemo(() => {
+    return resolveArtworkSuggestions(artwork);
+  }, [artwork]);
 
   return (
     <div
@@ -81,9 +90,10 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
             )}
 
             {/* Draw every individually colorable enclosed region */}
-            {artwork.regions.map((region) => {
+            {regionsWithSuggestions.map((region) => {
               const currentFill = filledRegions[region.id] || '#FFFFFF';
               const isHovered = hoveredRegionId === region.id;
+              const isHighlighted = hoveredSuggestionNumber === region.suggestedNumber;
 
               return (
                 <path
@@ -91,8 +101,8 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
                   id={region.id}
                   d={region.path}
                   fill={currentFill}
-                  stroke="#0F172A"
-                  strokeWidth="2.5"
+                  stroke={isHighlighted ? region.suggestedColor : '#0F172A'}
+                  strokeWidth={isHighlighted ? '4' : '2.5'}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   onClick={(e) => {
@@ -101,9 +111,11 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
                   }}
                   onPointerEnter={() => setHoveredRegionId(region.id)}
                   onPointerLeave={() => setHoveredRegionId(null)}
-                  className="transition-colors duration-150 cursor-pointer"
+                  className="transition-all duration-150 cursor-pointer"
                   style={{
-                    filter: isHovered
+                    filter: isHighlighted
+                      ? `drop-shadow(0 0 10px ${region.suggestedColor})`
+                      : isHovered
                       ? activeTool === 'eraser'
                         ? 'drop-shadow(0 0 6px rgba(239, 68, 68, 0.75))'
                         : `drop-shadow(0 0 8px ${activeColor})`
@@ -121,6 +133,67 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
                 className="artwork-overlay select-none"
                 dangerouslySetInnerHTML={{ __html: artwork.overlaySvg }}
               />
+            )}
+
+            {/* Color by Number Canvas Hints (1-Red, 2-Orange, etc.) */}
+            {showNumberHints && (
+              <g className="number-hint-overlay pointer-events-none select-none">
+                {regionsWithSuggestions.map((region) => {
+                  const isColored =
+                    Boolean(filledRegions[region.id]) && filledRegions[region.id] !== '#FFFFFF';
+                  // Hide hint bubble once region is colored to preserve clean artwork
+                  if (isColored) return null;
+
+                  const isMatch = hoveredSuggestionNumber === region.suggestedNumber;
+
+                  return (
+                    <g
+                      key={`hint-${region.id}`}
+                      className="transition-all duration-200"
+                    >
+                      {/* Outer Pulse Glow if active suggestion hovered */}
+                      {isMatch && (
+                        <circle
+                          cx={region.centerPoint.x}
+                          cy={region.centerPoint.y}
+                          r="14"
+                          fill={region.suggestedColor}
+                          opacity="0.35"
+                          className="animate-ping"
+                        />
+                      )}
+
+                      {/* Circular Number Bubble */}
+                      <circle
+                        cx={region.centerPoint.x}
+                        cy={region.centerPoint.y}
+                        r={isMatch ? '11' : '8.5'}
+                        fill={isMatch ? region.suggestedColor : '#FFFFFF'}
+                        stroke="#0F172A"
+                        strokeWidth={isMatch ? '2' : '1.5'}
+                        style={{
+                          filter: isMatch
+                            ? `drop-shadow(0 0 8px ${region.suggestedColor})`
+                            : 'drop-shadow(0 1px 3px rgba(0,0,0,0.35))',
+                        }}
+                      />
+
+                      {/* Number Label */}
+                      <text
+                        x={region.centerPoint.x}
+                        y={region.centerPoint.y + (isMatch ? 4 : 3.5)}
+                        textAnchor="middle"
+                        fontSize={isMatch ? '11' : '9.5'}
+                        fontWeight="900"
+                        fill={isMatch && region.suggestedColor !== '#FFFFFF' ? '#FFFFFF' : '#0F172A'}
+                        fontFamily="'Roboto Mono', monospace"
+                      >
+                        {region.suggestedNumber}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
             )}
           </svg>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ColoringArtwork, ColoringHistoryStep } from '../types';
+import { NUMBERED_COLOR_PALETTE } from '../coloringData';
 
 export interface UseColoringEngineReturn {
   filledRegions: Record<string, string>;
@@ -32,6 +33,12 @@ export interface UseColoringEngineReturn {
   printArtwork: (uncolored?: boolean) => void;
   isComplete: boolean;
   progressPercent: number;
+  showNumberHints: boolean;
+  setShowNumberHints: (show: boolean | ((prev: boolean) => boolean)) => void;
+  toggleNumberHints: () => void;
+  hoveredSuggestionNumber: number | null;
+  setHoveredSuggestionNumber: (num: number | null) => void;
+  applySuggestedColor: (number: number) => void;
 }
 
 const STORAGE_PREFIX = 'orbit_coloring_progress_';
@@ -58,6 +65,22 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const panStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Color by Number & Number Hints
+  const [showNumberHints, setShowNumberHints] = useState<boolean>(true);
+  const [hoveredSuggestionNumber, setHoveredSuggestionNumber] = useState<number | null>(null);
+
+  const toggleNumberHints = useCallback(() => {
+    setShowNumberHints((prev) => !prev);
+  }, []);
+
+  const applySuggestedColor = useCallback((num: number) => {
+    const sug = NUMBERED_COLOR_PALETTE.find((s) => s.number === num);
+    if (sug) {
+      setActiveColor(sug.hex);
+      setActiveTool('fill');
+    }
+  }, []);
 
   // Load saved state from localStorage whenever artwork changes
   useEffect(() => {
@@ -272,6 +295,11 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
     if (!svgElement) return;
 
     const svgClone = svgElement.cloneNode(true) as SVGSVGElement;
+    // Strip number hint overlay before exporting to clean PNG
+    const hintOverlay = svgClone.querySelector('.number-hint-overlay');
+    if (hintOverlay) {
+      hintOverlay.remove();
+    }
     // Ensure width and height attributes exist on clone for canvas rendering
     svgClone.setAttribute('width', '1200');
     svgClone.setAttribute('height', '900');
@@ -484,5 +512,11 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
     printArtwork,
     isComplete,
     progressPercent,
+    showNumberHints,
+    setShowNumberHints,
+    toggleNumberHints,
+    hoveredSuggestionNumber,
+    setHoveredSuggestionNumber,
+    applySuggestedColor,
   };
 }
