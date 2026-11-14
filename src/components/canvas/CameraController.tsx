@@ -10,7 +10,7 @@ interface CameraControllerProps {
   controlsRef: React.RefObject<OrbitControlsImpl>;
 }
 
-const OVERVIEW_CAMERA_POS = new THREE.Vector3(0, 42, 68);
+const OVERVIEW_CAMERA_POS = new THREE.Vector3(0, 48, 92);
 const OVERVIEW_TARGET = new THREE.Vector3(0, 0, 0);
 
 /**

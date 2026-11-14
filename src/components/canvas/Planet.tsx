@@ -148,26 +148,36 @@ export const Planet: React.FC<PlanetProps> = ({
     earthNightShaderMaterial.uniforms.uNightTexture.value = earthNightTexture;
   }
 
-  // Physically tuned planetary roughness
+  // Physically tuned planetary roughness & metallic response
   const materialRoughness = useMemo(() => {
     switch (id) {
       case 'earth':
-        return 0.52; // Oceans reflect soft specular sunlight
+        return 0.48; // Specular ocean glint with matte continents
       case 'mars':
-        return 0.85; // Matte rust silicate rock and dust
+        return 0.88; // Matte oxidized basaltic regolith & dust
       case 'mercury':
-        return 0.92; // Cratered regolith
+        return 0.94; // Heavily cratered airless regolith
       case 'venus':
-        return 0.78; // Dense sulfuric cloud deck
+        return 0.82; // Dense, opaque sulfuric cloud deck
       case 'jupiter':
-        return 0.65; // Dynamic gas bands
+        return 0.68; // Smooth, turbulent Jovian zonal cloud bands
       case 'saturn':
-        return 0.70;
+        return 0.70; // Soft ammonia-ice haze
       case 'uranus':
+        return 0.64; // Featureless methane haze
       case 'neptune':
-        return 0.62; // Deep methane atmosphere
+        return 0.60; // Deep azure Rayleigh absorption
       default:
         return 0.8;
+    }
+  }, [id]);
+
+  const materialMetalness = useMemo(() => {
+    switch (id) {
+      case 'earth':
+        return 0.06; // Soft oceanic fresnel reflection
+      default:
+        return 0.01;
     }
   }, [id]);
 
@@ -274,7 +284,7 @@ export const Planet: React.FC<PlanetProps> = ({
             map={surfaceTexture}
             color="#FFFFFF"
             roughness={materialRoughness}
-            metalness={0.03}
+            metalness={materialMetalness}
             emissive={emissiveColor}
             emissiveIntensity={emissiveIntensity}
           />
@@ -290,12 +300,12 @@ export const Planet: React.FC<PlanetProps> = ({
 
         {/* 3. Earth: Independent Dynamic Cloud Layer */}
         {id === 'earth' && earthCloudsTexture && (
-          <mesh ref={cloudsMeshRef} scale={[1.015, 1.015, 1.015]}>
+          <mesh ref={cloudsMeshRef} scale={[1.012, 1.012, 1.012]}>
             <sphereGeometry args={[visualRadius, 48, 48]} />
             <meshStandardMaterial
               map={earthCloudsTexture}
               transparent={true}
-              opacity={0.82}
+              opacity={0.78}
               blending={THREE.NormalBlending}
               depthWrite={false}
               roughness={0.9}
@@ -303,27 +313,37 @@ export const Planet: React.FC<PlanetProps> = ({
           </mesh>
         )}
 
-        {/* 4. Earth: Thin Realistic Rayleigh Scattering Rim (Not Neon) */}
+        {/* 4. Earth: Thin Realistic Rayleigh Scattering Rim */}
         {id === 'earth' && (
-          <AtmosphereRim radius={visualRadius} color="#38BDF8" intensity={0.85} falloff={3.2} />
+          <AtmosphereRim radius={visualRadius} color="#38BDF8" intensity={0.90} falloff={4.2} scale={1.02} />
         )}
 
-        {/* 5. Venus: Dense Sulfuric Atmosphere Rim */}
+        {/* 5. Mars: Subtle Thin Terracotta Atmospheric Haze */}
+        {id === 'mars' && (
+          <AtmosphereRim radius={visualRadius} color="#F87171" intensity={0.45} falloff={4.8} scale={1.016} />
+        )}
+
+        {/* 6. Venus: Dense Sulfuric Atmosphere Rim */}
         {id === 'venus' && (
-          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.85} falloff={3.0} />
+          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.75} falloff={3.6} scale={1.022} />
         )}
 
-        {/* 6. Uranus: Delicate Methane Atmospheric Rim */}
+        {/* 7. Jupiter: Soft Jovian Atmospheric Edge */}
+        {id === 'jupiter' && (
+          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.35} falloff={4.5} scale={1.014} />
+        )}
+
+        {/* 8. Uranus: Delicate Aquamarine Methane Rim */}
         {id === 'uranus' && (
-          <AtmosphereRim radius={visualRadius} color="#5EEAD4" intensity={0.95} falloff={2.8} />
+          <AtmosphereRim radius={visualRadius} color="#5EEAD4" intensity={0.80} falloff={3.8} scale={1.02} />
         )}
 
-        {/* 7. Neptune: Deep Azure Methane Atmospheric Rim */}
+        {/* 9. Neptune: Deep Azure Methane Rim */}
         {id === 'neptune' && (
-          <AtmosphereRim radius={visualRadius} color="#3B82F6" intensity={1.05} falloff={2.6} />
+          <AtmosphereRim radius={visualRadius} color="#3B82F6" intensity={0.90} falloff={3.6} scale={1.02} />
         )}
 
-        {/* 8. Saturn: Authentic 2K Radial Ring System with Cassini Division */}
+        {/* 10. Saturn: Authentic 2K Radial Ring System with Cassini Division & Shadows */}
         {hasRings && id === 'saturn' && saturnRingGeometry && (
           <mesh
             ref={ringsMeshRef}
@@ -335,15 +355,16 @@ export const Planet: React.FC<PlanetProps> = ({
             <meshStandardMaterial
               map={saturnRingTexture}
               side={THREE.DoubleSide}
+              shadowSide={THREE.DoubleSide}
               transparent={true}
               opacity={0.96}
               roughness={0.65}
-              metalness={0.04}
+              metalness={0.02}
             />
           </mesh>
         )}
 
-        {/* 9. Uranus: Delicate Tilted Dust Ring System */}
+        {/* 11. Uranus: Delicate Tilted Dust Ring System */}
         {hasRings && id === 'uranus' && (
           <mesh ref={ringsMeshRef} rotation={[Math.PI / 2, 0, 0]}>
             <ringGeometry args={[visualRadius * 1.35, visualRadius * 1.62, 64]} />
@@ -351,7 +372,7 @@ export const Planet: React.FC<PlanetProps> = ({
               color="#5EEAD4"
               side={THREE.DoubleSide}
               transparent={true}
-              opacity={0.28}
+              opacity={0.25}
               roughness={0.9}
             />
           </mesh>

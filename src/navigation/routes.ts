@@ -1,10 +1,19 @@
 /**
- * ORBIT ACADEMY — Application Route Definitions (Phase 7)
- * Centralized, strongly-typed route table mapped to celestial destinations.
+ * ORBIT ACADEMY — Application Route Definitions
+ * Centralized, strongly-typed route table mapped to the 6 Core Experiences and celestial modules.
  */
 
 export const ROUTES = {
+  // Six Primary Core Experiences
   HOME: '/',
+  EXPLORE: '/',
+  LEARN: '/learn',
+  DRAW: '/draw',
+  LAB: '/lab',
+  QUIZ: '/quiz',
+  BUILD: '/build',
+
+  // Planetary Modular Applications
   EXPLORER: '/explorer',
   EARTH_DRAWING: '/learning/earth',
   MARS_ADVENTURE: '/game/mars',
@@ -29,6 +38,11 @@ export function isValidRoute(path: string): path is AppRoute {
  */
 export const ALL_ROUTES: AppRoute[] = [
   ROUTES.HOME,
+  ROUTES.LEARN,
+  ROUTES.DRAW,
+  ROUTES.LAB,
+  ROUTES.QUIZ,
+  ROUTES.BUILD,
   ROUTES.EXPLORER,
   ROUTES.EARTH_DRAWING,
   ROUTES.MARS_ADVENTURE,

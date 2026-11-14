@@ -201,3 +201,4 @@ export function getDestinationByRoute(route: string): CelestialDestination | und
 export function getAllDestinations(): CelestialDestination[] {
   return Object.values(CELESTIAL_DESTINATIONS);
 }
+

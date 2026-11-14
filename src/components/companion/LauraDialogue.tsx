@@ -30,24 +30,17 @@ interface LauraDialogueProps {
   onNextCuriosity: () => void;
   contextName: string;
   isAiConnected: boolean;
-  anchor?: {
-    left: number;
-    top: number;
-    pointerDirection: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
-  };
 }
 
 /**
- * LAURA Dialogue & Interactive Chat Interface (Phase 6D)
- * Aligned with design-system/orbit-academy/MASTER.md
+ * LAURA Dialogue & Interactive Chat Interface (Phase 7 Elite Redesign)
  *
  * Features:
- * - Dynamically anchored relative to LAURA's live flight coordinates
- * - Speech pointer triangle dynamically points toward LAURA
- * - Prevents viewport clipping and never overlaps mission-critical inputs
- * - Real-time conversational interface powered by Google Gemini Developer API
- * - Animated thinking telemetry indicator ("LAURA is gazing into the cosmos... ✦ ✧")
- * - Dedicated "Next Curiosity" button preserving Phase 6A curated trivia cycler
+ * - Edge-docked bottom-right position matching companion entry point
+ * - Minimalist dark glass aesthetic with subtle borders and backdrop blur
+ * - Conversational telemetry powered by Google Gemini Developer API
+ * - Real-time thinking animation
+ * - Curated trivia cycler
  */
 export const LauraDialogue: React.FC<LauraDialogueProps> = ({
   isOpen,
@@ -59,7 +52,6 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
   onNextCuriosity,
   contextName,
   isAiConnected,
-  anchor,
 }) => {
   const [inputText, setInputText] = useState<string>('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -95,32 +87,24 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
     }
   };
 
-  const pointerDir = anchor?.pointerDirection;
-
   return (
     <div
       role="region"
       aria-label="LAURA Companion Mission Dialogue"
-      style={{
-        left: anchor ? `${anchor.left}px` : undefined,
-        top: anchor ? `${anchor.top}px` : undefined,
-      }}
-      className={`pointer-events-auto fixed z-30 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-[rgba(245,158,11,0.35)] bg-[#0A0F1D]/95 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-fade-in sm:w-[390px] md:w-[420px] ${
-        !anchor ? 'bottom-20 left-4 sm:left-6' : ''
-      }`}
+      className="pointer-events-auto fixed bottom-20 right-4 sm:right-6 z-40 flex w-[340px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-white/10 bg-[#05070D]/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 animate-fade-in sm:w-[380px]"
     >
       {/* 1. Header with Status Telemetry & Controls */}
-      <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
           {/* Pulsing Core Indicator */}
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-2 w-2">
             <span
               className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
                 isAiConnected ? 'bg-[#38BDF8] opacity-75' : 'bg-[#F59E0B] opacity-60'
               }`}
             />
             <span
-              className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+              className={`relative inline-flex h-2 w-2 rounded-full ${
                 isAiConnected ? 'bg-[#38BDF8]' : 'bg-[#F59E0B]'
               }`}
             />
@@ -140,13 +124,13 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         </div>
 
         {/* Action Controls: Clear Chat & Minimize */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={onClearChat}
             title="Reset conversation"
             aria-label="Reset conversation"
-            className="flex h-7 w-7 items-center justify-center rounded-lg border border-[rgba(148,163,184,0.15)] bg-[#11182E] text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#38BDF8]"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#94A3B8] transition-colors hover:border-[#38BDF8] hover:text-[#38BDF8]"
           >
             <RotateCcw className="h-3 w-3" aria-hidden="true" />
           </button>
@@ -155,7 +139,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Minimize LAURA dialogue"
-            className="flex h-7 w-7 items-center justify-center rounded-lg border border-[rgba(148,163,184,0.15)] bg-[#11182E] text-[#94A3B8] transition-colors hover:border-[#F59E0B] hover:text-[#F8FAFC]"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#94A3B8] transition-colors hover:border-[#F59E0B] hover:text-[#F8FAFC]"
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
@@ -166,7 +150,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
       <div
         ref={chatScrollRef}
         aria-live="polite"
-        className="flex max-h-[260px] min-h-[150px] flex-col gap-3 overflow-y-auto p-4 sm:max-h-[300px]"
+        className="flex max-h-[260px] min-h-[140px] flex-col gap-2.5 overflow-y-auto p-3.5 sm:max-h-[290px] scrollbar-none"
       >
         {messages.map((msg) => (
           <div
@@ -176,7 +160,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
             }`}
           >
             {/* Sender Badge */}
-            <div className="mb-1 flex items-center gap-1.5 px-1 font-mono text-[9.5px] text-[#94A3B8]">
+            <div className="mb-1 flex items-center gap-1.5 px-1 font-mono text-[9px] text-[#94A3B8]">
               {msg.role === 'user' ? (
                 <>
                   <span>Explorer</span>
@@ -197,10 +181,10 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
 
             {/* Bubble */}
             <div
-              className={`rounded-2xl p-3 text-xs leading-relaxed transition-all ${
+              className={`rounded-2xl p-2.5 text-xs leading-relaxed transition-all ${
                 msg.role === 'user'
-                  ? 'max-w-[85%] rounded-tr-sm border border-[#38BDF8]/30 bg-[#38BDF8]/10 text-[#F8FAFC]'
-                  : 'max-w-[90%] rounded-tl-sm border border-[rgba(245,158,11,0.25)] bg-[#11182E]/90 text-[#F8FAFC]'
+                  ? 'max-w-[85%] rounded-tr-sm border border-[#38BDF8]/20 bg-[#38BDF8]/10 text-[#F8FAFC]'
+                  : 'max-w-[90%] rounded-tl-sm border border-white/5 bg-white/[0.03] text-[#F8FAFC]'
               }`}
             >
               <p className="font-sans whitespace-pre-wrap">{msg.text}</p>
@@ -211,14 +195,14 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         {/* Thinking Indicator */}
         {isThinking && (
           <div className="flex flex-col items-start animate-fade-in">
-            <div className="mb-1 flex items-center gap-1.5 px-1 font-mono text-[9.5px] text-[#F59E0B]">
+            <div className="mb-1 flex items-center gap-1.5 px-1 font-mono text-[9px] text-[#F59E0B]">
               <Sparkles className="h-2.5 w-2.5 animate-spin text-[#F59E0B]" aria-hidden="true" />
               <span>LAURA // OBSERVING</span>
             </div>
-            <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-sm border border-[#F59E0B]/30 bg-[#11182E]/90 px-3.5 py-2.5">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" aria-hidden="true" />
-              <span className="font-sans text-xs italic text-[#FBBF24]">
-                LAURA is gazing into the cosmos... ✦ ✧
+            <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-[#F59E0B]/20 bg-white/[0.03] px-3 py-2">
+              <Loader2 className="h-3 w-3 animate-spin text-[#F59E0B]" aria-hidden="true" />
+              <span className="font-sans text-[11px] italic text-[#FBBF24]">
+                LAURA is analyzing planetary telemetry... ✦
               </span>
             </div>
           </div>
@@ -226,9 +210,9 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
       </div>
 
       {/* 3. Action Toolbar: Curiosity Button */}
-      <div className="flex items-center justify-between border-t border-[rgba(148,163,184,0.1)] bg-[#0A0F1D]/60 px-4 py-2">
-        <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#94A3B8]">
-          <Sparkles className="h-3 w-3 text-[#F59E0B]" aria-hidden="true" />
+      <div className="flex items-center justify-between border-t border-white/5 bg-black/20 px-3.5 py-2">
+        <div className="flex items-center gap-1.5 font-mono text-[9.5px] text-[#94A3B8]">
+          <Sparkles className="h-2.5 w-2.5 text-[#F59E0B]" aria-hidden="true" />
           <span>Curated Trivia</span>
         </div>
 
@@ -236,15 +220,15 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
           type="button"
           onClick={onNextCuriosity}
           aria-label="Cycle to next astronomical fact"
-          className="flex items-center gap-1 rounded-lg border border-[rgba(148,163,184,0.2)] bg-[#11182E] px-2.5 py-1 font-mono text-[10px] font-semibold text-[#38BDF8] transition-colors hover:border-[#38BDF8] hover:bg-[#38BDF8]/10 hover:text-[#F8FAFC]"
+          className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 font-mono text-[9.5px] font-semibold text-[#38BDF8] transition-colors hover:border-[#38BDF8]/40 hover:bg-[#38BDF8]/10 hover:text-[#F8FAFC]"
         >
           <span>Next Curiosity</span>
-          <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          <ChevronRight className="h-2.5 w-2.5" aria-hidden="true" />
         </button>
       </div>
 
       {/* 4. Interactive Input Field */}
-      <div className="border-t border-[rgba(148,163,184,0.12)] p-3">
+      <div className="border-t border-white/5 p-2.5">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -261,10 +245,10 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
               onKeyDown={handleKeyDown}
               placeholder={`Ask LAURA about ${contextName}...`}
               aria-label={`Ask LAURA about ${contextName}`}
-              className="w-full resize-none rounded-xl border border-[rgba(148,163,184,0.2)] bg-[#11182E] px-3 py-2 pr-12 font-sans text-xs text-[#F8FAFC] placeholder-[#94A3B8]/60 transition-colors focus:border-[#F59E0B] focus:outline-none focus:ring-1 focus:ring-[#F59E0B]"
+              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 pr-10 font-sans text-xs text-[#F8FAFC] placeholder-[#94A3B8]/50 transition-colors focus:border-[#F59E0B]/50 focus:outline-none focus:ring-1 focus:ring-[#F59E0B]/30"
             />
             {inputText.length > 350 && (
-              <span className="absolute bottom-1 right-2 font-mono text-[9px] text-[#94A3B8]">
+              <span className="absolute bottom-1 right-2 font-mono text-[8px] text-[#94A3B8]">
                 {inputText.length}/500
               </span>
             )}
@@ -274,38 +258,12 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
             type="submit"
             disabled={!inputText.trim() || isThinking}
             aria-label="Transmit question to LAURA"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#F59E0B] text-[#0A0F1D] shadow-md transition-all hover:bg-[#FBBF24] disabled:opacity-30 disabled:hover:bg-[#F59E0B]"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#F59E0B] text-[#05070D] shadow-md transition-all hover:bg-[#FBBF24] disabled:opacity-30 disabled:hover:bg-[#F59E0B]"
           >
-            <Send className="h-4 w-4" aria-hidden="true" />
+            <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </form>
       </div>
-
-      {/* Dynamic Speech Pointer pointing towards LAURA (when anchored) */}
-      {anchor && pointerDir === 'bottom-left' && (
-        <div
-          className="pointer-events-none absolute -bottom-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
-          aria-hidden="true"
-        />
-      )}
-      {anchor && pointerDir === 'bottom-right' && (
-        <div
-          className="pointer-events-none absolute -bottom-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#0A0F1D]"
-          aria-hidden="true"
-        />
-      )}
-      {anchor && pointerDir === 'top-left' && (
-        <div
-          className="pointer-events-none absolute -top-2 left-6 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
-          aria-hidden="true"
-        />
-      )}
-      {anchor && pointerDir === 'top-right' && (
-        <div
-          className="pointer-events-none absolute -top-2 right-8 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#0A0F1D]"
-          aria-hidden="true"
-        />
-      )}
     </div>
   );
 };
