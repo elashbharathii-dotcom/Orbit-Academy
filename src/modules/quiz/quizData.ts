@@ -1,13 +1,13 @@
 export interface QuizQuestion {
   id: string;
   category:
-    | 'solar-system'
-    | 'earth-science'
-    | 'planetary-science'
-    | 'astrophysics'
-    | 'space-missions'
-    | 'galaxies'
-    | 'advanced-astronomy';
+  | 'solar-system'
+  | 'earth-science'
+  | 'planetary-science'
+  | 'astrophysics'
+  | 'space-missions'
+  | 'galaxies'
+  | 'advanced-astronomy';
   difficulty: 'Cadet' | 'Commander' | 'Astrophysicist';
   question: string;
   options: string[];
@@ -16,16 +16,90 @@ export interface QuizQuestion {
   xpReward: number;
 }
 
-export const QUIZ_CATEGORIES = [
-  { id: 'all', label: 'All Arenas', icon: '🏆' },
-  { id: 'solar-system', label: 'Solar System', icon: '🪐' },
-  { id: 'earth-science', label: 'Earth Science', icon: '🌍' },
-  { id: 'planetary-science', label: 'Planetary Science', icon: '🌋' },
-  { id: 'astrophysics', label: 'Astrophysics', icon: '⚡' },
-  { id: 'space-missions', label: 'Space Missions', icon: '🛰️' },
-  { id: 'galaxies', label: 'Galaxies', icon: '🌌' },
-  { id: 'advanced-astronomy', label: 'Advanced Astronomy', icon: '🔭' },
-] as const;
+export interface QuizCategoryMeta {
+  id: string;
+  label: string;
+  icon: string;
+  tagline: string;
+  accentColor: string;
+  glowColor: string;
+  badge: string;
+}
+
+export const QUIZ_CATEGORIES: QuizCategoryMeta[] = [
+  {
+    id: 'all',
+    label: 'All Arenas',
+    icon: '🏆',
+    tagline: 'Complete Astrophysics Tournament',
+    accentColor: '#A78BFA',
+    glowColor: 'rgba(167, 139, 250, 0.35)',
+    badge: 'UNIVERSAL',
+  },
+  {
+    id: 'solar-system',
+    label: 'Solar System',
+    icon: '🪐',
+    tagline: 'Planetary Dynamics & Rings',
+    accentColor: '#FBBF24',
+    glowColor: 'rgba(251, 191, 36, 0.35)',
+    badge: 'ORBITAL',
+  },
+  {
+    id: 'earth-science',
+    label: 'Earth Science',
+    icon: '🌍',
+    tagline: 'Geodynamo & Aurora Physics',
+    accentColor: '#34D399',
+    glowColor: 'rgba(52, 211, 153, 0.35)',
+    badge: 'TERRESTRIAL',
+  },
+  {
+    id: 'planetary-science',
+    label: 'Planetary Science',
+    icon: '🌋',
+    tagline: 'Volcanism & Cryo-Oceans',
+    accentColor: '#E879F9',
+    glowColor: 'rgba(232, 121, 249, 0.35)',
+    badge: 'GEOLOGICAL',
+  },
+  {
+    id: 'astrophysics',
+    label: 'Astrophysics',
+    icon: '⚡',
+    tagline: 'Black Holes & Fusion',
+    accentColor: '#38DDF8',
+    glowColor: 'rgba(56, 221, 248, 0.35)',
+    badge: 'QUANTUM',
+  },
+  {
+    id: 'space-missions',
+    label: 'Space Missions',
+    icon: '🛰️',
+    tagline: 'Voyager, Cassini & JWST',
+    accentColor: '#F97316',
+    glowColor: 'rgba(249, 115, 22, 0.35)',
+    badge: 'AEROSPACE',
+  },
+  {
+    id: 'galaxies',
+    label: 'Galaxies',
+    icon: '🌌',
+    tagline: 'Spiral Arms & Dark Matter',
+    accentColor: '#C084FC',
+    glowColor: 'rgba(192, 132, 252, 0.35)',
+    badge: 'COSMIC',
+  },
+  {
+    id: 'advanced-astronomy',
+    label: 'Advanced Astronomy',
+    icon: '🔭',
+    tagline: 'Gravitational Lensing & CMB',
+    accentColor: '#38DDF8',
+    glowColor: 'rgba(56, 221, 248, 0.35)',
+    badge: 'DEEP SPACE',
+  },
+];
 
 export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
   // 1. Solar System

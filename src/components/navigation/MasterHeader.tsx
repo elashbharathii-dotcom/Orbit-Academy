@@ -50,7 +50,7 @@ export const MasterHeader: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/[0.08] bg-[#070C1B]/80 px-3 py-2 backdrop-blur-2xl sm:px-6">
+    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/[0.08] bg-[#050816]/75 px-3 py-2.5 backdrop-blur-2xl sm:px-6 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
       {/* 1. Left Cluster: Brand Logo & Celestial Breadcrumb */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
         <button
@@ -60,16 +60,16 @@ export const MasterHeader: React.FC = () => {
             navigate(ROUTES.HOME);
           }}
           title="Return to System Overview"
-          className="group flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 transition-all duration-200 hover:border-[#38BDF8]/40 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#38BDF8]"
+          className="group flex items-center gap-2.5 rounded-full border border-white/[0.12] bg-white/[0.04] px-3.5 py-1.5 transition-all duration-300 hover:border-[#38DDF8]/50 hover:bg-white/[0.08] hover:shadow-[0_0_15px_rgba(56,221,248,0.25)] focus:outline-none"
         >
           {/* Pulsing Core Sensor Emblem */}
           <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#38BDF8] opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-gradient-to-tr from-[#0284C7] to-[#38BDF8] shadow-[0_0_8px_#38BDF8]" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#38DDF8] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-gradient-to-tr from-[#0284C7] to-[#38DDF8] shadow-[0_0_10px_#38DDF8]" />
           </span>
 
           <div className="flex flex-col text-left">
-            <span className="font-sans text-[11px] font-bold tracking-[0.22em] uppercase text-[#F8FAFC] transition-colors group-hover:text-white">
+            <span className="font-sans text-[11px] font-extrabold tracking-[0.22em] uppercase text-white transition-colors group-hover:text-[#38DDF8]">
               <span className="sm:hidden">ORBIT</span>
               <span className="hidden sm:inline">ORBIT ACADEMY</span>
             </span>
@@ -97,7 +97,7 @@ export const MasterHeader: React.FC = () => {
       {/* 2. Center: Six Core Modes Navigation Bar */}
       <nav
         aria-label="Orbit Academy Core Experiences"
-        className="flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/[0.08] bg-[#0B1226]/85 p-1 shadow-2xl backdrop-blur-xl scrollbar-none mx-1 sm:mx-2"
+        className="flex items-center gap-1 overflow-x-auto rounded-full border border-white/[0.1] bg-white/[0.04] p-1 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-2xl scrollbar-none mx-1 sm:mx-2"
       >
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -121,22 +121,20 @@ export const MasterHeader: React.FC = () => {
                 }
                 navigate(item.route);
               }}
-              className={`group relative flex shrink-0 items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 font-sans text-xs transition-all duration-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#38BDF8] ${
-                isActive
-                  ? 'border border-[#38BDF8]/40 bg-gradient-to-r from-[#38BDF8]/15 via-[#818CF8]/12 to-[#38BDF8]/15 font-semibold text-[#F8FAFC] shadow-[0_0_16px_rgba(56,189,248,0.22)]'
-                  : 'border border-transparent text-[#94A3B8] hover:bg-white/[0.05] hover:text-[#F8FAFC]'
-              }`}
+              className={`group relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-xs transition-all duration-300 focus:outline-none ${isActive
+                  ? 'border border-[#38DDF8]/60 bg-gradient-to-r from-[#38DDF8]/20 via-[#A78BFA]/15 to-[#38DDF8]/20 font-bold text-white shadow-[0_0_20px_rgba(56,221,248,0.35)]'
+                  : 'border border-transparent text-[#94A3B8] hover:bg-white/[0.07] hover:text-white'
+                }`}
             >
               <Icon
-                className={`h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110 ${
-                  isActive ? 'text-[#38BDF8]' : 'text-[#94A3B8]'
-                }`}
+                className={`h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-[#38DDF8]' : 'text-[#94A3B8]'
+                  }`}
               />
               <span className="tracking-wide text-[11.5px]">{item.label}</span>
 
               {/* Active Indicator Pip */}
               {isActive && (
-                <span className="h-1 w-1 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#38DDF8] shadow-[0_0_8px_#38DDF8]" />
               )}
             </button>
           );

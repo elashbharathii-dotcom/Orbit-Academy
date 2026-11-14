@@ -167,4 +167,75 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(56, 189, 248, 0.75);
   }
+
+  /* Glassmorphism Sheen & Cockpit Animations */
+  @keyframes shimmerSweep {
+    0% {
+      transform: translateX(-150%) rotate(25deg);
+    }
+
+    100% {
+      transform: translateX(250%) rotate(25deg);
+    }
+  }
+
+  @keyframes floatGentle {
+
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-5px) rotate(4deg);
+    }
+  }
+
+  @keyframes shakeSubtle {
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
+
+  @keyframes pulseGlow {
+
+    0%,
+    100% {
+      opacity: 0.35;
+      filter: drop-shadow(0 0 8px rgba(56, 221, 248, 0.4));
+    }
+
+    50% {
+      opacity: 0.9;
+      filter: drop-shadow(0 0 20px rgba(56, 221, 248, 0.8));
+    }
+  }
+
+  .animate-shimmer-sweep {
+    animation: shimmerSweep 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-float-gentle {
+    animation: floatGentle 3.5s ease-in-out infinite;
+  }
+
+  .animate-shake {
+    animation: shakeSubtle 0.35s ease-in-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
 }
