@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
-import { GlassCard } from '../../components/ui/GlassCard';
-import { TelemetryBadge } from '../../components/ui/TelemetryBadge';
-import { COLORING_ARTWORKS, COLORING_CATEGORIES } from './coloringData';
+import { COLORING_ARTWORKS } from './coloringData';
 import { ColoringArtwork, ColoringCategoryId } from './types';
 import { ColoringCategoryGrid } from './components/ColoringCategoryGrid';
 import { ColoringGallery } from './components/ColoringGallery';
 import { ColoringWorkspace } from './components/ColoringWorkspace';
-import { Palette, Award } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 
 export const EarthDrawingScreen: React.FC = () => {
   const [selectedArtwork, setSelectedArtwork] = useState<ColoringArtwork | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
+  const [headerSearch, setHeaderSearch] = useState<string>('');
+  const galleryRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to top when switching views
+  // Scroll to top when opening an artwork
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (selectedArtwork) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [selectedArtwork]);
 
   const handleSelectCategory = (catId: ColoringCategoryId | 'all') => {
     setActiveCategoryId(catId);
     setSelectedArtwork(null);
+    // Smooth scroll down to gallery
+    setTimeout(() => {
+      galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleSelectArtwork = (artwork: ColoringArtwork) => {
@@ -53,77 +59,63 @@ export const EarthDrawingScreen: React.FC = () => {
             />
           ) : (
             /* VIEW 2: Category Library & Gallery */
-            <div className="flex flex-col gap-8 w-full animate-fade-in">
-              {/* Hero Banner Card */}
-              <GlassCard
-                variant="elevated"
-                className="p-6 sm:p-8 flex flex-col justify-between border-white/10 bg-gradient-to-r from-[#031A2A]/90 via-[#070C1B]/95 to-[#0A2540]/80 shadow-2xl"
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <TelemetryBadge
-                        label="EARTH // COLORING STUDIO"
-                        tone="emerald"
-                        pulsing
-                        size="sm"
-                      />
-                      <TelemetryBadge
-                        label={`${COLORING_ARTWORKS.length} VECTOR PLATES`}
-                        tone="cyan"
-                        size="sm"
-                      />
-                      <TelemetryBadge
-                        label={`${COLORING_CATEGORIES.length} THEMES`}
-                        tone="amber"
-                        size="sm"
-                      />
-                    </div>
-
-                    <h1 className="mt-3 font-sans text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#F8FAFC]">
-                      Space & Astronomy Coloring Studio
-                    </h1>
-
-                    <p className="mt-2 font-sans text-xs sm:text-sm text-[#94A3B8] max-w-2xl leading-relaxed">
-                      Color certified vector illustrations across {COLORING_CATEGORIES.length} space exploration themes.
-                      Click or tap enclosed regions to paint, explore verified NASA astrophysics facts,
-                      and download or print your customized cosmic posters!
-                    </p>
+            <div className="flex flex-col gap-6 w-full animate-fade-in">
+              {/* Platform Branding Bar matching image_7.png */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#080E1E]/95 border border-white/10 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl animate-spin [animation-duration:24s]">🪐</span>
+                    <span className="font-sans text-base sm:text-lg font-black tracking-tight text-[#F8FAFC]">
+                      Orbit Academy
+                    </span>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#0B1226]/80 px-4 py-3 font-mono text-xs text-[#94A3B8]">
-                      <Palette className="h-5 w-5 text-[#38BDF8]" />
-                      <div className="flex flex-col">
-                        <span className="text-[#F8FAFC] font-bold">Vector Click-to-Fill</span>
-                        <span className="text-[10px] text-[#64748B]">Preserves Clean Outlines</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#0B1226]/80 px-4 py-3 font-mono text-xs text-[#94A3B8]">
-                      <Award className="h-5 w-5 text-[#F59E0B]" />
-                      <div className="flex flex-col">
-                        <span className="text-[#F8FAFC] font-bold">Printable A4 Sheets</span>
-                        <span className="text-[10px] text-[#64748B]">High-Res PNG Export</span>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1838] border border-violet-500/40 text-xs font-mono font-bold text-violet-300 shadow-sm">
+                    <span>🎉</span>
+                    <span>Anti-Gravity Coloring!</span>
                   </div>
                 </div>
-              </GlassCard>
 
-              {/* 8 Categories Browser */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={headerSearch}
+                      onChange={(e) => setHeaderSearch(e.target.value)}
+                      className="rounded-xl border border-white/10 bg-[#070C1B] pl-9 pr-3 py-1.5 font-mono text-xs text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none w-36 sm:w-52 transition-colors"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Toggle all categories view
+                      setActiveCategoryId((prev) => (prev === 'all' ? 'solar-system' : 'all'));
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-[#38BDF8]" />
+                    <span className="hidden sm:inline">Filter</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 8 Categories Browser Grid (Pixel-Perfect from image_7.png) */}
               <ColoringCategoryGrid
                 onSelectCategory={handleSelectCategory}
                 activeCategoryId={activeCategoryId}
               />
 
               {/* Plate Gallery with Search and Category Filtering */}
-              <ColoringGallery
-                artworks={COLORING_ARTWORKS}
-                activeCategoryId={activeCategoryId}
-                onSelectCategory={handleSelectCategory}
-                onSelectArtwork={handleSelectArtwork}
-              />
+              <div ref={galleryRef} className="scroll-mt-6">
+                <ColoringGallery
+                  artworks={COLORING_ARTWORKS}
+                  activeCategoryId={activeCategoryId}
+                  onSelectCategory={handleSelectCategory}
+                  onSelectArtwork={handleSelectArtwork}
+                />
+              </div>
             </div>
           )}
         </div>
