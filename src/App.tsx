@@ -69,7 +69,7 @@ const AppViewport: React.FC = () => {
   return (
     <div
       className={`relative w-full bg-[#030611] font-sans text-[#F8FAFC] ${
-        isHome ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden'
+        isHome ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden overflow-y-auto'
       }`}
     >
       {/* 1. Persistent 3D Solar System Canvas (Always kept warm in DOM) */}

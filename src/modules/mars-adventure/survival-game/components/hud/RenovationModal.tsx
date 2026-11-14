@@ -134,9 +134,9 @@ export const RenovationModal: React.FC = () => {
         )}
 
         {/* Body Grid: Left Upgrade List, Right Upgrade Detail */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-0 overflow-y-auto">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-0 overflow-y-auto custom-scrollbar">
           {/* Left: Progression Stages Tabs (5 cols) */}
-          <div className="md:col-span-5 border-r border-slate-800 bg-[#0D1527]/50 p-4 space-y-2.5 overflow-y-auto">
+          <div className="md:col-span-5 border-r border-slate-800 bg-[#0D1527]/50 p-4 space-y-2.5 overflow-y-auto custom-scrollbar">
             <div className="text-[11px] font-bold tracking-wider text-slate-400 px-2 py-1 uppercase">
               Renovation Phases ({completedCount}/5 Operational)
             </div>
@@ -202,7 +202,7 @@ export const RenovationModal: React.FC = () => {
           </div>
 
           {/* Right: Selected Stage Specification (7 cols) */}
-          <div className="md:col-span-7 p-6 flex flex-col justify-between overflow-y-auto bg-[#0A0F1D]/80">
+          <div className="md:col-span-7 p-6 flex flex-col justify-between overflow-y-auto custom-scrollbar bg-[#0A0F1D]/80">
             <div>
               {/* Sector Title & Status Badge */}
               <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">

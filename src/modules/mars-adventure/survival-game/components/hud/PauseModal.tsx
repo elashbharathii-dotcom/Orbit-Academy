@@ -43,7 +43,7 @@ export const PauseModal: React.FC<PauseModalProps> = ({ canvasContainerRef }) =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md font-mono select-none">
-      <div className="relative flex max-h-[90vh] w-full max-w-xl flex-col rounded-3xl border border-red-500/30 bg-[#0A0F1D]/95 p-6 sm:p-8 shadow-[0_0_60px_rgba(239,68,68,0.25)] text-slate-100 overflow-y-auto">
+      <div className="relative flex max-h-[90vh] w-full max-w-xl flex-col rounded-3xl border border-red-500/30 bg-[#0A0F1D]/95 p-6 sm:p-8 shadow-[0_0_60px_rgba(239,68,68,0.25)] text-slate-100 overflow-y-auto custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">

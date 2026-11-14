@@ -89,7 +89,7 @@ export const PlayerController: React.FC = () => {
       canvas.removeEventListener('click', handleCanvasClick);
       canvas.removeEventListener('wheel', handleWheel);
     };
-  }, [gl, isPauseModalOpen, isSubstanceModalOpen, controlMode]);
+  }, [gl, isPauseModalOpen, isSubstanceModalOpen, isStorageModalOpen, isRenovationModalOpen, controlMode]);
 
   useFrame((_, delta) => {
     const clampedDelta = Math.min(delta, 0.1);

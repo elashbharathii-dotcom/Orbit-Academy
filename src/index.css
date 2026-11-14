@@ -48,17 +48,49 @@
     color-scheme: dark;
   }
 
-  html,
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
   body {
     background-color: #030611;
     color: #F8FAFC;
     font-family: 'Exo', sans-serif;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
     user-select: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Global Sleek Martian & Aerospace Scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.45) rgba(7, 12, 27, 0.75);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(7, 12, 27, 0.75);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+    border-radius: 9999px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.7);
   }
 }
 
@@ -110,48 +142,29 @@
     box-shadow: 0 0 14px rgba(245, 158, 11, 0.25), inset 0 0 8px rgba(245, 158, 11, 0.10);
   }
 
-  /* Safe custom scrollbar for dashboards */
+  /* High-Contrast Aerospace Custom Scrollbar for Dashboards, Modals & Drawers */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.45) rgba(7, 12, 27, 0.85);
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(7, 12, 27, 0.6);
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 9999px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(56, 189, 248, 0.3);
-  }
-
-  /* Sleek Martian Aerospace Custom Scrollbars */
-  ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
-  ::-webkit-scrollbar-track {
-    background: rgba(10, 15, 29, 0.7);
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(7, 12, 27, 0.85);
     border-radius: 9999px;
   }
 
-  ::-webkit-scrollbar-thumb {
-    background: rgba(56, 189, 248, 0.35);
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.4);
     border-radius: 9999px;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.25);
   }
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(56, 189, 248, 0.65);
-  }
-
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(56, 189, 248, 0.35) rgba(10, 15, 29, 0.7);
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.75);
   }
 }

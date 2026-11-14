@@ -91,7 +91,7 @@ export const StorageModal: React.FC = () => {
         </div>
 
         {/* Dual Storage Pane Container */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 overflow-y-auto">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 overflow-y-auto custom-scrollbar">
           {/* Left Column: Backpack Cargo */}
           <div className="flex flex-col rounded-2xl border border-slate-800 bg-[#0D1527]/80 p-4">
             <div className="flex items-center justify-between border-b border-slate-700/50 pb-3 mb-3">
@@ -118,7 +118,7 @@ export const StorageModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1">
+            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1 custom-scrollbar">
               {resourceKeys.map((key) => {
                 const item = inventory[key];
                 if (!item || item.count <= 0) return null;
@@ -191,7 +191,7 @@ export const StorageModal: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1">
+            <div className="flex-1 space-y-2 overflow-y-auto max-h-[50vh] pr-1 custom-scrollbar">
               {resourceKeys.map((key) => {
                 const storedCount = vaultStorage[key] || 0;
                 if (storedCount <= 0) return null;

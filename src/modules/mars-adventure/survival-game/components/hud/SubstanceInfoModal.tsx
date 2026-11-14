@@ -33,7 +33,7 @@ export const SubstanceInfoModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md font-mono select-none">
-      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-sky-500/40 bg-[#0A0F1D]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(56,189,248,0.25)] text-slate-100">
+      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-sky-500/40 bg-[#0A0F1D]/95 p-6 sm:p-8 shadow-[0_0_50px_rgba(56,189,248,0.25)] text-slate-100 overflow-y-auto custom-scrollbar">
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ export const SubstanceInfoModal: React.FC = () => {
         </div>
 
         {/* Content Body */}
-        <div className="mt-5 flex flex-col gap-4 overflow-y-auto pr-1">
+        <div className="mt-5 flex flex-col gap-4 max-h-[58vh] overflow-y-auto pr-1 custom-scrollbar">
           {/* Key Classification Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-2xl border border-white/5 bg-[#11182E] p-3.5">

@@ -150,7 +150,7 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
       <div
         ref={chatScrollRef}
         aria-live="polite"
-        className="flex max-h-[260px] min-h-[140px] flex-col gap-2.5 overflow-y-auto p-3.5 sm:max-h-[290px] scrollbar-none"
+        className="flex max-h-[260px] min-h-[140px] flex-col gap-2.5 overflow-y-auto p-3.5 sm:max-h-[290px] custom-scrollbar"
       >
         {messages.map((msg) => (
           <div
