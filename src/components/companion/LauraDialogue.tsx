@@ -99,14 +99,12 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
           {/* Pulsing Core Indicator */}
           <span className="relative flex h-2 w-2">
             <span
-              className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
-                isAiConnected ? 'bg-[#38BDF8] opacity-75' : 'bg-[#F59E0B] opacity-60'
-              }`}
+              className={`absolute inline-flex h-full w-full animate-ping rounded-full ${isAiConnected ? 'bg-[#38BDF8] opacity-75' : 'bg-[#F59E0B] opacity-60'
+                }`}
             />
             <span
-              className={`relative inline-flex h-2 w-2 rounded-full ${
-                isAiConnected ? 'bg-[#38BDF8]' : 'bg-[#F59E0B]'
-              }`}
+              className={`relative inline-flex h-2 w-2 rounded-full ${isAiConnected ? 'bg-[#38BDF8]' : 'bg-[#F59E0B]'
+                }`}
             />
           </span>
 
@@ -155,9 +153,8 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex flex-col ${
-              msg.role === 'user' ? 'items-end' : 'items-start'
-            }`}
+            className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'
+              }`}
           >
             {/* Sender Badge */}
             <div className="mb-1 flex items-center gap-1.5 px-1 font-mono text-[9px] text-[#94A3B8]">
@@ -181,11 +178,10 @@ export const LauraDialogue: React.FC<LauraDialogueProps> = ({
 
             {/* Bubble */}
             <div
-              className={`rounded-2xl p-2.5 text-xs leading-relaxed transition-all ${
-                msg.role === 'user'
-                  ? 'max-w-[85%] rounded-tr-sm border border-[#38BDF8]/20 bg-[#38BDF8]/10 text-[#F8FAFC]'
-                  : 'max-w-[90%] rounded-tl-sm border border-white/5 bg-white/[0.03] text-[#F8FAFC]'
-              }`}
+              className={`rounded-2xl p-2.5 text-xs leading-relaxed transition-all ${msg.role === 'user'
+                ? 'max-w-[85%] rounded-tr-sm border border-[#38BDF8]/20 bg-[#38BDF8]/10 text-[#F8FAFC]'
+                : 'max-w-[90%] rounded-tl-sm border border-white/5 bg-white/[0.03] text-[#F8FAFC]'
+                }`}
             >
               <p className="font-sans whitespace-pre-wrap">{msg.text}</p>
             </div>

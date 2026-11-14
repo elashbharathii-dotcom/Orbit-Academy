@@ -105,13 +105,12 @@ export const StorageModal: React.FC = () => {
                 </span>
                 <div className="w-28 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-300 ${
-                      weightPercent > 90
-                        ? 'bg-red-500'
-                        : weightPercent > 70
+                    className={`h-full transition-all duration-300 ${weightPercent > 90
+                      ? 'bg-red-500'
+                      : weightPercent > 70
                         ? 'bg-amber-400'
                         : 'bg-cyan-400'
-                    }`}
+                      }`}
                     style={{ width: `${weightPercent}%` }}
                   />
                 </div>
@@ -225,11 +224,10 @@ export const StorageModal: React.FC = () => {
                       <button
                         onClick={() => withdrawFromStorage(key, 1)}
                         disabled={!canWithdraw}
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-bold transition-all ${
-                          canWithdraw
-                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 active:scale-95'
-                            : 'border-slate-700 bg-slate-800/40 text-slate-600 cursor-not-allowed'
-                        }`}
+                        className={`rounded-lg border px-2 py-1 text-[11px] font-bold transition-all ${canWithdraw
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 active:scale-95'
+                          : 'border-slate-700 bg-slate-800/40 text-slate-600 cursor-not-allowed'
+                          }`}
                         title={canWithdraw ? 'Withdraw 1 unit to backpack' : 'Backpack full'}
                       >
                         <ArrowLeft className="inline h-3 w-3 mr-0.5" /> -1
