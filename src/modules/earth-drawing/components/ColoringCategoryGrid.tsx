@@ -1,11 +1,12 @@
 import React from 'react';
-import { COLORING_CATEGORIES } from '../coloringData';
-import { ColoringCategoryId } from '../types';
+import { COLORING_CATEGORIES, COLORING_ARTWORKS } from '../coloringData';
+import { ColoringArtwork, ColoringCategoryId } from '../types';
 import { CategoryBannerSvg } from './CategoryBannerSvgs';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight, Sparkles, Paintbrush } from 'lucide-react';
 
 interface ColoringCategoryGridProps {
   onSelectCategory: (categoryId: ColoringCategoryId) => void;
+  onStartColoring: (artwork: ColoringArtwork) => void;
   activeCategoryId: string;
 }
 
@@ -55,6 +56,7 @@ const CATEGORY_BADGE_ICONS: Record<ColoringCategoryId, React.ReactNode> = {
 
 export const ColoringCategoryGrid: React.FC<ColoringCategoryGridProps> = ({
   onSelectCategory,
+  onStartColoring,
   activeCategoryId,
 }) => {
   return (
@@ -63,11 +65,24 @@ export const ColoringCategoryGrid: React.FC<ColoringCategoryGridProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
         {COLORING_CATEGORIES.map((cat) => {
           const isActive = activeCategoryId === cat.id;
+          const flagshipArtwork =
+            COLORING_ARTWORKS.find((a) => a.category === cat.id && a.id.includes('-flagship')) ||
+            COLORING_ARTWORKS.find((a) => a.category === cat.id);
+
+          const handleOpenFlagship = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (flagshipArtwork) {
+              onStartColoring(flagshipArtwork);
+            } else {
+              onSelectCategory(cat.id);
+            }
+          };
 
           return (
             <div
               key={cat.id}
-              onClick={() => onSelectCategory(cat.id)}
+              onClick={handleOpenFlagship}
+              title={`Click to color ${cat.title}`}
               className={`group relative flex flex-col rounded-2xl border p-2.5 transition-all duration-300 cursor-pointer hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.7)] ${
                 isActive
                   ? 'border-[#38BDF8] bg-[#0E1A38] shadow-[0_0_24px_rgba(56,189,248,0.3)]'
@@ -87,19 +102,38 @@ export const ColoringCategoryGrid: React.FC<ColoringCategoryGridProps> = ({
                 <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded-full bg-[#080E1E]/95 border border-white/20 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#38BDF8] shadow-md backdrop-blur-sm">
                   <span>{cat.itemCount} Plates</span>
                 </div>
+
+                {/* Hover Reveal: Color Plate Action Pill */}
+                <div className="absolute inset-0 bg-[#070C1B]/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px] rounded-xl z-20">
+                  <span className="flex items-center gap-1.5 rounded-full bg-[#38BDF8] px-3.5 py-1.5 font-mono text-xs font-black text-[#070C1B] shadow-2xl transform translate-y-1.5 group-hover:translate-y-0 transition-transform duration-200">
+                    <Paintbrush className="h-3.5 w-3.5" />
+                    <span>Color This Page</span>
+                  </span>
+                </div>
               </div>
 
               {/* Bottom Exploration Row */}
               <div className="mt-2.5 flex items-center justify-between px-1.5 py-1 text-xs font-mono">
-                <div className="flex items-center gap-1 font-bold text-[#F59E0B] group-hover:text-amber-300 transition-colors">
+                <button
+                  type="button"
+                  onClick={handleOpenFlagship}
+                  className="flex items-center gap-1 font-bold text-[#F59E0B] group-hover:text-amber-300 hover:scale-105 transition-all"
+                >
                   <Sparkles className="h-3.5 w-3.5 fill-current" />
-                  <span>Explore</span>
-                </div>
+                  <span>Color Now</span>
+                </button>
 
-                <div className="flex items-center gap-0.5 font-bold text-[#38BDF8] group-hover:text-cyan-200 group-hover:translate-x-1 transition-all">
-                  <span>Browse</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectCategory(cat.id);
+                  }}
+                  className="flex items-center gap-0.5 font-bold text-[#38BDF8] hover:text-cyan-200 hover:translate-x-1 transition-all"
+                >
+                  <span>Browse All</span>
                   <ChevronRight className="h-3.5 w-3.5" />
-                </div>
+                </button>
               </div>
             </div>
           );

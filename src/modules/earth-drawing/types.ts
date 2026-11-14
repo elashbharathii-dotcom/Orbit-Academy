@@ -40,6 +40,8 @@ export interface ColoringArtwork {
   learningTopic: string;
   viewBox: string;
   regions: SvgColorRegion[];
+  underlaySvg?: string;
+  overlaySvg?: string;
   recommendedPalette?: string[];
   thumbnailSvg?: string;
 }

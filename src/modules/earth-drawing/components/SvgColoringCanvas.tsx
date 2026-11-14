@@ -71,6 +71,15 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
               maxWidth: '100%',
             }}
           >
+            {/* Optional underlay layer (orbits, star dust, background lines) */}
+            {artwork.underlaySvg && (
+              <g
+                pointerEvents="none"
+                className="artwork-underlay select-none"
+                dangerouslySetInnerHTML={{ __html: artwork.underlaySvg }}
+              />
+            )}
+
             {/* Draw every individually colorable enclosed region */}
             {artwork.regions.map((region) => {
               const currentFill = filledRegions[region.id] || '#FFFFFF';
@@ -104,6 +113,15 @@ export const SvgColoringCanvas: React.FC<SvgColoringCanvasProps> = ({
                 />
               );
             })}
+
+            {/* Optional overlay linework layer (eyes, facial expressions, black outlines, details) */}
+            {artwork.overlaySvg && (
+              <g
+                pointerEvents="none"
+                className="artwork-overlay select-none"
+                dangerouslySetInnerHTML={{ __html: artwork.overlaySvg }}
+              />
+            )}
           </svg>
         </div>
       </div>

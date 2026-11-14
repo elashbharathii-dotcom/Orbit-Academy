@@ -70,8 +70,8 @@ export const EarthDrawingScreen: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1838] border border-violet-500/40 text-xs font-mono font-bold text-violet-300 shadow-sm">
-                    <span>🎉</span>
-                    <span>Anti-Gravity Coloring!</span>
+                    <span>🎨</span>
+                    <span>Planet Painter</span>
                   </div>
                 </div>
 
@@ -104,6 +104,7 @@ export const EarthDrawingScreen: React.FC = () => {
               {/* 8 Categories Browser Grid (Pixel-Perfect from image_7.png) */}
               <ColoringCategoryGrid
                 onSelectCategory={handleSelectCategory}
+                onStartColoring={handleSelectArtwork}
                 activeCategoryId={activeCategoryId}
               />
 

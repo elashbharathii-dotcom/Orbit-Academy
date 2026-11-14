@@ -299,11 +299,11 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
       // Academic Footer Watermark
       ctx.fillStyle = '#0F172A';
       ctx.font = 'bold 20px Exo, sans-serif';
-      ctx.fillText(`ORBIT ACADEMY // ${artwork.title.toUpperCase()}`, 50, 915);
+      ctx.fillText(`ORBIT ACADEMY // PLANET PAINTER // ${artwork.title.toUpperCase()}`, 50, 915);
 
       ctx.fillStyle = '#64748B';
       ctx.font = '14px "Roboto Mono", monospace';
-      ctx.fillText(`Earth: Space & Astronomy Coloring Studio • Verified Academic Artwork`, 50, 938);
+      ctx.fillText(`Planet Painter: Space & Astronomy Coloring Studio • Verified Academic Artwork`, 50, 938);
 
       const a = document.createElement('a');
       a.download = `Orbit-Academy-${artwork.id}-${Date.now()}.png`;
@@ -327,6 +327,9 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
         alert('Please allow popups to print your coloring page.');
         return;
       }
+
+      const underlayHtml = artwork.underlaySvg ? `<g class="underlay">${artwork.underlaySvg}</g>` : '';
+      const overlayHtml = artwork.overlaySvg ? `<g class="overlay">${artwork.overlaySvg}</g>` : '';
 
       const pathsHtml = artwork.regions
         .map((r) => {
@@ -404,7 +407,7 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
           <div class="header">
             <div>
               <div class="title">${artwork.title}</div>
-              <div class="subtitle">Orbit Academy — Earth: Space & Astronomy Coloring Studio (${artwork.learningTopic})</div>
+              <div class="subtitle">Orbit Academy — Planet Painter Studio (${artwork.learningTopic})</div>
             </div>
             <div style="text-align: right; font-size: 11px;">
               <span>Name: ______________________</span><br>
@@ -414,7 +417,9 @@ export function useColoringEngine(artwork: ColoringArtwork | null): UseColoringE
 
           <div class="canvas-container">
             <svg viewBox="${artwork.viewBox}">
+              ${underlayHtml}
               ${pathsHtml}
+              ${overlayHtml}
             </svg>
           </div>
 

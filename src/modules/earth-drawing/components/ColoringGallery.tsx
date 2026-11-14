@@ -150,6 +150,9 @@ export const ColoringGallery: React.FC<ColoringGalleryProps> = ({
                     viewBox={artwork.viewBox}
                     className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105 pointer-events-none"
                   >
+                    {artwork.underlaySvg && (
+                      <g dangerouslySetInnerHTML={{ __html: artwork.underlaySvg }} />
+                    )}
                     {artwork.regions.map((r, idx) => (
                       <path
                         key={r.id}
@@ -159,10 +162,13 @@ export const ColoringGallery: React.FC<ColoringGalleryProps> = ({
                         strokeWidth="2.5"
                       />
                     ))}
+                    {artwork.overlaySvg && (
+                      <g dangerouslySetInnerHTML={{ __html: artwork.overlaySvg }} />
+                    )}
                   </svg>
 
                   {/* Badges on Top */}
-                  <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 flex-wrap">
                     <TelemetryBadge
                       label={artwork.difficulty}
                       tone={
@@ -174,6 +180,11 @@ export const ColoringGallery: React.FC<ColoringGalleryProps> = ({
                       }
                       size="sm"
                     />
+                    {artwork.id.includes('-flagship') && (
+                      <span className="rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/60 px-2 py-0.5 text-[9px] font-mono font-bold text-[#F59E0B]">
+                        ✨ Signature
+                      </span>
+                    )}
                   </div>
 
                   {/* In Progress / Done Indicator */}
