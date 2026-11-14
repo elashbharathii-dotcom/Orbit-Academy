@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { ModuleShell } from '../../components/modules/ModuleShell';
 import { getDestinationByPlanetId } from '../../navigation/celestialDestinations';
+import { MarsSurvivalGame } from './survival-game/MarsSurvivalGame';
 import {
   Compass,
   Radio,
   CheckCircle2,
   AlertCircle,
-  Play,
   RotateCcw,
   Sparkles,
   Thermometer,
+  Gamepad2,
+  FlaskConical,
 } from 'lucide-react';
 
 interface MartianSample {
@@ -54,15 +56,28 @@ const INITIAL_SAMPLES: MartianSample[] = [
 
 export const MarsAdventureScreen: React.FC = () => {
   const destination = getDestinationByPlanetId('mars');
+  const expeditionSectionRef = React.useRef<HTMLDivElement>(null);
 
   const [isExpeditionActive, setIsExpeditionActive] = useState<boolean>(false);
+  const [activeExpeditionView, setActiveExpeditionView] = useState<'3d-game' | 'scanner'>('3d-game');
   const [samples, setSamples] = useState<MartianSample[]>(INITIAL_SAMPLES);
   const [selectedSample, setSelectedSample] = useState<MartianSample>(INITIAL_SAMPLES[0]);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [radarPing, setRadarPing] = useState<number>(1);
 
-  const handleStartExpedition = () => {
+  const handleStartExpedition = (mode: '3d-game' | 'scanner' = '3d-game') => {
+    setActiveExpeditionView(mode);
     setIsExpeditionActive(true);
+    setTimeout(() => {
+      expeditionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const switchExpeditionView = (mode: '3d-game' | 'scanner') => {
+    setActiveExpeditionView(mode);
+    setTimeout(() => {
+      expeditionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   const handleScanSample = (sampleId: string) => {
@@ -105,17 +120,28 @@ export const MarsAdventureScreen: React.FC = () => {
               </p>
             </div>
 
-            {/* Launch Action */}
-            <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+            {/* Launch Actions */}
+            <div className="flex flex-col items-start md:items-end gap-2.5 shrink-0">
               {!isExpeditionActive ? (
-                <button
-                  type="button"
-                  onClick={handleStartExpedition}
-                  className="group flex items-center gap-2.5 rounded-2xl bg-[#EF4444] px-6 py-3 font-mono text-sm font-bold text-[#FFFFFF] shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:bg-[#DC2626] hover:scale-105 active:scale-95"
-                >
-                  <Play className="h-4 w-4 fill-current transition-transform group-hover:scale-110" />
-                  <span>Start Expedition</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleStartExpedition('3d-game')}
+                    className="group flex items-center gap-2.5 rounded-2xl bg-[#EF4444] px-5 py-3 font-mono text-sm font-bold text-[#FFFFFF] shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:bg-[#DC2626] hover:scale-105 active:scale-95"
+                  >
+                    <Gamepad2 className="h-4 w-4 fill-current transition-transform group-hover:scale-110" />
+                    <span>Play 3D Survival Game</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleStartExpedition('scanner')}
+                    className="flex items-center gap-2 rounded-2xl border border-[#EF4444]/40 bg-[#EF4444]/15 px-4 py-3 font-mono text-xs font-semibold text-[#FCA5A5] transition-all hover:bg-[#EF4444]/25"
+                  >
+                    <FlaskConical className="h-4 w-4" />
+                    <span>Spectroscopy Lab</span>
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -134,9 +160,50 @@ export const MarsAdventureScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Rover Mission Status & Interactive Scanner Experience */}
+        {/* Rover Mission Status & Interactive Experience */}
         {isExpeditionActive ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+          <div ref={expeditionSectionRef} className="flex flex-col gap-4 animate-fade-in scroll-mt-6">
+            {/* Expedition Mode Switcher Bar */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0A0F1D]/80 p-2 backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => switchExpeditionView('3d-game')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 font-mono text-xs font-bold transition-all ${
+                    activeExpeditionView === '3d-game'
+                      ? 'bg-[#EF4444] text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Gamepad2 className="h-4 w-4" />
+                  <span>3D Survival: The Last Frontier</span>
+                </button>
+
+                <button
+                  onClick={() => switchExpeditionView('scanner')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 font-mono text-xs font-bold transition-all ${
+                    activeExpeditionView === 'scanner'
+                      ? 'bg-[#EF4444] text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <FlaskConical className="h-4 w-4" />
+                  <span>Raman Spectroscopy Lab</span>
+                </button>
+              </div>
+
+              <span className="hidden sm:inline font-mono text-[10px] text-slate-500 pr-3">
+                JEZERO CRATER OUTPOST 0.38G
+              </span>
+            </div>
+
+            {/* Mode 1: 3D Mars Survival Game */}
+            {activeExpeditionView === '3d-game' && (
+              <MarsSurvivalGame onReturnToBriefing={() => setIsExpeditionActive(false)} />
+            )}
+
+            {/* Mode 2: Existing 2D Spectroscopy Scanner */}
+            {activeExpeditionView === 'scanner' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
             {/* Left: Interactive Radar Grid & Targets */}
             <div className="lg:col-span-1 flex flex-col gap-4 rounded-2xl border border-[#EF4444]/25 bg-[#0A0F1D]/90 p-5 shadow-xl backdrop-blur-md">
               <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-3">
@@ -275,7 +342,9 @@ export const MarsAdventureScreen: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : (
+        )}
+      </div>
+    ) : (
           /* Mission Briefing Cards */
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0A0F1D]/80 p-5 shadow-xl backdrop-blur-md">
