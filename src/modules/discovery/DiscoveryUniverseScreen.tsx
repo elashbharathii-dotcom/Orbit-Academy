@@ -11,6 +11,7 @@ import { DiscoveryAchievements } from './components/DiscoveryAchievements';
 import { NasaDiscoveryHub } from './components/NasaDiscoveryHub';
 import { PlanetaryDestinationDeck } from './components/PlanetaryDestinationDeck';
 import { SpacecraftJourney3D } from './components/SpacecraftJourney3D';
+import { PlanetHeroCanvas3D } from './components/PlanetHeroCanvas3D';
 import { discoveryAudio } from './audio/discoveryAudio';
 import {
   ChevronLeft,
@@ -31,69 +32,156 @@ interface DiscoveryUniverseScreenProps {
 
 const STORAGE_KEY_DISCOVERY = 'orbit_discovery_cadet_progress';
 
-type SpaceEduPlanetKey = 'earth' | 'venus' | 'mars';
+type SpaceEduPlanetKey =
+  | 'mercury'
+  | 'venus'
+  | 'earth'
+  | 'mars'
+  | 'jupiter'
+  | 'saturn'
+  | 'uranus'
+  | 'neptune';
 
 interface SpaceEduPlanetSpec {
   id: SpaceEduPlanetKey;
   name: string;
-  videoClip: string;
+  orderIndex: number;
+  videoClip?: string;
   stillPoster: string;
   cutoutUrl: string;
   ledeHtml: string;
   buttonLabel: string;
+  accentColor: string;
+  frequencyTone: number;
 }
 
-const ORDER: SpaceEduPlanetKey[] = ['earth', 'venus', 'mars'];
+const ORDER: SpaceEduPlanetKey[] = [
+  'mercury',
+  'venus',
+  'earth',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+];
 
 const PLANETS_SPEC: Record<SpaceEduPlanetKey, SpaceEduPlanetSpec> = {
-  earth: {
-    id: 'earth',
-    name: 'EARTH',
-    videoClip:
-      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_3ffb4889-c520-432d-8458-038009eb40df.mp4',
-    stillPoster:
-      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_508c64b8-a31e-4290-bdfc-1187df70e0a6.png',
-    cutoutUrl:
-      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202005_3346cc4d-ec3b-44ab-825c-b18e49f5021a.png',
+  mercury: {
+    id: 'mercury',
+    name: 'MERCURY',
+    orderIndex: 1,
+    stillPoster: '/assets/textures/mercury.jpg',
+    cutoutUrl: '/assets/planets/mercury.png',
     ledeHtml:
-      'Learn more about the fascinating details that we call our home, Planet Earth. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!',
-    buttonLabel: 'EXPLORE EARTH',
+      'The swift, heavily cratered messenger world closest to our Sun. Explore its extreme 600&deg;C daily thermal swings, hidden polar water ice, and enormous metallic iron core.',
+    buttonLabel: 'EXPLORE MERCURY',
+    accentColor: '#94A3B8',
+    frequencyTone: 880,
   },
   venus: {
     id: 'venus',
     name: 'VENUS',
+    orderIndex: 2,
     videoClip:
       'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_b211cd74-013b-4dd3-bfd0-64491d8696fa.mp4',
     stillPoster:
       'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_cf55d1d8-7b59-4a64-80da-d72052ae974e.png',
-    cutoutUrl:
-      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202012_640b239a-d08a-4200-adb2-741bbe129ac8.png',
+    cutoutUrl: '/assets/planets/venus.png',
     ledeHtml:
-      'The hottest world in our solar system, wrapped in clouds of sulfuric acid. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!',
+      'The hottest world in our solar system, wrapped in reflective clouds of sulfuric acid. Discover its runaway greenhouse inferno, basalt volcanic plains, and retrograding skies.',
     buttonLabel: 'EXPLORE VENUS',
+    accentColor: '#F59E0B',
+    frequencyTone: 740,
+  },
+  earth: {
+    id: 'earth',
+    name: 'EARTH',
+    orderIndex: 3,
+    videoClip:
+      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_3ffb4889-c520-432d-8458-038009eb40df.mp4',
+    stillPoster:
+      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_508c64b8-a31e-4290-bdfc-1187df70e0a6.png',
+    cutoutUrl: '/assets/planets/earth.png',
+    ledeHtml:
+      'Our vibrant oceanic home world, shielded by a protective geodynamo and teeming with life. Explore its living oceans, churning atmosphere, and celestial companion.',
+    buttonLabel: 'EXPLORE EARTH',
+    accentColor: '#38BDF8',
+    frequencyTone: 659,
   },
   mars: {
     id: 'mars',
     name: 'MARS',
+    orderIndex: 4,
     videoClip:
       'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_51eae59a-2459-4c84-907c-cc5edfe5fea7.mp4',
     stillPoster:
       'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_0ba6de7c-285d-43dc-b7ab-8c54c73707cb.png',
-    cutoutUrl:
-      'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202018_3d559490-f613-4ed7-a3bb-3b7e9fc90fb8.png',
+    cutoutUrl: '/assets/planets/mars.png',
     ledeHtml:
-      'The rust-red desert world, home to the tallest volcano we know of. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!',
+      'The rust-red desert world, home to the gigantic Olympus Mons volcano and the vast Valles Marineris canyon. Investigate signs of primordial water deltas and ancient lakes.',
     buttonLabel: 'EXPLORE MARS',
+    accentColor: '#EF4444',
+    frequencyTone: 587,
+  },
+  jupiter: {
+    id: 'jupiter',
+    name: 'JUPITER',
+    orderIndex: 5,
+    stillPoster: '/assets/textures/jupiter.jpg',
+    cutoutUrl: '/assets/planets/jupiter.png',
+    ledeHtml:
+      'The king of planets, with more mass than all other worlds combined. Explore its chromatic ammonium storm belts, ancient Great Red Spot, and oceanic ice moons.',
+    buttonLabel: 'EXPLORE JUPITER',
+    accentColor: '#FB923C',
+    frequencyTone: 440,
+  },
+  saturn: {
+    id: 'saturn',
+    name: 'SATURN',
+    orderIndex: 6,
+    stillPoster: '/assets/textures/saturn.jpg',
+    cutoutUrl: '/assets/planets/saturn.png',
+    ledeHtml:
+      'Encircled by a breathtaking 282,000-km-wide ring system of pure water-ice crystals. Investigate the methane lakes of Titan and the active cryogenic geysers of Enceladus.',
+    buttonLabel: 'EXPLORE SATURN',
+    accentColor: '#FCD34D',
+    frequencyTone: 370,
+  },
+  uranus: {
+    id: 'uranus',
+    name: 'URANUS',
+    orderIndex: 7,
+    stillPoster: '/assets/textures/uranus.jpg',
+    cutoutUrl: '/assets/planets/uranus.png',
+    ledeHtml:
+      'The enigmatic tilted ice giant rolling through space with an extreme 97.8&deg; axial tilt. Explore its superchilled methane atmosphere, dark rings, and scarred moon Miranda.',
+    buttonLabel: 'EXPLORE URANUS',
+    accentColor: '#22D3EE',
+    frequencyTone: 330,
+  },
+  neptune: {
+    id: 'neptune',
+    name: 'NEPTUNE',
+    orderIndex: 8,
+    stillPoster: '/assets/textures/neptune.jpg',
+    cutoutUrl: '/assets/planets/neptune.png',
+    ledeHtml:
+      'The most distant outer giant world, battered by supersonic 2,100 km/h winds. Explore its deep cobalt storms, high-altitude methane cirrus clouds, and cryovolcanic moon Triton.',
+    buttonLabel: 'EXPLORE NEPTUNE',
+    accentColor: '#3B82F6',
+    frequencyTone: 294,
   },
 };
 
 export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = ({
   initialPlanetId,
 }) => {
-  // 1. Featured SpaceEdu Planet State (Earth, Venus, Mars)
+  // 1. Featured SpaceEdu Planet State (All 8 Planets supported)
   const [featuredPlanet, setFeaturedPlanet] = useState<SpaceEduPlanetKey>(() => {
-    if (initialPlanetId === 'venus') return 'venus';
-    if (initialPlanetId === 'mars') return 'mars';
+    if (initialPlanetId && ORDER.includes(initialPlanetId as SpaceEduPlanetKey)) {
+      return initialPlanetId as SpaceEduPlanetKey;
+    }
     return 'earth';
   });
 
@@ -116,7 +204,7 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
   const [selectedHotspot, setSelectedHotspot] = useState<PlanetaryHotspot | null>(null);
 
   // 5. Video Element References
-  const videoRefs = useRef<Record<SpaceEduPlanetKey, HTMLVideoElement | null>>({
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({
     earth: null,
     venus: null,
     mars: null,
@@ -145,10 +233,10 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
     return 1;
   });
 
-  // Calculate flanking slot planets (re-fills with the remaining two in ORDER)
-  const remaining = ORDER.filter((p) => p !== featuredPlanet);
-  const slotLeft = remaining[0];
-  const slotRight = remaining[1];
+  // Calculate flanking slot planets (continuous cyclic neighbor traversal across all 8 planets)
+  const currentIndex = ORDER.indexOf(featuredPlanet);
+  const slotLeft = ORDER[(currentIndex - 1 + ORDER.length) % ORDER.length];
+  const slotRight = ORDER[(currentIndex + 1) % ORDER.length];
 
   // --------------------------------------------------------------------------
   // ENTRANCE ANIMATION: .anim -> .play -> clean static state after 2150ms
@@ -212,7 +300,7 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
   useEffect(() => {
     // Idle preloading of remaining planetary videos after first paint
     const handleIdleWarm = () => {
-      ORDER.forEach((p) => warmPlanet(p));
+      ['earth', 'venus', 'mars'].forEach((p) => warmPlanet(p as SpaceEduPlanetKey));
     };
 
     const win = window as unknown as {
@@ -232,8 +320,8 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
     (next: SpaceEduPlanetKey) => {
       if (next === featuredPlanet) return;
 
-      // 1. Warm and activate matching video
-      ORDER.forEach((p) => {
+      // 1. Warm and activate matching video if it exists
+      ['earth', 'venus', 'mars'].forEach((p) => {
         const vid = videoRefs.current[p];
         if (vid) {
           if (p === next) {
@@ -253,10 +341,62 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
       // 2. Set featured planet state
       setFeaturedPlanet(next);
       setActivePlanetId(next as CelestialId);
-      discoveryAudio.playTelemetryChime(next === 'mars' ? 440 : next === 'venus' ? 587 : 659);
+      discoveryAudio.playTelemetryChime(PLANETS_SPEC[next].frequencyTone || 659);
     },
     [featuredPlanet]
   );
+
+  // --------------------------------------------------------------------------
+  // KEYBOARD NAVIGATION (ArrowLeft, ArrowRight, Enter)
+  // --------------------------------------------------------------------------
+  useEffect(() => {
+    if (viewMode !== 'hero') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        showPlanet(slotLeft);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        showPlanet(slotRight);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLaunch3DExplorer();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewMode, slotLeft, slotRight, showPlanet]);
+
+  // --------------------------------------------------------------------------
+  // TOUCH SWIPE GESTURE DETECTION
+  // --------------------------------------------------------------------------
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(deltaX) > 42) {
+      if (deltaX < 0) {
+        showPlanet(slotRight); // Swiped left -> next planet
+      } else {
+        showPlanet(slotLeft);  // Swiped right -> previous planet
+      }
+    }
+    touchStartX.current = null;
+  };
 
   // Mark explored planet in cadet persistence
   const markPlanetExplored = useCallback(
@@ -322,58 +462,26 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
         {/* VIEW A: SPACEEDU REPLICATED HERO VIEW (The Required Attached UI)  */}
         {/* ================================================================= */}
         {viewMode === 'hero' && (
-          <div className={`discovery-space-root ${animClass} relative w-full h-full`}>
+          <div
+            className={`discovery-space-root ${animClass} relative w-full h-full`}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <div className="stage">
-              {/* Sky Background: Looping Videos + Fallback Still Poster */}
+              {/* Sky Background: Cosmic Deep Space Atmosphere */}
               <div
                 className="sky"
                 style={{
-                  backgroundImage: `url(${PLANETS_SPEC[featuredPlanet].stillPoster})`,
+                  background:
+                    'radial-gradient(ellipse at 50% 60%, #07152d 0%, #030814 65%, #010307 100%)',
                 }}
-              >
-                {/* Earth Background Video */}
-                <video
-                  ref={(el) => (videoRefs.current.earth = el)}
-                  data-planet="earth"
-                  className={featuredPlanet === 'earth' ? 'is-active' : ''}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  src={PLANETS_SPEC.earth.videoClip}
-                  poster={PLANETS_SPEC.earth.stillPoster}
-                  aria-hidden="true"
-                />
+              />
 
-                {/* Venus Background Video */}
-                <video
-                  ref={(el) => (videoRefs.current.venus = el)}
-                  data-planet="venus"
-                  className={featuredPlanet === 'venus' ? 'is-active' : ''}
-                  muted
-                  loop
-                  playsInline
-                  preload="none"
-                  data-src={PLANETS_SPEC.venus.videoClip}
-                  poster={PLANETS_SPEC.venus.stillPoster}
-                  aria-hidden="true"
-                />
-
-                {/* Mars Background Video */}
-                <video
-                  ref={(el) => (videoRefs.current.mars = el)}
-                  data-planet="mars"
-                  className={featuredPlanet === 'mars' ? 'is-active' : ''}
-                  muted
-                  loop
-                  playsInline
-                  preload="none"
-                  data-src={PLANETS_SPEC.mars.videoClip}
-                  poster={PLANETS_SPEC.mars.stillPoster}
-                  aria-hidden="true"
-                />
-              </div>
+              {/* Realtime 3D Central Planet & Starfield (All 8 Planets with NASA 2K Textures & Rings) */}
+              <PlanetHeroCanvas3D
+                planetId={featuredPlanet}
+                glowColor={PLANETS_SPEC[featuredPlanet].accentColor}
+              />
 
               {/* UI Overlay: Navbar, Hero Typography, Flanking Cutouts, Call to Action */}
               <div className="ui">
@@ -464,7 +572,9 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
                   {/* Eyebrow */}
                   <div className="col eyebrow">
                     <span className="ent-mask">
-                      <span className="ent-line">PLANET</span>
+                      <span className="ent-line">
+                        PLANET {PLANETS_SPEC[featuredPlanet].orderIndex} OF 8
+                      </span>
                     </span>
                   </div>
 
@@ -477,7 +587,7 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
 
                   {/* Cyan Divider Rule */}
                   <div className="col rule">
-                    <span />
+                    <span style={{ backgroundColor: PLANETS_SPEC[featuredPlanet].accentColor }} />
                   </div>
 
                   {/* Paragraph Lede Description */}
@@ -487,6 +597,28 @@ export const DiscoveryUniverseScreen: React.FC<DiscoveryUniverseScreenProps> = (
                       __html: PLANETS_SPEC[featuredPlanet].ledeHtml,
                     }}
                   />
+
+                  {/* 8-Planet Orbit Navigation Strip */}
+                  <nav className="planet-indicators" aria-label="8 Planets of the Solar System">
+                    {ORDER.map((planetKey, index) => {
+                      const isActive = planetKey === featuredPlanet;
+                      const pSpec = PLANETS_SPEC[planetKey];
+                      return (
+                        <button
+                          key={planetKey}
+                          type="button"
+                          className={`planet-node ${isActive ? 'active' : ''}`}
+                          onClick={() => showPlanet(planetKey)}
+                          aria-label={`Jump to ${pSpec.name} (Planet ${index + 1} of 8)`}
+                          aria-current={isActive ? 'true' : undefined}
+                          title={`${pSpec.name} — Planet ${index + 1} of 8`}
+                        >
+                          <span className="node-pip" />
+                          <span className="node-text">{pSpec.name}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
 
                   {/* Call-to-Action Row & Flanking Cutout Slots */}
                   <div className="col cta">
