@@ -109,11 +109,10 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
                 return (
                   <tr
                     key={body.id}
-                    className={`transition-colors ${
-                      isSelected
+                    className={`transition-colors ${isSelected
                         ? 'bg-[#F59E0B]/10'
                         : 'hover:bg-[#11182E]/50'
-                    }`}
+                      }`}
                   >
                     {/* Name */}
                     <td className="py-3.5 pr-4">
@@ -164,11 +163,10 @@ export const AccessibleDirectory: React.FC<AccessibleDirectoryProps> = ({ isOpen
                           type="button"
                           onClick={() => handleSelect(body.id)}
                           aria-label={`Select and fly to ${body.name}`}
-                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
-                            isSelected
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${isSelected
                               ? 'border border-[#F59E0B] bg-[#F59E0B] text-[#05070D]'
                               : 'border border-[rgba(148,163,184,0.2)] bg-[#11182E] text-[#94A3B8] hover:border-[#38BDF8] hover:text-[#F8FAFC]'
-                          }`}
+                            }`}
                         >
                           {isSelected ? (
                             <>

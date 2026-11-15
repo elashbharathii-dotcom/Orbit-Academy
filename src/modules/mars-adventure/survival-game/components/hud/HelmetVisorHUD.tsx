@@ -8,6 +8,20 @@ import { SubstanceInfoModal } from './SubstanceInfoModal';
 import { PauseModal } from './PauseModal';
 import { StorageModal } from './StorageModal';
 import { RenovationModal } from './RenovationModal';
+import { CraftingModal } from './CraftingModal';
+import { DisassemblyModal } from './DisassemblyModal';
+import { PowerGridModal } from './PowerGridModal';
+import { MissionModal } from './MissionModal';
+import { MarsMapModal } from './MarsMapModal';
+import { ResearchModal } from './ResearchModal';
+import { IntelligentBaseModal } from './IntelligentBaseModal';
+import { StoryDialogueModal } from './StoryDialogueModal';
+import { StoryChoiceModal } from './StoryChoiceModal';
+import { JournalModal } from './JournalModal';
+import { CampaignEndingModal } from './CampaignEndingModal';
+import { ChapterIntroBanner } from './ChapterIntroBanner';
+import { MainMenuModal } from './MainMenuModal';
+import { OpeningCinematic } from './OpeningCinematic';
 import { InteractionPrompt } from './InteractionPrompt';
 import { ScannerOverlay } from './ScannerOverlay';
 import { RoverHUD } from './RoverHUD';
@@ -19,6 +33,13 @@ import {
   Backpack,
   ClipboardList,
   SlidersHorizontal,
+  Zap,
+  Compass,
+  Map,
+  FlaskConical,
+  Radio,
+  Bot,
+  BookOpen,
 } from 'lucide-react';
 
 interface HelmetVisorHUDProps {
@@ -42,15 +63,67 @@ export const HelmetVisorHUD: React.FC<HelmetVisorHUDProps> = ({
   const clearNotification = useMarsGameStore((state) => state.clearNotification);
   const backpackWeight = useMarsGameStore((state) => state.backpackWeight);
   const maxBackpackCapacity = useMarsGameStore((state) => state.maxBackpackCapacity);
+  const isOpeningPrologueOpen = useMarsGameStore((state) => state.isOpeningPrologueOpen);
+  const openPowerGridModal = useMarsGameStore((state) => state.openPowerGridModal);
+  const openMissionModal = useMarsGameStore((state) => state.openMissionModal);
+  const openMapModal = useMarsGameStore((state) => state.openMapModal);
+  const openResearchModal = useMarsGameStore((state) => state.openResearchModal);
+  const openIntelligentBaseModal = useMarsGameStore((state) => state.openIntelligentBaseModal);
+  const openJournalModal = useMarsGameStore((state) => state.openJournalModal);
+  const campaignChapter = useMarsGameStore((state) => state.campaignChapter);
+  const activeWorldEvent = useMarsGameStore((state) => state.activeWorldEvent);
 
-  // Keyboard shortcut for Cargo ([C]) and Sol Log ([M])
+  // Keyboard shortcut for Cargo ([B] or [C] or [TAB]) and Sol Log ([M]) and Power Grid ([P]) and AI Dashboard ([U])
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'KeyC') {
+      if (e.code === 'KeyB' || e.code === 'Tab') {
+        e.preventDefault();
         setShowInventory((prev) => !prev);
+      } else if (e.code === 'KeyC') {
+        const mode = useMarsGameStore.getState().settings.controlMode;
+        if (mode === 'on_foot') {
+          setShowInventory((prev) => !prev);
+        }
       }
       if (e.code === 'KeyM') {
-        setShowMissionLog((prev) => !prev);
+        const store = useMarsGameStore.getState();
+        if (store.isMissionModalOpen) {
+          store.closeMissionModal();
+        } else {
+          store.openMissionModal();
+        }
+      }
+      if (e.code === 'KeyN') {
+        const store = useMarsGameStore.getState();
+        if (store.isMapModalOpen) {
+          store.closeMapModal();
+        } else {
+          store.openMapModal();
+        }
+      }
+      if (e.code === 'KeyP') {
+        const store = useMarsGameStore.getState();
+        if (store.isPowerGridModalOpen) {
+          store.closePowerGridModal();
+        } else {
+          store.openPowerGridModal();
+        }
+      }
+      if (e.code === 'KeyU') {
+        const store = useMarsGameStore.getState();
+        if (store.isIntelligentBaseModalOpen) {
+          store.closeIntelligentBaseModal();
+        } else {
+          store.openIntelligentBaseModal();
+        }
+      }
+      if (e.code === 'KeyJ') {
+        const store = useMarsGameStore.getState();
+        if (store.isJournalModalOpen) {
+          store.closeJournalModal();
+        } else {
+          store.openJournalModal();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -113,6 +186,69 @@ export const HelmetVisorHUD: React.FC<HelmetVisorHUDProps> = ({
             <span className="hidden sm:inline text-[10px]">SCAN [V]</span>
           </button>
 
+          {/* Base Power Grid Quick Button */}
+          <button
+            onClick={openPowerGridModal}
+            title="Base Power Grid & Telemetry (P)"
+            className="flex items-center gap-1 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-2.5 py-1 text-yellow-300 hover:bg-yellow-500/20 transition-colors"
+          >
+            <Zap className="h-3.5 w-3.5 text-yellow-400" />
+            <span className="hidden sm:inline text-[10px]">GRID [P]</span>
+          </button>
+
+          {/* Missions Terminal Quick Button */}
+          <button
+            onClick={openMissionModal}
+            title="Mission Operations Terminal (M)"
+            className="flex items-center gap-1 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-cyan-300 hover:bg-cyan-500/20 transition-colors"
+          >
+            <Compass className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="hidden sm:inline text-[10px]">MISSIONS [M]</span>
+          </button>
+
+          {/* Planetary Radar Map Quick Button */}
+          <button
+            onClick={openMapModal}
+            title="Jezero Topographic Planetary Map (N)"
+            className="flex items-center gap-1 rounded-xl border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-sky-300 hover:bg-sky-500/20 transition-colors"
+          >
+            <Map className="h-3.5 w-3.5 text-sky-400" />
+            <span className="hidden sm:inline text-[10px]">MAP [N]</span>
+          </button>
+
+          {/* Research Lab Quick Button */}
+          <button
+            onClick={openResearchModal}
+            title="Scientific Research & Blueprints"
+            className="flex items-center gap-1 rounded-xl border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-purple-300 hover:bg-purple-500/20 transition-colors"
+          >
+            <FlaskConical className="h-3.5 w-3.5 text-purple-400" />
+            <span className="hidden sm:inline text-[10px]">LAB</span>
+          </button>
+
+          {/* Base AI & Robotics Quick Button */}
+          <button
+            onClick={openIntelligentBaseModal}
+            title="Intelligent Base & Autonomous Robotics (U)"
+            className="flex items-center gap-1 rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-2.5 py-1 text-cyan-300 hover:bg-cyan-500/25 transition-colors shadow-sm"
+          >
+            <Bot className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="hidden sm:inline text-[10px]">BASE AI [U]</span>
+          </button>
+
+          {/* Story & Field Journal Quick Button [J] */}
+          <button
+            onClick={openJournalModal}
+            title="Astronaut Field Journal & Story Archive (J)"
+            className="flex items-center gap-1 rounded-xl border border-cyan-400/40 bg-cyan-500/20 px-2.5 py-1 text-cyan-200 hover:bg-cyan-500/30 transition-colors shadow-sm"
+          >
+            <BookOpen className="h-3.5 w-3.5 text-cyan-300" />
+            <span className="hidden sm:inline text-[10px]">JOURNAL [J]</span>
+            <span className="hidden md:inline-block text-[9px] text-amber-300 font-bold ml-0.5">
+              CH.{campaignChapter}
+            </span>
+          </button>
+
           {/* Pause / Controls Guide Button */}
           <button
             onClick={() => togglePauseModal(true)}
@@ -163,6 +299,27 @@ export const HelmetVisorHUD: React.FC<HelmetVisorHUDProps> = ({
           </div>
         )}
       </div>
+
+      {/* 3b. Active Planetary Dynamic Event Alert Banner */}
+      {activeWorldEvent && (
+        <div className="pointer-events-none flex justify-center my-1">
+          <div className="pointer-events-auto flex items-center gap-2.5 rounded-xl border border-red-500/60 bg-red-950/85 px-4 py-2 font-mono text-xs text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.4)] backdrop-blur-md animate-pulse">
+            <Radio className="h-4 w-4 text-red-400 animate-spin [animation-duration:6s] flex-shrink-0" />
+            <div className="flex flex-col text-left">
+              <span className="font-bold text-red-300">
+                PLANETARY EVENT: {activeWorldEvent.title}
+              </span>
+              <span className="text-[11px] text-zinc-300">{activeWorldEvent.description}</span>
+            </div>
+            <button
+              onClick={() => useMarsGameStore.getState().dismissWorldEvent()}
+              className="ml-3 px-2 py-0.5 rounded border border-red-400/50 hover:bg-red-500/20 text-[10px] text-red-300"
+            >
+              DISMISS
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 4. Contextual Interaction Prompt [E] */}
       <InteractionPrompt />
@@ -226,15 +383,21 @@ export const HelmetVisorHUD: React.FC<HelmetVisorHUDProps> = ({
             <span>•</span>
             <span>[Mouse] Look</span>
             <span>•</span>
-            <span>[Scroll] Zoom</span>
-            <span>•</span>
             <span>[E] Interact</span>
+            <span>•</span>
+            <span>[M] Missions</span>
+            <span>•</span>
+            <span>[N] Map</span>
+            <span>•</span>
+            <span>[P] Power Grid</span>
             <span>•</span>
             <span>[V] Scanner</span>
             <span>•</span>
-            <span>[I] Substance Info</span>
+            <span>[I] Info</span>
             <span>•</span>
-            <span>[ESC] Pause</span>
+            <span>[J] Journal</span>
+            <span>•</span>
+            <span>[ESC] Guide</span>
           </div>
         </div>
 
@@ -245,10 +408,36 @@ export const HelmetVisorHUD: React.FC<HelmetVisorHUDProps> = ({
       </div>
 
       {/* Modals & Menus */}
+      <MainMenuModal
+        onReturnToBriefing={onReturnToBriefing}
+        onStartNewCampaign={() => {
+          useMarsGameStore.getState().resetSaveData();
+          useMarsGameStore.getState().openOpeningPrologue();
+        }}
+      />
+      {isOpeningPrologueOpen && (
+        <OpeningCinematic
+          onComplete={() => {
+            useMarsGameStore.getState().closeOpeningPrologue();
+          }}
+        />
+      )}
+      <ChapterIntroBanner />
+      <StoryDialogueModal />
+      <StoryChoiceModal />
+      <JournalModal />
+      <CampaignEndingModal />
       {showInventory && <InventoryDrawer onClose={() => setShowInventory(false)} />}
       {showMissionLog && <MissionLogModal onClose={() => setShowMissionLog(false)} />}
       <StorageModal />
       <RenovationModal />
+      <PowerGridModal />
+      <MissionModal />
+      <MarsMapModal />
+      <ResearchModal />
+      <IntelligentBaseModal />
+      <CraftingModal />
+      <DisassemblyModal />
       <SubstanceInfoModal />
       <PauseModal canvasContainerRef={canvasContainerRef} />
       <GameOverModal />

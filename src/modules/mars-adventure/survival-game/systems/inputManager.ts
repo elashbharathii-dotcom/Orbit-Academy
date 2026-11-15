@@ -15,6 +15,7 @@ class MarsInputManager {
   private keyVTriggered: boolean = false;
   private keyITriggered: boolean = false;
   private keyEscTriggered: boolean = false;
+  private keyCTriggered: boolean = false;
 
   private isInitialized = false;
 
@@ -60,6 +61,7 @@ class MarsInputManager {
       if (e.code === 'KeyV') this.keyVTriggered = true;
       if (e.code === 'KeyI') this.keyITriggered = true;
       if (e.code === 'Escape') this.keyEscTriggered = true;
+      if (e.code === 'KeyC') this.keyCTriggered = true;
     }
 
     this.keys[e.code] = true;
@@ -164,6 +166,17 @@ class MarsInputManager {
     const val = this.keyEscTriggered;
     this.keyEscTriggered = false;
     return val;
+  }
+
+  public consumeC(): boolean {
+    const val = this.keyCTriggered;
+    this.keyCTriggered = false;
+    return val;
+  }
+
+  public isHandbrakeActive(): boolean {
+    if (this.uiBlocking) return false;
+    return !!this.keys['Space'];
   }
 }
 

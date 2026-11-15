@@ -383,7 +383,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
       <MasterHeader />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6 animate-fade-in">
-        
+
         {/* ================================================================= */}
         {/* 1. STUDIO HERO TELEMETRY BANNER                                  */}
         {/* ================================================================= */}
@@ -467,7 +467,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
         {/* 2. MAIN 3D WORKBENCH & CAD FABRICATION AREA                      */}
         {/* ================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Left Column: 3D Three.js Viewport (8 Cols) */}
           <div className="lg:col-span-8 flex flex-col gap-4">
             <GlassCard
@@ -581,11 +581,10 @@ export const SpaceCreationStudioScreen: React.FC = () => {
                   return (
                     <div
                       key={m.name}
-                      className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
-                        canReach
-                          ? 'border-[#34D399]/40 bg-[#34D399]/10 text-white'
-                          : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8]'
-                      }`}
+                      className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${canReach
+                        ? 'border-[#34D399]/40 bg-[#34D399]/10 text-white'
+                        : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8]'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -615,7 +614,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
 
           {/* Right Column: Telemetry & Component Catalog (4 Cols) */}
           <div className="lg:col-span-4 flex flex-col gap-4">
-            
+
             {/* Propulsion & Power Telemetry */}
             <GlassCard variant="default" className="p-5">
               <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold block mb-3">
@@ -676,11 +675,10 @@ export const SpaceCreationStudioScreen: React.FC = () => {
                     key={cat}
                     type="button"
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-2.5 py-1 rounded-lg font-mono text-[10px] transition-all capitalize ${
-                      activeCategory === cat
-                        ? 'border border-[#38BDF8] bg-[#38BDF8]/20 text-[#38BDF8] font-bold'
-                        : 'border border-white/5 bg-[#0B1226]/60 text-[#94A3B8] hover:text-white'
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg font-mono text-[10px] transition-all capitalize ${activeCategory === cat
+                      ? 'border border-[#38BDF8] bg-[#38BDF8]/20 text-[#38BDF8] font-bold'
+                      : 'border border-white/5 bg-[#0B1226]/60 text-[#94A3B8] hover:text-white'
+                      }`}
                   >
                     {cat}
                   </button>

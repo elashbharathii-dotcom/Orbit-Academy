@@ -13,6 +13,8 @@ export const MarsSurvivalGame: React.FC<MarsSurvivalGameProps> = ({ onReturnToBr
   const containerRef = useRef<HTMLDivElement>(null);
   const isPauseModalOpen = useMarsGameStore((state) => state.isPauseModalOpen);
   const isSubstanceModalOpen = useMarsGameStore((state) => state.isSubstanceModalOpen);
+  const isCraftingModalOpen = useMarsGameStore((state) => state.isCraftingModalOpen);
+  const isDisassemblyModalOpen = useMarsGameStore((state) => state.isDisassemblyModalOpen);
 
   // Initialize input manager & audio system
   useEffect(() => {
@@ -42,7 +44,9 @@ export const MarsSurvivalGame: React.FC<MarsSurvivalGameProps> = ({ onReturnToBr
       target.closest('a') ||
       target.closest('input') ||
       isPauseModalOpen ||
-      isSubstanceModalOpen
+      isSubstanceModalOpen ||
+      isCraftingModalOpen ||
+      isDisassemblyModalOpen
     ) {
       return;
     }

@@ -7,6 +7,8 @@ export const CompassRadar: React.FC = () => {
   const roverPos = useMarsGameStore((state) => state.roverPosition);
   const resourceNodes = useMarsGameStore((state) => state.resourceNodes);
   const visorActive = useMarsGameStore((state) => state.settings.visorScanActive);
+  const navTarget = useMarsGameStore((state) => state.navTarget);
+  const landmarks = useMarsGameStore((state) => state.landmarks);
 
   // Distance to Hab ([0, 0, 0])
   const distToHab = Math.round(Math.hypot(playerPos[0] - 0, playerPos[2] - 0));
@@ -107,6 +109,50 @@ export const CompassRadar: React.FC = () => {
           }
           return null;
         })}
+        {/* Discovered Exploration Landmarks */}
+        {landmarks.map((lm) => {
+          if (!lm.discovered) return null;
+          const relX = (lm.coordinates[0] - playerPos[0]) / RADAR_RADIUS_M;
+          const relZ = (lm.coordinates[2] - playerPos[2]) / RADAR_RADIUS_M;
+          if (Math.hypot(relX, relZ) <= 1.0) {
+            const px = relX * RADAR_PX;
+            const pz = relZ * RADAR_PX;
+            return (
+              <div
+                key={lm.id}
+                title={lm.name}
+                className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-400 bg-purple-500 shadow-[0_0_6px_#A855F7]"
+                style={{
+                  left: `calc(50% + ${px}px)`,
+                  top: `calc(50% + ${pz}px)`,
+                }}
+              />
+            );
+          }
+          return null;
+        })}
+
+        {/* Active Nav Target Waypoint Marker */}
+        {navTarget && (() => {
+          const dx = navTarget.x - playerPos[0];
+          const dz = navTarget.z - playerPos[2];
+          const len = Math.hypot(dx, dz);
+          const clampedRatio = Math.min(1.0, len / RADAR_RADIUS_M);
+          const angle = Math.atan2(dz, dx);
+          const px = Math.cos(angle) * (clampedRatio * RADAR_PX);
+          const pz = Math.sin(angle) * (clampedRatio * RADAR_PX);
+
+          return (
+            <div
+              title={navTarget.name}
+              className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-400 bg-amber-500/50 shadow-[0_0_10px_#F59E0B] animate-pulse"
+              style={{
+                left: `calc(50% + ${px}px)`,
+                top: `calc(50% + ${pz}px)`,
+              }}
+            />
+          );
+        })()}
       </div>
 
       {/* Target Telemetry Readouts */}
@@ -119,6 +165,14 @@ export const CompassRadar: React.FC = () => {
           <span className="text-amber-400 font-semibold">ROVER:</span>
           <span>{distToRover}m</span>
         </div>
+        {navTarget && (
+          <div className="flex justify-between text-cyan-300 font-bold border-t border-cyan-500/20 pt-1">
+            <span className="truncate max-w-[70px]">{navTarget.name}:</span>
+            <span>
+              {Math.round(Math.hypot(playerPos[0] - navTarget.x, playerPos[2] - navTarget.z))}m
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

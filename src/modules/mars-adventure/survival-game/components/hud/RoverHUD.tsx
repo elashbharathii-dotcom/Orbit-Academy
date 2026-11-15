@@ -6,12 +6,17 @@ import {
   Compass,
   Activity,
   Zap,
+  Square,
 } from 'lucide-react';
 
 export const RoverHUD: React.FC = () => {
   const controlMode = useMarsGameStore((state) => state.settings.controlMode);
   const telemetry = useMarsGameStore((state) => state.roverTelemetry);
   const roverPos = useMarsGameStore((state) => state.roverPosition);
+  const roverAIMode = useMarsGameStore((state) => state.roverAIMode);
+  const roverNavPlan = useMarsGameStore((state) => state.roverNavPlan);
+  const cancelRoverAutonomous = useMarsGameStore((state) => state.cancelRoverAutonomous);
+  const openIntelligentBaseModal = useMarsGameStore((state) => state.openIntelligentBaseModal);
 
   if (controlMode !== 'driving_rover') return null;
 
@@ -22,14 +27,29 @@ export const RoverHUD: React.FC = () => {
     <div className="pointer-events-none absolute bottom-5 inset-x-0 flex flex-col items-center gap-2 z-40 select-none font-mono">
       {/* Upper Status Banner */}
       <div className="flex items-center gap-3 rounded-full border border-cyan-500/30 bg-[#0A0F1D]/80 px-4 py-1 text-[10px] text-cyan-300 backdrop-blur-md shadow-lg">
-        <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+        <span
+          className={`flex h-2 w-2 rounded-full ${
+            roverAIMode === 'autonomous' ? 'bg-amber-400 animate-ping' : 'bg-cyan-400 animate-pulse'
+          }`}
+        />
         <span className="font-bold tracking-widest uppercase">
-          MARS ROVER EXPLORATION SYSTEM • ACTIVE TELEMETRY
+          {roverAIMode === 'autonomous'
+            ? `AUTOPILOT ENGAGED • TARGET: ${roverNavPlan.destination?.name || 'WAYPOINT'} (${roverNavPlan.remainingDistance.toFixed(0)}m)`
+            : 'MARS ROVER EXPLORATION SYSTEM • ACTIVE TELEMETRY'}
         </span>
         <span className="text-slate-500">|</span>
         <span className="flex items-center gap-1 text-slate-300">
           <Activity className="h-3 w-3 text-cyan-400" /> 4-WHEEL ALL-TERRAIN DRIVE
         </span>
+        {roverAIMode === 'autonomous' && (
+          <button
+            onClick={cancelRoverAutonomous}
+            className="pointer-events-auto ml-2 flex items-center gap-1 rounded bg-rose-500/20 border border-rose-500/40 px-2 py-0.5 text-[9px] font-black text-rose-300 hover:bg-rose-500/30 transition-colors"
+          >
+            <Square className="h-2.5 w-2.5 text-rose-400" />
+            DISENGAGE
+          </button>
+        )}
       </div>
 
       {/* Main Aerospace Cockpit Dashboard */}
@@ -67,7 +87,7 @@ export const RoverHUD: React.FC = () => {
             GEAR
           </span>
           <div className="flex gap-1.5 text-xs font-bold">
-            {(['R', 'N', 'D'] as const).map((g) => (
+            {(['P', 'R', 'N', 'D'] as const).map((g) => (
               <span
                 key={g}
                 className={`flex h-7 w-7 items-center justify-center rounded-xl transition-all ${
@@ -121,12 +141,38 @@ export const RoverHUD: React.FC = () => {
 
         <div className="h-10 w-[1px] bg-white/10" />
 
-        {/* 5. Dismount Prompt */}
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-400 text-black text-xs font-black shadow-md">
-            E
-          </span>
-          <span>Dismount Rover</span>
+        {/* 5. Controls Shortcuts */}
+        <div className="flex items-center gap-3 text-xs font-bold text-slate-200">
+          <button
+            onClick={openIntelligentBaseModal}
+            className="pointer-events-auto flex items-center gap-1.5 text-[11px] text-cyan-300 hover:text-white transition-colors"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-black border border-cyan-400/30">
+              U
+            </span>
+            <span>AI Nav</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+            <span className="flex px-1.5 py-0.5 items-center justify-center rounded bg-white/10 text-cyan-300 text-[10px] font-black border border-white/20">
+              SPACE
+            </span>
+            <span>Brake</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+            <span className="flex h-6 w-6 items-center justify-center rounded bg-white/10 text-cyan-300 text-[10px] font-black border border-white/20">
+              C
+            </span>
+            <span>View</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+            <span className="flex h-6 w-6 items-center justify-center rounded bg-cyan-400 text-black text-[10px] font-black shadow-md">
+              E
+            </span>
+            <span>Exit</span>
+          </div>
         </div>
       </div>
     </div>
