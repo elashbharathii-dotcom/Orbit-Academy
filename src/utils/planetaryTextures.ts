@@ -14,6 +14,7 @@ import {
   getUranusTexture as getProceduralUranus,
   getNeptuneTexture as getProceduralNeptune,
   getNeptuneCirrusTexture as getProceduralNeptuneCirrus,
+  getMoonTexture as getProceduralMoon,
 } from './textureGenerator';
 
 /**
@@ -243,3 +244,19 @@ export function getMilkyWayTexture(): THREE.Texture {
   textureCache.set(url, texture);
   return texture;
 }
+
+/**
+ * React Hook for Natural Satellite / Moon Textures
+ * Generates and caches geologically authentic procedural textures based on satellite type.
+ */
+export function useMoonTexture(
+  moonId: string,
+  textureType?: string,
+  baseColor?: string
+): THREE.Texture {
+  const [texture] = useState<THREE.Texture>(() => {
+    return configureTexture(getProceduralMoon(moonId, textureType, baseColor));
+  });
+  return texture;
+}
+

@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, X, Navigation } from 'lucide-react';
-import { CELESTIAL_BODIES } from '../../data/celestialBodies';
+import { CELESTIAL_BODIES, DWARF_PLANETS, SPACECRAFT } from '../../data/celestialBodies';
 import { MILKY_WAY_DATA } from '../../data/milkyWayData';
 import { useSolarSystem } from '../../context/SolarSystemContext';
-import { CelestialId } from '../../types';
+import { CelestialId, DwarfPlanetId, SpacecraftId } from '../../types';
 
 interface SearchItem {
   id: string;
   name: string;
-  category: 'planet' | 'moon' | 'star' | 'galaxy';
+  category: 'planet' | 'moon' | 'star' | 'galaxy' | 'dwarf' | 'spacecraft';
   subtitle: string;
   parentPlanetId?: CelestialId;
   color: string;
@@ -20,7 +20,13 @@ export const CelestialSearchBar: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { selectPlanet, selectMoon, setActiveEnvironment } = useSolarSystem();
+  const {
+    selectPlanet,
+    selectMoon,
+    selectDwarfPlanet,
+    selectSpacecraft,
+    setActiveEnvironment,
+  } = useSolarSystem();
 
   // Aggregate all searchable items
   const allItems = useMemo<SearchItem[]>(() => {
@@ -71,15 +77,37 @@ export const CelestialSearchBar: React.FC = () => {
       }
     }
 
+    // Dwarf Planets
+    for (const dwarf of DWARF_PLANETS) {
+      list.push({
+        id: dwarf.id,
+        name: `${dwarf.name} (Dwarf Planet)`,
+        category: 'dwarf',
+        subtitle: `${dwarf.classification} // ⌀ ${dwarf.realDiameterKm}`,
+        color: dwarf.primaryColor,
+      });
+    }
+
+    // Spacecraft
+    for (const craft of SPACECRAFT) {
+      list.push({
+        id: craft.id,
+        name: craft.name,
+        category: 'spacecraft',
+        subtitle: `${craft.agency} // ${craft.missionType}`,
+        color: craft.primaryColor,
+      });
+    }
+
     return list;
   }, []);
 
   const filteredItems = useMemo(() => {
-    if (!query.trim()) return allItems.slice(0, 8);
+    if (!query.trim()) return allItems.slice(0, 10);
     const q = query.toLowerCase().trim();
     return allItems
       .filter((item) => item.name.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q))
-      .slice(0, 8);
+      .slice(0, 10);
   }, [allItems, query]);
 
   const handleSelect = (item: SearchItem) => {
@@ -87,16 +115,25 @@ export const CelestialSearchBar: React.FC = () => {
       setActiveEnvironment?.('milky-way');
       selectPlanet(null);
       selectMoon?.(null);
+      selectDwarfPlanet?.(null);
     } else if (item.category === 'star' || item.category === 'planet') {
       setActiveEnvironment?.('solar-system');
       selectPlanet(item.parentPlanetId || null);
       selectMoon?.(null);
+      selectDwarfPlanet?.(null);
     } else if (item.category === 'moon') {
       setActiveEnvironment?.('solar-system');
       if (item.parentPlanetId) {
         selectPlanet(item.parentPlanetId);
       }
       selectMoon?.(item.id);
+      selectDwarfPlanet?.(null);
+    } else if (item.category === 'dwarf') {
+      setActiveEnvironment?.('solar-system');
+      selectDwarfPlanet?.(item.id as DwarfPlanetId);
+    } else if (item.category === 'spacecraft') {
+      setActiveEnvironment?.('solar-system');
+      selectSpacecraft?.(item.id as SpacecraftId);
     }
     setIsOpen(false);
     setQuery('');

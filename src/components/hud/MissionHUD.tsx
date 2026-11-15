@@ -57,7 +57,7 @@ export const MissionHUD: React.FC = () => {
                   ? '100,000 LY DIAMETER'
                   : selectedBody
                   ? `${selectedBody.physical.realDistanceAU} AU`
-                  : '8 PLANETS • 18 MOONS'}
+                  : '8 PLANETS • 22 MOONS • 5 DWARF PLANETS'}
               </span>
             </div>
 

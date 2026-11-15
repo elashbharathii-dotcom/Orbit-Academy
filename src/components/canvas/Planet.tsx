@@ -42,7 +42,7 @@ export const Planet: React.FC<PlanetProps> = ({
   const planetMeshRef = useRef<THREE.Mesh>(null);
   const cloudsMeshRef = useRef<THREE.Mesh>(null);
 
-  const { selectedPlanetId, hoveredPlanetId, setHoveredPlanet, viewingMode } = useSolarSystem();
+  const { selectedPlanetId, hoveredPlanetId, setHoveredPlanet, viewingMode, selectPlanet } = useSolarSystem();
   const { launchModuleForPlanet } = useNavigation();
 
   const isSelected = selectedPlanetId === data.id;
@@ -222,8 +222,12 @@ export const Planet: React.FC<PlanetProps> = ({
       }
     }
 
-    // Launch dedicated learning module with cinematic camera approach
-    launchModuleForPlanet(id);
+    // If planet is already focused, open learning module; otherwise focus & inspect planet
+    if (isSelected) {
+      launchModuleForPlanet(id);
+    } else {
+      selectPlanet(id);
+    }
   };
 
   const handlePointerOver = (e: any) => {

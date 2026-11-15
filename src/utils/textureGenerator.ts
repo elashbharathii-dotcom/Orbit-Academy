@@ -657,4 +657,190 @@ export function getNeptuneCirrusTexture(): THREE.CanvasTexture {
   });
 }
 
+/**
+ * Procedural Natural Satellite / Moon Texture Generator
+ * Generates distinct surface textures for all 22 moons based on geological classification:
+ * - Cratered: Ancient anorthosite/basalt with multi-ring craters and ray ejecta (Luna, Callisto, Mimas, etc.)
+ * - Ice: Fractured ice shell with crisscrossing tectonic lineae and ridges (Europa, Enceladus, Triton)
+ * - Volcanic: Sulfur calderas, lava flows, and dark volcanic vent deposits (Io)
+ * - Grooved: Parallel tectonic grooves and graben fracture systems (Ganymede, Phobos, Miranda)
+ * - Methane: Dense orange nitrogen-methane haze with dark liquid hydrocarbon lakes (Titan)
+ * - Smooth: Soft regolith-mantled asteroid body (Deimos, Nereid)
+ */
+export function getMoonTexture(
+  moonId: string,
+  textureType: string = 'cratered',
+  baseColor: string = '#CBD5E1'
+): THREE.CanvasTexture {
+  const cacheKey = `moon_${moonId}_${textureType}`;
+  return createCachedTexture(cacheKey, 512, 256, (ctx, w, h) => {
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(0, 0, w, h);
+
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    if (textureType === 'volcanic') {
+      // Io: Sulfur dioxide, sulfur frost, and dark volcanic calderas
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const n1 = fbm(x * 0.04, y * 0.04, 3, 101);
+          const n2 = smoothNoise(x * 0.08, y * 0.08, 202);
+
+          // Vivid yellow, orange, and white sulfur frost
+          data[idx] = Math.min(255, Math.floor(220 + n1 * 35));
+          data[idx + 1] = Math.min(255, Math.floor(170 + n2 * 60));
+          data[idx + 2] = Math.min(255, Math.floor(30 + n1 * 40));
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Dark volcanic calderas (Pele, Loki Patera)
+      ctx.fillStyle = '#1A0E08';
+      for (let i = 0; i < 28; i++) {
+        const cx = (pseudoNoise(i, 1) * w) % w;
+        const cy = (pseudoNoise(i, 2) * h) % h;
+        const rad = 3 + pseudoNoise(i, 3) * 8;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Red/orange sulfur ring halo around active vent
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad * 2.2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (textureType === 'ice') {
+      // Europa / Enceladus: Bright ice shell with crisscrossing reddish/brown lineae
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const iceNoise = fbm(x * 0.03, y * 0.03, 3, 303);
+          const val = Math.min(255, Math.floor(215 + iceNoise * 40));
+          data[idx] = val;
+          data[idx + 1] = Math.min(255, val + 5);
+          data[idx + 2] = Math.min(255, val + 15);
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Crisscrossing cycloidal tectonic ridges and lineae
+      ctx.strokeStyle = moonId === 'europa' ? 'rgba(154, 52, 18, 0.65)' : 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 1.8;
+      for (let i = 0; i < 24; i++) {
+        const sx = pseudoNoise(i, 11) * w;
+        const sy = pseudoNoise(i, 12) * h;
+        const ex = (sx + (pseudoNoise(i, 13) - 0.5) * 180 + w) % w;
+        const ey = (sy + (pseudoNoise(i, 14) - 0.5) * 120 + h) % h;
+
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.bezierCurveTo(
+          sx + 30, sy - 20,
+          ex - 30, ey + 20,
+          ex, ey
+        );
+        ctx.stroke();
+      }
+    } else if (textureType === 'methane') {
+      // Titan: Dense golden-orange atmospheric haze with dark polar hydrocarbon lakes
+      for (let y = 0; y < h; y++) {
+        const poleDist = Math.abs(y - h / 2) / (h / 2);
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const haze = fbm(x * 0.02, y * 0.02, 3, 505);
+          data[idx] = Math.min(255, Math.floor(235 + haze * 20));
+          data[idx + 1] = Math.min(255, Math.floor(145 + haze * 30));
+          data[idx + 2] = Math.min(255, Math.floor(35 + haze * 25));
+          data[idx + 3] = 255;
+
+          // Polar dark liquid methane seas (Kraken Mare, Ligeia Mare)
+          if (poleDist > 0.72) {
+            const lakeNoise = smoothNoise(x * 0.05, y * 0.05, 707);
+            if (lakeNoise > 0.62) {
+              data[idx] = 45;
+              data[idx + 1] = 30;
+              data[idx + 2] = 20;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    } else if (textureType === 'grooved') {
+      // Ganymede / Phobos / Miranda: Parallel tectonic grooves and scarred graben terrain
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const groove = Math.sin(x * 0.25 + y * 0.15) * 20;
+          const base = 128 + fbm(x * 0.03, y * 0.03, 3, 606) * 50;
+          const c = Math.max(0, Math.min(255, Math.floor(base + groove)));
+          data[idx] = c;
+          data[idx + 1] = c;
+          data[idx + 2] = Math.min(255, c + 8);
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    } else {
+      // Cratered (Default: Luna, Callisto, Mimas, Rhea, etc.)
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const regolith = fbm(x * 0.04, y * 0.04, 4, 808);
+          const c = Math.floor(100 + regolith * 75);
+          data[idx] = c;
+          data[idx + 1] = c;
+          data[idx + 2] = c;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Prominent impact craters with bright rims & dark floors
+      for (let i = 0; i < 38; i++) {
+        const cx = (pseudoNoise(i, 21) * w) % w;
+        const cy = (pseudoNoise(i, 22) * h) % h;
+        const rad = 2.5 + pseudoNoise(i, 23) * 16;
+
+        ctx.fillStyle = 'rgba(40, 40, 45, 0.75)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(235, 240, 255, 0.85)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad + 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Herschel / Stickney super-crater for Mimas or Phobos
+        if ((moonId === 'mimas' || moonId === 'phobos') && i === 0) {
+          ctx.fillStyle = 'rgba(25, 25, 30, 0.95)';
+          ctx.beginPath();
+          ctx.arc(w * 0.45, h * 0.5, 38, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(w * 0.45, h * 0.5, 40, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Central peak
+          ctx.fillStyle = 'rgba(240, 240, 250, 0.9)';
+          ctx.beginPath();
+          ctx.arc(w * 0.45, h * 0.5, 8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  });
+}
+
+
 

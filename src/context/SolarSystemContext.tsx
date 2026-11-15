@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { CelestialId, SolarSystemInteractionState, ViewingMode, ActiveEnvironment } from '../types';
+import {
+  CelestialId,
+  SolarSystemInteractionState,
+  ViewingMode,
+  ActiveEnvironment,
+  GraphicsTier,
+  DossierMode,
+  DwarfPlanetId,
+  SpacecraftId,
+} from '../types';
 
 const SolarSystemContext = createContext<SolarSystemInteractionState | null>(null);
 
@@ -28,6 +37,13 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [viewingMode, setViewingModeState] = useState<ViewingMode>('cinematic');
   const [activeEnvironment, setActiveEnvironmentState] = useState<ActiveEnvironment>('solar-system');
   const [timeWarp, setTimeWarpState] = useState<number>(1.0);
+  const [graphicsTier, setGraphicsTierState] = useState<GraphicsTier>('high');
+  const [dossierMode, setDossierModeState] = useState<DossierMode>('educational');
+  const [showAsteroidBelt, setShowAsteroidBeltState] = useState<boolean>(true);
+  const [showKuiperBelt, setShowKuiperBeltState] = useState<boolean>(true);
+  const [showSpacecraft, setShowSpacecraftState] = useState<boolean>(true);
+  const [selectedDwarfPlanetId, setSelectedDwarfPlanetId] = useState<DwarfPlanetId | null>(null);
+  const [selectedSpacecraftId, setSelectedSpacecraftId] = useState<SpacecraftId | null>(null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
   const selectPlanet = useCallback((id: CelestialId | null) => {
@@ -35,6 +51,8 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (prev === id) return prev;
       setIsTransitioning(true);
       setSelectedMoonId(null); // Clear active moon on planet switch
+      setSelectedDwarfPlanetId(null);
+      setSelectedSpacecraftId(null);
 
       // Synchronize search params for shareable URLs
       if (typeof window !== 'undefined') {
@@ -53,6 +71,30 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const selectMoon = useCallback((id: string | null) => {
     setSelectedMoonId(id);
+    if (id) {
+      setSelectedDwarfPlanetId(null);
+      setSelectedSpacecraftId(null);
+    }
+  }, []);
+
+  const selectDwarfPlanet = useCallback((id: DwarfPlanetId | null) => {
+    setSelectedDwarfPlanetId(id);
+    if (id) {
+      setSelectedPlanetId(null);
+      setSelectedMoonId(null);
+      setSelectedSpacecraftId(null);
+      setIsTransitioning(true);
+    }
+  }, []);
+
+  const selectSpacecraft = useCallback((id: SpacecraftId | null) => {
+    setSelectedSpacecraftId(id);
+    if (id) {
+      setSelectedPlanetId(null);
+      setSelectedMoonId(null);
+      setSelectedDwarfPlanetId(null);
+      setIsTransitioning(true);
+    }
   }, []);
 
   const setHoveredPlanet = useCallback((id: CelestialId | null) => {
@@ -69,6 +111,26 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const setTimeWarp = useCallback((speed: number) => {
     setTimeWarpState(speed);
+  }, []);
+
+  const setGraphicsTier = useCallback((tier: GraphicsTier) => {
+    setGraphicsTierState(tier);
+  }, []);
+
+  const setDossierMode = useCallback((mode: DossierMode) => {
+    setDossierModeState(mode);
+  }, []);
+
+  const setShowAsteroidBelt = useCallback((show: boolean) => {
+    setShowAsteroidBeltState(show);
+  }, []);
+
+  const setShowKuiperBelt = useCallback((show: boolean) => {
+    setShowKuiperBeltState(show);
+  }, []);
+
+  const setShowSpacecraft = useCallback((show: boolean) => {
+    setShowSpacecraftState(show);
   }, []);
 
   // Keyboard navigation shortcuts: Escape to overview, 1-8 for planets, 0 for Sun
@@ -115,6 +177,13 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
         viewingMode,
         activeEnvironment,
         timeWarp,
+        graphicsTier,
+        dossierMode,
+        showAsteroidBelt,
+        showKuiperBelt,
+        showSpacecraft,
+        selectedDwarfPlanetId,
+        selectedSpacecraftId,
         isTransitioning,
         selectPlanet,
         selectMoon,
@@ -122,6 +191,13 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setViewingMode,
         setActiveEnvironment,
         setTimeWarp,
+        setGraphicsTier,
+        setDossierMode,
+        setShowAsteroidBelt,
+        setShowKuiperBelt,
+        setShowSpacecraft,
+        selectDwarfPlanet,
+        selectSpacecraft,
       }}
     >
       {children}

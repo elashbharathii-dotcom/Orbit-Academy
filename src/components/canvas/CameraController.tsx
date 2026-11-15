@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 import { getCelestialPosition } from '../../utils/celestialRegistry';
-import { CELESTIAL_BODIES } from '../../data/celestialBodies';
+import { CELESTIAL_BODIES, ALL_MOONS, DWARF_PLANETS } from '../../data/celestialBodies';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 interface CameraControllerProps {
@@ -14,18 +14,26 @@ const OVERVIEW_CAMERA_POS = new THREE.Vector3(0, 48, 92);
 const OVERVIEW_TARGET = new THREE.Vector3(0, 0, 0);
 
 /**
- * Cinematic Bezier Flight & Orbital Tracking Controller (Phase 6C)
+ * Cinematic Bezier Flight & Multi-Target Orbital Tracking Controller (AAA Edition)
  * 
  * Features:
  * - Bespoke planetary framing accommodating planetary radii and Saturn's ring system
+ * - Zoom & focus tracking for individual Natural Satellites (Moons)
+ * - Support for Dwarf Planets (Pluto, Ceres, etc.) and Spacecraft
  * - Curved quadratic Bezier orbital fly-path preventing celestial collisions
  * - Smooth quintic easing curve delivering cinematic acceleration and soft deceleration
- * - Dynamic planet tracking in focus mode with drift-free orbital delta compensation
- * - Adaptive OrbitControls distance clamps tailored to individual planet geometry
+ * - Dynamic body tracking in focus mode with drift-free orbital delta compensation
+ * - Adaptive OrbitControls distance clamps tailored to individual celestial geometry
  */
 export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef }) => {
   const { camera, size } = useThree();
-  const { selectedPlanetId, activeEnvironment } = useSolarSystem();
+  const {
+    selectedPlanetId,
+    selectedMoonId,
+    selectedDwarfPlanetId,
+    selectedSpacecraftId,
+    activeEnvironment,
+  } = useSolarSystem();
 
   // Animation transition state
   const isTransitioningRef = useRef<boolean>(false);
@@ -38,7 +46,7 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
 
   const lastTargetPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Trigger transition when selected planet or environment changes
+  // Trigger transition when selected planet, moon, dwarf planet, or environment changes
   useEffect(() => {
     if (!controlsRef.current) return;
 
@@ -66,7 +74,51 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
       return;
     }
 
-    // Determine destination target & camera offset
+    // 1. Check if a Moon is targeted
+    if (selectedMoonId) {
+      const moonDef = ALL_MOONS.find((m) => m.id === selectedMoonId);
+      const destTarget = getCelestialPosition(selectedMoonId);
+      const mRadius = moonDef ? moonDef.visualRadius : 0.45;
+
+      const offset = new THREE.Vector3(mRadius * 3.8, mRadius * 2.2, mRadius * 3.8).multiplyScalar(portraitMultiplier);
+      const destCamPos = destTarget.clone().add(offset);
+
+      controlsRef.current.minDistance = mRadius * 1.4;
+      controlsRef.current.maxDistance = mRadius * 16.0 * portraitMultiplier;
+
+      const mid = startCamPosRef.current.clone().lerp(destCamPos, 0.5);
+      mid.y += Math.max(4, startCamPosRef.current.distanceTo(destCamPos) * 0.2);
+      midCamPosRef.current.copy(mid);
+      lastTargetPosRef.current.copy(destTarget);
+
+      transitionProgressRef.current = 0.0;
+      isTransitioningRef.current = true;
+      return;
+    }
+
+    // 2. Check if a Dwarf Planet is targeted
+    if (selectedDwarfPlanetId) {
+      const dwarfDef = DWARF_PLANETS.find((d) => d.id === selectedDwarfPlanetId);
+      const destTarget = getCelestialPosition(selectedDwarfPlanetId);
+      const dRadius = dwarfDef ? dwarfDef.visualRadius : 0.7;
+
+      const offset = new THREE.Vector3(dRadius * 4.2, dRadius * 2.4, dRadius * 4.2).multiplyScalar(portraitMultiplier);
+      const destCamPos = destTarget.clone().add(offset);
+
+      controlsRef.current.minDistance = dRadius * 1.4;
+      controlsRef.current.maxDistance = dRadius * 18.0 * portraitMultiplier;
+
+      const mid = startCamPosRef.current.clone().lerp(destCamPos, 0.5);
+      mid.y += Math.max(6, startCamPosRef.current.distanceTo(destCamPos) * 0.22);
+      midCamPosRef.current.copy(mid);
+      lastTargetPosRef.current.copy(destTarget);
+
+      transitionProgressRef.current = 0.0;
+      isTransitioningRef.current = true;
+      return;
+    }
+
+    // 3. Determine destination target for Planet or System Overview
     const destTarget = selectedPlanetId
       ? getCelestialPosition(selectedPlanetId)
       : OVERVIEW_TARGET;
@@ -81,14 +133,14 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
       const radius = planetDef.visual.visualRadius;
       
       // Calculate framing distance: Saturn requires wider framing for its extensive ring system
-      let framingMultiplier = 2.5;
+      let framingMultiplier = 2.4;
       let heightMultiplier = 1.25;
 
       if (planetDef.id === 'saturn') {
-        framingMultiplier = 3.6;
-        heightMultiplier = 1.6;
+        framingMultiplier = 3.4;
+        heightMultiplier = 1.5;
       } else if (planetDef.id === 'jupiter') {
-        framingMultiplier = 2.7;
+        framingMultiplier = 2.6;
         heightMultiplier = 1.35;
       }
 
@@ -106,7 +158,7 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
       destCamPos = destTarget.clone().add(offset);
 
       // Adapt controls zoom limits to the focused body
-      controlsRef.current.minDistance = radius * (planetDef.id === 'saturn' ? 2.5 : 1.6);
+      controlsRef.current.minDistance = radius * (planetDef.id === 'saturn' ? 2.4 : 1.5);
       controlsRef.current.maxDistance = radius * (planetDef.id === 'saturn' ? 16.0 : 12.0) * portraitMultiplier;
     } else {
       // Return to Macro System Overview with portrait compensation
@@ -115,7 +167,7 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
         destCamPos.multiplyScalar(Math.min(1.75, 0.9 / aspect));
       }
       controlsRef.current.minDistance = 8.0;
-      controlsRef.current.maxDistance = 140.0 * portraitMultiplier;
+      controlsRef.current.maxDistance = 180.0 * portraitMultiplier;
     }
 
     // Compute arched Bezier midpoint for cinematic swoop
@@ -129,7 +181,15 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
     // Initiate flight
     transitionProgressRef.current = 0.0;
     isTransitioningRef.current = true;
-  }, [selectedPlanetId, activeEnvironment, camera, controlsRef]);
+  }, [
+    selectedPlanetId,
+    selectedMoonId,
+    selectedDwarfPlanetId,
+    selectedSpacecraftId,
+    activeEnvironment,
+    camera,
+    controlsRef,
+  ]);
 
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
@@ -149,8 +209,10 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
       return;
     }
 
-    const currentPlanetPos = selectedPlanetId
-      ? getCelestialPosition(selectedPlanetId)
+    // Active body position resolution
+    const activeTargetId = selectedMoonId || selectedDwarfPlanetId || selectedPlanetId;
+    const currentTargetPos = activeTargetId
+      ? getCelestialPosition(activeTargetId)
       : OVERVIEW_TARGET;
 
     const planetDef = selectedPlanetId
@@ -167,19 +229,29 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
           ? 16 * t * t * t * t * t
           : 1 - Math.pow(-2 * t + 2, 5) / 2;
 
-      // Calculate destination position (accounting for continuous planetary orbital motion)
+      // Calculate destination position (accounting for continuous celestial orbital motion)
       let currentDestCamPos: THREE.Vector3;
-      if (planetDef && planetDef.id !== 'sun') {
+      if (selectedMoonId) {
+        const moonDef = ALL_MOONS.find((m) => m.id === selectedMoonId);
+        const mRadius = moonDef ? moonDef.visualRadius : 0.45;
+        const offset = new THREE.Vector3(mRadius * 3.8, mRadius * 2.2, mRadius * 3.8);
+        currentDestCamPos = currentTargetPos.clone().add(offset);
+      } else if (selectedDwarfPlanetId) {
+        const dwarfDef = DWARF_PLANETS.find((d) => d.id === selectedDwarfPlanetId);
+        const dRadius = dwarfDef ? dwarfDef.visualRadius : 0.7;
+        const offset = new THREE.Vector3(dRadius * 4.2, dRadius * 2.4, dRadius * 4.2);
+        currentDestCamPos = currentTargetPos.clone().add(offset);
+      } else if (planetDef && planetDef.id !== 'sun') {
         const radius = planetDef.visual.visualRadius;
-        const framingMultiplier = planetDef.id === 'saturn' ? 3.6 : 2.5;
-        const heightMultiplier = planetDef.id === 'saturn' ? 1.6 : 1.25;
+        const framingMultiplier = planetDef.id === 'saturn' ? 3.4 : 2.4;
+        const heightMultiplier = planetDef.id === 'saturn' ? 1.5 : 1.25;
 
         const offset = new THREE.Vector3(
           radius * framingMultiplier,
           radius * heightMultiplier,
           radius * framingMultiplier
         );
-        currentDestCamPos = currentPlanetPos.clone().add(offset);
+        currentDestCamPos = currentTargetPos.clone().add(offset);
       } else {
         currentDestCamPos = OVERVIEW_CAMERA_POS;
       }
@@ -206,23 +278,23 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
       // Interpolate look-at target
       controlsRef.current.target.lerpVectors(
         startTargetRef.current,
-        currentPlanetPos,
+        currentTargetPos,
         easeT
       );
       controlsRef.current.update();
 
       if (t >= 1.0) {
         isTransitioningRef.current = false;
-        lastTargetPosRef.current.copy(currentPlanetPos);
+        lastTargetPosRef.current.copy(currentTargetPos);
       }
-    } else if (selectedPlanetId && planetDef && planetDef.id !== 'sun') {
-      // Settle state: smooth tracking along active planetary orbit
-      const deltaMovement = currentPlanetPos.clone().sub(lastTargetPosRef.current);
+    } else if (activeTargetId && activeTargetId !== 'sun') {
+      // Settle state: smooth drift-free tracking along active orbital motion
+      const deltaMovement = currentTargetPos.clone().sub(lastTargetPosRef.current);
       if (deltaMovement.lengthSq() > 0.000001) {
         camera.position.add(deltaMovement);
         controlsRef.current.target.add(deltaMovement);
         controlsRef.current.update();
-        lastTargetPosRef.current.copy(currentPlanetPos);
+        lastTargetPosRef.current.copy(currentTargetPos);
       }
     }
   });

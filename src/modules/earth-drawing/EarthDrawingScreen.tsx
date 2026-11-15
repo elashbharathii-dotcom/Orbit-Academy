@@ -1,126 +1,231 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
-import { COLORING_ARTWORKS } from './coloringData';
-import { ColoringArtwork, ColoringCategoryId } from './types';
-import { ColoringCategoryGrid } from './components/ColoringCategoryGrid';
-import { ColoringGallery } from './components/ColoringGallery';
-import { ColoringWorkspace } from './components/ColoringWorkspace';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { ColoringArtwork, StudioActiveView, SavedStudioProject } from './types';
+import { useDrawingStudioEngine } from './hooks/useDrawingStudioEngine';
+import { CosmicDrawingStudio } from './components/CosmicDrawingStudio';
+import { TemplateGalleryView } from './components/TemplateGalleryView';
+import { MyGalleryView } from './components/MyGalleryView';
+import { PlateColoringView } from './components/PlateColoringView';
+import { Paintbrush, BookOpen, FolderOpen, Palette } from 'lucide-react';
 
 export const EarthDrawingScreen: React.FC = () => {
-  const [selectedArtwork, setSelectedArtwork] = useState<ColoringArtwork | null>(null);
-  const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
-  const [headerSearch, setHeaderSearch] = useState<string>('');
-  const galleryRef = useRef<HTMLDivElement>(null);
+  const engine = useDrawingStudioEngine();
+  const [activeView, setActiveView] = useState<StudioActiveView>('studio');
+  const [activePlate, setActivePlate] = useState<ColoringArtwork | null>(null);
 
-  // Scroll to top when opening an artwork
+  // Global Keyboard Shortcuts
   useEffect(() => {
-    if (selectedArtwork) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [selectedArtwork]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
-  const handleSelectCategory = (catId: ColoringCategoryId | 'all') => {
-    setActiveCategoryId(catId);
-    setSelectedArtwork(null);
-    // Smooth scroll down to gallery
-    setTimeout(() => {
-      galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') {
+          e.preventDefault();
+          engine.undo();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          engine.redo();
+        } else if (e.key === 's') {
+          e.preventDefault();
+          engine.saveProject();
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case 'p':
+          engine.setActiveTool('pencil');
+          break;
+        case 'b':
+          engine.setActiveTool('brush');
+          break;
+        case 'e':
+          engine.setActiveTool('eraser');
+          break;
+        case 'l':
+          engine.setActiveTool('line');
+          break;
+        case 'r':
+          engine.setActiveTool('rect');
+          break;
+        case 'c':
+          engine.setActiveTool('circle');
+          break;
+        case 's':
+          engine.setActiveTool('polygon');
+          break;
+        case 'f':
+          engine.setActiveTool('fill');
+          break;
+        case 't':
+          engine.setActiveTool('text');
+          break;
+        case 'v':
+          engine.setActiveTool('select');
+          break;
+        case 'h':
+          engine.setActiveTool('pan');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [engine]);
+
+  // Handle open template in studio
+  const handleSelectStudioTemplate = (artwork: ColoringArtwork) => {
+    engine.setActiveTemplate(artwork);
+    engine.setProjectTitle(artwork.title);
+    setActiveView('studio');
   };
 
-  const handleSelectArtwork = (artwork: ColoringArtwork) => {
-    setSelectedArtwork(artwork);
+  // Handle open template in coloring mode
+  const handleSelectColoringPlate = (artwork: ColoringArtwork) => {
+    setActivePlate(artwork);
+    setActiveView('plate-coloring');
   };
 
-  const handleBackToGallery = () => {
-    setSelectedArtwork(null);
+  // Handle open saved project in studio
+  const handleOpenProject = (project: SavedStudioProject) => {
+    engine.loadProject(project);
+    setActiveView('studio');
+  };
+
+  // Start fresh blank canvas
+  const handleStartBlank = () => {
+    engine.setActiveTemplate(null);
+    engine.clearAllLayers();
+    engine.setProjectTitle('Cosmic Sketch');
+    setActiveView('studio');
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030611] font-sans text-[#F8FAFC]">
-      {/* Subtle Starfield & Ambient Glow Background */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,40,60,0.3),rgba(3,6,17,0.95))]"
-        aria-hidden="true"
-      />
-
-      {/* 1. Global Master Navigation Header */}
+    <div className="relative min-h-screen w-full flex flex-col bg-[#F1F1F0] text-[#0B0B0B] font-mono select-none">
+      {/* 1. Global Master Navigation Header (Preserved) */}
       <MasterHeader />
 
-      {/* 2. Main Content Area */}
-      <main className="relative z-10 flex-1 flex flex-col p-4 sm:p-6 md:p-8 pb-20 sm:pb-28 max-w-7xl w-full mx-auto">
-        <div className="flex flex-col gap-6 w-full">
-          {/* VIEW 1: Active Interactive Coloring Workspace */}
-          {selectedArtwork ? (
-            <ColoringWorkspace
-              artwork={selectedArtwork}
-              onBackToGallery={handleBackToGallery}
-            />
-          ) : (
-            /* VIEW 2: Category Library & Gallery */
-            <div className="flex flex-col gap-6 w-full animate-fade-in">
-              {/* Platform Branding Bar matching image_7.png */}
-              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#080E1E]/95 border border-white/10 shadow-2xl backdrop-blur-xl">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl animate-spin [animation-duration:24s]">🪐</span>
-                    <span className="font-sans text-base sm:text-lg font-black tracking-tight text-[#F8FAFC]">
-                      Orbit Academy
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1838] border border-violet-500/40 text-xs font-mono font-bold text-violet-300 shadow-sm">
-                    <span>🎨</span>
-                    <span>Planet Painter</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={headerSearch}
-                      onChange={(e) => setHeaderSearch(e.target.value)}
-                      className="rounded-xl border border-white/10 bg-[#070C1B] pl-9 pr-3 py-1.5 font-mono text-xs text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none w-36 sm:w-52 transition-colors"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Toggle all categories view
-                      setActiveCategoryId((prev) => (prev === 'all' ? 'solar-system' : 'all'));
-                    }}
-                    className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                    <SlidersHorizontal className="h-3.5 w-3.5 text-[#38BDF8]" />
-                    <span className="hidden sm:inline">Filter</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 8 Categories Browser Grid (Pixel-Perfect from image_7.png) */}
-              <ColoringCategoryGrid
-                onSelectCategory={handleSelectCategory}
-                onStartColoring={handleSelectArtwork}
-                activeCategoryId={activeCategoryId}
-              />
-
-              {/* Plate Gallery with Search and Category Filtering */}
-              <div ref={galleryRef} className="scroll-mt-6">
-                <ColoringGallery
-                  artworks={COLORING_ARTWORKS}
-                  activeCategoryId={activeCategoryId}
-                  onSelectCategory={handleSelectCategory}
-                  onSelectArtwork={handleSelectArtwork}
-                />
-              </div>
+      {/* 2. Scoped Warm Ivory Neo-Brutalist Studio Wrapper */}
+      <div className="relative z-10 flex-1 flex flex-col p-3 sm:p-5 md:p-6 pb-16 sm:pb-24 max-w-7xl w-full mx-auto">
+        {/* Studio Branding & Primary Navigation Tabs */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-[#FFFFFF] border-2 border-[#0B0B0B] shadow-[6px_6px_0px_#0B0B0B] mb-5">
+          {/* Identity */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-[#0B0B0B] bg-[#00E5FF] flex items-center justify-center font-bold text-lg shadow-[2px_2px_0px_#0B0B0B]">
+              🎨
             </div>
-          )}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="font-mono text-sm sm:text-base font-black tracking-tight uppercase text-[#0B0B0B]"
+                  style={{ fontFamily: '"Silkscreen", monospace' }}
+                >
+                  ORBIT ACADEMY
+                </span>
+                <span className="hidden sm:inline-block px-1.5 py-0.2 bg-[#0B0B0B] text-[#F1F1F0] font-mono text-[9px] font-bold">
+                  STUDIO
+                </span>
+              </div>
+              <span className="font-mono text-[10px] text-[#555555] uppercase tracking-wider">
+                COSMIC CREATIVE STUDIO // NUDGE ART ENGINE
+              </span>
+            </div>
+          </div>
+
+          {/* Mode Switch Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <button
+              type="button"
+              onClick={() => setActiveView('studio')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border-2 font-mono text-xs font-black uppercase transition-all ${
+                activeView === 'studio'
+                  ? 'bg-[#0B0B0B] text-[#F1F1F0] border-[#0B0B0B] shadow-[2px_2px_0px_#9A9A9A]'
+                  : 'bg-[#F1F1F0] text-[#0B0B0B] border-[#0B0B0B] hover:bg-[#FFFFFF]'
+              }`}
+            >
+              <Paintbrush className="w-3.5 h-3.5" />
+              <span>STUDIO</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('templates')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border-2 font-mono text-xs font-black uppercase transition-all ${
+                activeView === 'templates'
+                  ? 'bg-[#0B0B0B] text-[#F1F1F0] border-[#0B0B0B] shadow-[2px_2px_0px_#9A9A9A]'
+                  : 'bg-[#F1F1F0] text-[#0B0B0B] border-[#0B0B0B] hover:bg-[#FFFFFF]'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>TEMPLATES</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('gallery')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border-2 font-mono text-xs font-black uppercase transition-all ${
+                activeView === 'gallery'
+                  ? 'bg-[#0B0B0B] text-[#F1F1F0] border-[#0B0B0B] shadow-[2px_2px_0px_#9A9A9A]'
+                  : 'bg-[#F1F1F0] text-[#0B0B0B] border-[#0B0B0B] hover:bg-[#FFFFFF]'
+              }`}
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span>MY GALLERY ({engine.savedProjects.length})</span>
+            </button>
+
+            {activeView === 'plate-coloring' && (
+              <button
+                type="button"
+                className="flex items-center gap-1.5 px-3 py-1.5 border-2 font-mono text-xs font-black uppercase bg-[#00E5FF] text-[#0B0B0B] border-[#0B0B0B] shadow-[2px_2px_0px_#0B0B0B]"
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span>COLORING PLATE</span>
+              </button>
+            )}
+          </div>
         </div>
-      </main>
+
+        {/* 3. ACTIVE VIEW CONTAINER */}
+        <main className="w-full">
+          {activeView === 'studio' && (
+            <CosmicDrawingStudio
+              engine={engine}
+              onOpenTemplateLibrary={() => setActiveView('templates')}
+              onOpenGallery={() => setActiveView('gallery')}
+            />
+          )}
+
+          {activeView === 'templates' && (
+            <TemplateGalleryView
+              onSelectStudioTemplate={handleSelectStudioTemplate}
+              onSelectColoringPlate={handleSelectColoringPlate}
+              onStartBlankCanvas={handleStartBlank}
+            />
+          )}
+
+          {activeView === 'gallery' && (
+            <MyGalleryView
+              savedProjects={engine.savedProjects}
+              onOpenProject={handleOpenProject}
+              onDeleteProject={engine.deleteSavedProject}
+              onStartBlank={handleStartBlank}
+            />
+          )}
+
+          {activeView === 'plate-coloring' && activePlate && (
+            <PlateColoringView
+              artwork={activePlate}
+              onBackToGallery={() => setActiveView('templates')}
+              onOpenInStudio={handleSelectStudioTemplate}
+            />
+          )}
+        </main>
+      </div>
     </div>
   );
 };

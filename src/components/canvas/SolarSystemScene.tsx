@@ -7,9 +7,11 @@ import { Starfield } from './Starfield';
 import { MilkyWayBackground } from './MilkyWayBackground';
 import { MilkyWayGalaxy3D } from './MilkyWayGalaxy3D';
 import { AsteroidBelt } from './AsteroidBelt';
+import { KuiperBelt } from './KuiperBelt';
+import { DwarfPlanet } from './DwarfPlanet';
 import { Comet } from './Comet';
 import { CameraController } from './CameraController';
-import { CELESTIAL_BODIES } from '../../data/celestialBodies';
+import { CELESTIAL_BODIES, DWARF_PLANETS } from '../../data/celestialBodies';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
@@ -31,7 +33,16 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
   speedScale = 0.45,
 }) => {
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const { selectedPlanetId, viewingMode, activeEnvironment, timeWarp = 1.0 } = useSolarSystem();
+  const {
+    selectedPlanetId,
+    selectedMoonId,
+    selectedDwarfPlanetId,
+    viewingMode,
+    activeEnvironment,
+    timeWarp = 1.0,
+    showAsteroidBelt = true,
+    showKuiperBelt = true,
+  } = useSolarSystem();
   const isScientific = viewingMode === 'scientific';
   const effectiveSpeed = speedScale * (timeWarp ?? 1.0);
 
@@ -88,16 +99,38 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
       {sunData && <Sun radius={sunRadius} />}
 
       {/* 5. Main Asteroid Belt between Mars and Jupiter */}
-      <AsteroidBelt
-        count={1100}
-        innerRadius={isScientific ? 26.0 : 22.5}
-        outerRadius={isScientific ? 34.0 : 29.0}
-      />
+      {showAsteroidBelt && (
+        <AsteroidBelt
+          count={1200}
+          innerRadius={isScientific ? 28.0 : 23.5}
+          outerRadius={isScientific ? 36.0 : 30.5}
+        />
+      )}
 
-      {/* 6. Active Eccentric Comet with Glowing Tail */}
+      {/* 6. Outer Kuiper Belt beyond Neptune */}
+      {showKuiperBelt && (
+        <KuiperBelt
+          count={1400}
+          innerRadius={isScientific ? 140.0 : 130.0}
+          outerRadius={isScientific ? 190.0 : 175.0}
+          speedScale={effectiveSpeed}
+        />
+      )}
+
+      {/* 7. Dwarf Planets (Pluto, Ceres, Haumea, Makemake, Eris) */}
+      {DWARF_PLANETS.map((dwarf, idx) => (
+        <DwarfPlanet
+          key={dwarf.id}
+          data={dwarf}
+          speedScale={effectiveSpeed}
+          initialAngleOffset={(idx * Math.PI * 2) / DWARF_PLANETS.length}
+        />
+      ))}
+
+      {/* 8. Active Eccentric Comet with Glowing Tail */}
       <Comet semiMajorAxis={isScientific ? 56 : 46} eccentricity={0.72} inclinationDeg={16} />
 
-      {/* 7. Planetary Orbits & Revolving Planets */}
+      {/* 9. Planetary Orbits & Revolving Planets */}
       {planets.map((planet, idx) => {
         const orbitRadius = isScientific
           ? (planet.visual.scientificOrbitRadius || planet.visual.visualOrbitRadius * 1.25)
@@ -122,21 +155,21 @@ export const SolarSystemScene: React.FC<SolarSystemSceneProps> = ({
         );
       })}
 
-      {/* 8. Smooth Camera Navigation Controls */}
+      {/* 10. Smooth Camera Navigation Controls */}
       <OrbitControls
         ref={controlsRef}
         makeDefault
         enableDamping={true}
         dampingFactor={0.045}
-        autoRotate={!selectedPlanetId}
+        autoRotate={!selectedPlanetId && !selectedMoonId && !selectedDwarfPlanetId}
         autoRotateSpeed={0.12}
         minDistance={8}
-        maxDistance={160}
+        maxDistance={180}
         maxPolarAngle={Math.PI / 2 + 0.12}
         minPolarAngle={0.08}
       />
 
-      {/* 9. Cinematic Bezier Flight Controller */}
+      {/* 11. Cinematic Bezier Flight Controller */}
       <CameraController controlsRef={controlsRef} />
     </>
   );
