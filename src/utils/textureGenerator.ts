@@ -592,3 +592,69 @@ export function getNeptuneTexture(): THREE.CanvasTexture {
   });
 }
 
+// ==========================================
+// 10. NEPTUNE HIGH-ALTITUDE METHANE CIRRUS LAYER (Dynamic Transparent Overlay)
+// ==========================================
+export function getNeptuneCirrusTexture(): THREE.CanvasTexture {
+  return createCachedTexture('neptune_cirrus_dynamic', 1024, 512, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    for (let y = 0; y < h; y++) {
+      const latNorm = (y / h) * 2.0 - 1.0; // -1 at north pole, +1 at south pole
+      // Streaking factor along latitude: focused in dynamic supersonic jet streams
+      const latBandWeight =
+        Math.exp(-Math.pow((latNorm - 0.22) / 0.12, 2)) * 1.2 + // Great Dark Spot companion band (~22° S)
+        Math.exp(-Math.pow((latNorm - 0.44) / 0.09, 2)) * 1.4 + // Scooter latitude (~42° S)
+        Math.exp(-Math.pow(latNorm / 0.14, 2)) * 0.95 +         // Equatorial jet stream
+        Math.exp(-Math.pow((latNorm + 0.38) / 0.12, 2)) * 0.85; // Northern jet band
+
+      for (let x = 0; x < w; x++) {
+        const idx = (y * w + x) * 4;
+        // Fine horizontal streaks along latitude lines (low freq along x, high freq along y)
+        const streakNoise = fbm(x * 0.005, y * 0.075, 4, 888);
+        const microTurbulence = smoothNoise(x * 0.012, y * 0.05, 444);
+
+        const density = streakNoise * latBandWeight + (microTurbulence * 0.18);
+
+        if (density > 0.76) {
+          const alpha = Math.min(180, Math.floor((density - 0.76) * 4.2 * 255));
+          // Delicate translucent white-cyan methane ice crystal filaments
+          data[idx] = 230;
+          data[idx + 1] = 245;
+          data[idx + 2] = 255;
+          data[idx + 3] = alpha;
+        } else {
+          data[idx + 3] = 0;
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Draw extra bright distinct "Scooter" cloud streak (horizontal elongated filament)
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.62, h * 0.72, 85, 4.5, 0.02, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw Great Dark Spot bright companion cirrus arcs (delicate wisps)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(w * 0.42, h * 0.58, 48, Math.PI * 0.25, Math.PI * 0.85);
+    ctx.stroke();
+
+    // Secondary equatorial cirrus streak
+    ctx.beginPath();
+    ctx.ellipse(w * 0.22, h * 0.51, 65, 3.5, -0.01, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  });
+}
+
+

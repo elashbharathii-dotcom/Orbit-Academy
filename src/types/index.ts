@@ -27,15 +27,44 @@ export interface CelestialPhysicalData {
   atmosphericComposition: string[];
 }
 
+export interface PlanetaryRingDefinition {
+  innerRadiusMultiplier: number;
+  outerRadiusMultiplier: number;
+  opacity: number;
+  color: string;
+  textureUrl?: string;
+  tiltAngleDeg?: number;
+}
+
+export interface MoonDefinition {
+  id: string;
+  name: string;
+  parentPlanetId: CelestialId;
+  visualRadius: number;
+  orbitRadius: number;
+  orbitSpeedMultiplier: number;
+  primaryColor: string;
+  surfaceTextureUrl?: string;
+  description: string;
+  realDiameterKm: string;
+  orbitalPeriodDays: number;
+  discoveredYear: string;
+  keyFeature: string;
+}
+
 export interface CelestialVisualData {
   visualRadius: number;
   visualOrbitRadius: number;
+  scientificOrbitRadius?: number;
+  scientificRadius?: number;
   orbitSpeedMultiplier: number;
   rotationSpeedMultiplier: number;
   axialTiltDeg: number;
   primaryColor: string;
   secondaryColor?: string;
   hasRings?: boolean;
+  rings?: PlanetaryRingDefinition;
+  moons?: MoonDefinition[];
 }
 
 export interface LearningModuleInfo {
@@ -57,11 +86,21 @@ export interface CelestialBodyDefinition {
 }
 
 export type NavigationMode = 'overview' | 'focus';
+export type ViewingMode = 'cinematic' | 'scientific';
+export type ActiveEnvironment = 'solar-system' | 'milky-way';
 
 export interface SolarSystemInteractionState {
   selectedPlanetId: CelestialId | null;
   hoveredPlanetId: CelestialId | null;
+  selectedMoonId?: string | null;
+  viewingMode?: ViewingMode;
+  activeEnvironment?: ActiveEnvironment;
+  timeWarp?: number;
   isTransitioning: boolean;
   selectPlanet: (id: CelestialId | null) => void;
+  selectMoon?: (id: string | null) => void;
   setHoveredPlanet: (id: CelestialId | null) => void;
+  setViewingMode?: (mode: ViewingMode) => void;
+  setActiveEnvironment?: (env: ActiveEnvironment) => void;
+  setTimeWarp?: (speed: number) => void;
 }

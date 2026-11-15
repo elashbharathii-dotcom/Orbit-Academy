@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════
+   ORBIT ACADEMY — MARS ROVER GAME THEME & STYLES
+   Strictly scoped to .mars-rover-theme-root to prevent any style leakage
+   ═══════════════════════════════════════════════════════════════ */
+
+.mars-rover-theme-root {
+  --brand: #EE3F2C;
+  --brand-hover: #d63525;
+  font-family: 'Rubik', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #000;
+  color: #fff;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mars-rover-theme-root .clip-corner {
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
+}
+
+.mars-rover-theme-root .glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@keyframes mars-rover-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mars-rover-theme-root .animate-fade-up {
+  animation: mars-rover-fade-up 0.85s ease-out forwards;
+}
+
+.mars-rover-theme-root .animate-fade-up-delay {
+  animation: mars-rover-fade-up 0.85s ease-out 0.15s forwards;
+  opacity: 0;
+}
+
+.mars-rover-theme-root .animate-fade-up-delay-2 {
+  animation: mars-rover-fade-up 0.85s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.mars-rover-theme-root .bg-brand {
+  background-color: #EE3F2C;
+}
+
+.mars-rover-theme-root .bg-brand\/90 {
+  background-color: rgba(238, 63, 44, 0.9);
+}
+
+.mars-rover-theme-root .hover\:bg-brand-hover:hover {
+  background-color: #d63525;
+}

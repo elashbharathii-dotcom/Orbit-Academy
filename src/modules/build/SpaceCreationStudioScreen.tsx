@@ -1,790 +1,801 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
-import { GlassCard } from '../../components/ui/GlassCard';
-import { TelemetryBadge } from '../../components/ui/TelemetryBadge';
-import { SpaceButton } from '../../components/ui/SpaceButton';
+import { BuildCanvas3D } from './components/BuildCanvas3D';
+import { TopEditorToolbar } from './components/TopEditorToolbar';
+import { ComponentLibraryPanel } from './components/ComponentLibraryPanel';
+import { ShipInspectorPanel } from './components/ShipInspectorPanel';
+import { BottomShipyardDock } from './components/BottomShipyardDock';
+import { BottomStatusFooter } from './components/BottomStatusFooter';
+import { MissionReadinessModal } from './components/MissionReadinessModal';
+import { BlueprintManagerModal } from './components/BlueprintManagerModal';
+import { TestFlightModal } from './components/TestFlightModal';
+import { ProgressionToast } from './components/ProgressionToast';
 import {
-  Play,
-  Square,
-  RotateCcw,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  AlertTriangle,
-  Rocket,
-  ArrowUp,
-  ArrowDown,
-  Sparkles,
-  Target,
-} from 'lucide-react';
+  PRESET_BLUEPRINTS,
+  LIVERY_OPTIONS,
+  BUILDER_ACHIEVEMENTS,
+} from './buildData';
+import {
+  VehicleComponentDef,
+  AssembledComponent,
+  LiveryOption,
+  MaterialFinish,
+  Blueprint,
+  VehicleStats,
+  BuilderAchievement,
+  TransformMode,
+  QualityPreset,
+  ShadingMode,
+  CameraProjection,
+  CameraViewAngle,
+  LightingEnvironmentMode,
+  ShipClass,
+} from './types';
+import './aerospace-workshop.css';
 
-export interface VehicleComponent {
-  id: string;
-  name: string;
-  category: 'propulsion' | 'fuel' | 'payload' | 'power' | 'avionics';
-  type: 'capsule' | 'tank' | 'engine' | 'solar' | 'antenna';
-  mass: number; // dry mass (kg)
-  propellant?: number; // fuel mass (kg)
-  thrust?: number; // vacuum thrust (kN)
-  isp?: number; // specific impulse (s)
-  power?: number; // net electrical power balance (kW)
-  color: string;
-  description: string;
-}
-
-export const COMPONENT_CATALOG: VehicleComponent[] = [
-  // Propulsion
-  {
-    id: 'c-engine-vac',
-    name: 'RS-25 Cryogenic Vacuum Engine',
-    category: 'propulsion',
-    type: 'engine',
-    mass: 2200,
-    thrust: 650,
-    isp: 452,
-    power: -1.5,
-    color: '#334155',
-    description: 'High-efficiency liquid hydrolox expander cycle engine with high specific impulse.',
-  },
-  {
-    id: 'c-engine-booster',
-    name: 'Solid Rocket Booster Stage',
-    category: 'propulsion',
-    type: 'engine',
-    mass: 6500,
-    propellant: 28000,
-    thrust: 2400,
-    isp: 282,
-    power: 0,
-    color: '#E2E8F0',
-    description: 'High-thrust segmented solid propellant motor delivering raw liftoff power.',
-  },
-  // Fuel Tanks
-  {
-    id: 'c-tank-hydrolox',
-    name: 'Hydrolox Cryogenic Tank Core',
-    category: 'fuel',
-    type: 'tank',
-    mass: 2500,
-    propellant: 22000,
-    power: -0.2,
-    color: '#EA580C',
-    description: 'Insulated liquid hydrogen and oxygen propellant cell with lightweight composite tankage.',
-  },
-  {
-    id: 'c-tank-methalox',
-    name: 'Methalox High-Density Tank',
-    category: 'fuel',
-    type: 'tank',
-    mass: 3200,
-    propellant: 29000,
-    power: -0.2,
-    color: '#0284C7',
-    description: 'Densified methane and liquid oxygen tank optimized for high volumetric efficiency.',
-  },
-  // Payload & Crew
-  {
-    id: 'c-capsule-orion',
-    name: 'Deep-Space Orion Command Module',
-    category: 'payload',
-    type: 'capsule',
-    mass: 3400,
-    power: -3.5,
-    color: '#F8FAFC',
-    description: 'Atmospheric reentry capsule accommodating 4 astronauts with ablative heat shielding.',
-  },
-  {
-    id: 'c-capsule-service',
-    name: 'Orbital Service Propulsion Hub',
-    category: 'payload',
-    type: 'capsule',
-    mass: 1800,
-    propellant: 3500,
-    thrust: 120,
-    isp: 320,
-    power: 2.0,
-    color: '#64748B',
-    description: 'Auxiliary attitude control, consumables storage, and hypergolic orbital maneuvering.',
-  },
-  // Power & Arrays
-  {
-    id: 'c-solar-wings',
-    name: 'Ultraflex Deployable Solar Wings',
-    category: 'power',
-    type: 'solar',
-    mass: 480,
-    power: 32.0,
-    color: '#38BDF8',
-    description: 'Circular origami photovoltaic arrays generating continuous power in cis-lunar space.',
-  },
-  // Avionics & Communication
-  {
-    id: 'c-dish-antenna',
-    name: 'High-Gain Deep-Space Dish',
-    category: 'avionics',
-    type: 'antenna',
-    mass: 220,
-    power: -1.2,
-    color: '#CBD5E1',
-    description: 'Ka-band high-gain parabolic reflector for multi-gigabit interplanetary telemetry.',
-  },
-];
-
-/**
- * Animated Exhaust Plume in Three.js
- */
-const EngineExhaustPlume: React.FC = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      const t = state.clock.getElapsedTime();
-      const scale = 1.0 + Math.sin(t * 30) * 0.12;
-      meshRef.current.scale.set(scale, 1.0 + Math.cos(t * 25) * 0.15, scale);
-    }
-  });
-
-  return (
-    <group position={[0, -1.8, 0]}>
-      {/* Outer Fire Cone */}
-      <mesh ref={meshRef}>
-        <coneGeometry args={[0.9, 2.6, 24]} />
-        <meshBasicMaterial color="#F59E0B" transparent opacity={0.85} />
-      </mesh>
-      {/* Inner White-Hot Core */}
-      <mesh position={[0, 0.4, 0]}>
-        <coneGeometry args={[0.45, 1.6, 16]} />
-        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.95} />
-      </mesh>
-      {/* Shock Diamonds */}
-      <pointLight color="#F59E0B" intensity={4} distance={8} />
-    </group>
-  );
-};
-
-/**
- * 3D Spacecraft Model in React Three Fiber
- */
-const Vehicle3DModel: React.FC<{
-  components: VehicleComponent[];
-  isSimulating: boolean;
-}> = ({ components, isSimulating }) => {
-  const stackRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (stackRef.current && isSimulating) {
-      // Subtle rocket vibration shudder during hot-fire
-      const t = state.clock.getElapsedTime();
-      stackRef.current.position.x = Math.sin(t * 80) * 0.012;
-      stackRef.current.position.z = Math.cos(t * 80) * 0.012;
-    } else if (stackRef.current) {
-      stackRef.current.position.x = 0;
-      stackRef.current.position.z = 0;
-    }
-  });
-
-  return (
-    <group position={[0, -3.2, 0]}>
-      {/* Aerospace Launch Deck Grid */}
-      <gridHelper args={[24, 24, '#38BDF8', '#132147']} position={[0, -0.05, 0]} />
-
-      {/* Assembly Stack */}
-      <group ref={stackRef}>
-        {components.map((comp, idx) => {
-          const yOffset = idx * 2.2;
-
-          return (
-            <group key={`${comp.id}-${idx}`} position={[0, yOffset + 1.1, 0]}>
-              {comp.type === 'capsule' && (
-                <mesh castShadow receiveShadow>
-                  <coneGeometry args={[1.2, 1.9, 32]} />
-                  <meshStandardMaterial
-                    color={comp.color}
-                    roughness={0.25}
-                    metalness={0.35}
-                    envMapIntensity={1.2}
-                  />
-                </mesh>
-              )}
-
-              {comp.type === 'tank' && (
-                <mesh castShadow receiveShadow>
-                  <cylinderGeometry args={[1.25, 1.25, 2.0, 32]} />
-                  <meshStandardMaterial
-                    color={comp.color}
-                    roughness={0.4}
-                    metalness={0.2}
-                  />
-                </mesh>
-              )}
-
-              {comp.type === 'engine' && (
-                <group>
-                  <mesh castShadow receiveShadow>
-                    <coneGeometry args={[1.25, 1.7, 32]} />
-                    <meshStandardMaterial
-                      color={comp.color}
-                      roughness={0.7}
-                      metalness={0.65}
-                    />
-                  </mesh>
-                  {/* Dynamic Hot-Fire Plume */}
-                  {isSimulating && <EngineExhaustPlume />}
-                </group>
-              )}
-
-              {comp.type === 'solar' && (
-                <group>
-                  {/* Left Array */}
-                  <mesh position={[2.2, 0, 0]}>
-                    <boxGeometry args={[2.8, 0.9, 0.08]} />
-                    <meshStandardMaterial
-                      color={comp.color}
-                      roughness={0.15}
-                      metalness={0.85}
-                      emissive="#0284C7"
-                      emissiveIntensity={0.25}
-                    />
-                  </mesh>
-                  {/* Right Array */}
-                  <mesh position={[-2.2, 0, 0]}>
-                    <boxGeometry args={[2.8, 0.9, 0.08]} />
-                    <meshStandardMaterial
-                      color={comp.color}
-                      roughness={0.15}
-                      metalness={0.85}
-                      emissive="#0284C7"
-                      emissiveIntensity={0.25}
-                    />
-                  </mesh>
-                </group>
-              )}
-
-              {comp.type === 'antenna' && (
-                <mesh position={[0, 1.2, 0]} rotation={[0.45, 0, 0]}>
-                  <sphereGeometry args={[0.9, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-                  <meshStandardMaterial
-                    color={comp.color}
-                    side={THREE.DoubleSide}
-                    metalness={0.75}
-                    roughness={0.2}
-                  />
-                </mesh>
-              )}
-            </group>
-          );
-        })}
-      </group>
-
-      <ambientLight color="#0F172A" intensity={1.5} />
-      <directionalLight position={[12, 18, 12]} intensity={2.5} castShadow />
-      <pointLight position={[-12, 6, -12]} intensity={0.9} color="#38BDF8" />
-    </group>
-  );
-};
+const STORAGE_KEY_BLUEPRINTS = 'orbit_academy_blueprints_v2';
+const STORAGE_KEY_PROGRESSION = 'orbit_academy_builder_progression';
 
 export const SpaceCreationStudioScreen: React.FC = () => {
-  const [vehicleName, setVehicleName] = useState<string>('Artemis Deep-Space Explorer');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [assembledParts, setAssembledParts] = useState<VehicleComponent[]>([
-    COMPONENT_CATALOG[0], // engine
-    COMPONENT_CATALOG[2], // fuel tank
-    COMPONENT_CATALOG[6], // solar wings
-    COMPONENT_CATALOG[4], // crew capsule
-    COMPONENT_CATALOG[7], // deep-space dish
-  ]);
+  // --------------------------------------------------------------------------
+  // 1. Core Spacecraft Configuration State
+  // --------------------------------------------------------------------------
+  const initialBlueprint = PRESET_BLUEPRINTS[0]; // Starfire Explorer flagship
+  const [shipName, setShipName] = useState<string>(initialBlueprint.name);
+  const [shipClass, setShipClass] = useState<ShipClass>(initialBlueprint.shipClass || 'Explorer');
+  const [activeBlueprintId, setActiveBlueprintId] = useState<string | null>(initialBlueprint.id);
+
+  const [selectedLivery, setSelectedLivery] = useState<LiveryOption>(
+    () => LIVERY_OPTIONS.find((l) => l.id === initialBlueprint.liveryId) || LIVERY_OPTIONS[0]
+  );
+  const [selectedMaterial, setSelectedMaterial] = useState<MaterialFinish>(
+    initialBlueprint.materialFinish || 'titanium'
+  );
+  const [engineGlowColor, setEngineGlowColor] = useState<string>(
+    initialBlueprint.engineGlowColor || '#00E5FF'
+  );
+
+  const [assembledParts, setAssembledParts] = useState<AssembledComponent[]>(
+    () => initialBlueprint.components
+  );
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(
+    () => initialBlueprint.components[0]?.instanceId || null
+  );
+
+  // --------------------------------------------------------------------------
+  // 2. 3D Viewport & Studio Editing State
+  // --------------------------------------------------------------------------
+  const [transformMode, setTransformMode] = useState<TransformMode>('select');
+  const [isSnapEnabled, setIsSnapEnabled] = useState<boolean>(true);
+  const [qualityPreset] = useState<QualityPreset>('balanced');
+  const [shadingMode, setShadingMode] = useState<ShadingMode>('lit');
+  const [cameraProjection, setCameraProjection] = useState<CameraProjection>('perspective');
+  const [cameraViewAngle, setCameraViewAngle] = useState<CameraViewAngle>('isometric');
+  const [lightingEnvironmentMode, setLightingEnvironmentMode] = useState<LightingEnvironmentMode>('cleanroom');
+  const [explodedFactor, setExplodedFactor] = useState<number>(0);
+  const [showCenterOfMass, setShowCenterOfMass] = useState<boolean>(false);
+  const [showCenterOfThrust, setShowCenterOfThrust] = useState<boolean>(false);
+  const [showMeasurementCalipers, setShowMeasurementCalipers] = useState<boolean>(false);
+  const [focusTrigger, setFocusTrigger] = useState<number>(0);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Physics Calculations
-  const dryMass = useMemo(
-    () => assembledParts.reduce((acc, p) => acc + p.mass, 0),
-    [assembledParts]
-  );
-  const propellantMass = useMemo(
-    () => assembledParts.reduce((acc, p) => acc + (p.propellant || 0), 0),
-    [assembledParts]
-  );
-  const totalGrossMass = dryMass + propellantMass; // kg
-  const totalThrustKn = useMemo(
-    () => assembledParts.reduce((acc, p) => acc + (p.thrust || 0), 0),
-    [assembledParts]
-  );
-  const netPowerKw = useMemo(
-    () => assembledParts.reduce((acc, p) => acc + (p.power || 0), 0),
-    [assembledParts]
+  // --------------------------------------------------------------------------
+  // 3. UI Panels & Modals State
+  // --------------------------------------------------------------------------
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && window.innerWidth < 1280;
+  });
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && window.innerWidth < 1280;
+  });
+  const [isBlueprintModalOpen, setIsBlueprintModalOpen] = useState<boolean>(false);
+  const [isMissionModalOpen, setIsMissionModalOpen] = useState<boolean>(false);
+  const [isTestFlightOpen, setIsTestFlightOpen] = useState<boolean>(false);
+  const spacecraftRootGroupRef = useRef<any>(null);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      if (window.innerWidth < 1280) {
+        setIsLeftPanelCollapsed(true);
+        setIsRightPanelCollapsed(true);
+      }
+    };
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, []);
+
+  const handleToggleLeftPanel = () => {
+    const next = !isLeftPanelCollapsed;
+    setIsLeftPanelCollapsed(next);
+    if (!next && typeof window !== 'undefined' && window.innerWidth < 1280) {
+      setIsRightPanelCollapsed(true);
+    }
+  };
+
+  const handleToggleRightPanel = () => {
+    const next = !isRightPanelCollapsed;
+    setIsRightPanelCollapsed(next);
+    if (!next && typeof window !== 'undefined' && window.innerWidth < 1280) {
+      setIsLeftPanelCollapsed(true);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // 4. Undo / Redo History Stack
+  // --------------------------------------------------------------------------
+  const [history, setHistory] = useState<AssembledComponent[][]>(() => [initialBlueprint.components]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  const pushHistory = useCallback(
+    (newParts: AssembledComponent[]) => {
+      setHistory((prev) => {
+        const nextSlice = prev.slice(0, historyIndex + 1);
+        return [...nextSlice, newParts].slice(-30);
+      });
+      setHistoryIndex((prev) => prev + 1);
+    },
+    [historyIndex]
   );
 
-  // Sea-level Earth Weight: W = (M * 9.80665) / 1000 kN
-  const weightKn = (totalGrossMass * 9.80665) / 1000;
-  const twr = weightKn > 0 ? parseFloat((totalThrustKn / weightKn).toFixed(2)) : 0;
-  const isFlightReady = twr >= 1.15;
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const target = history[historyIndex - 1];
+      setHistoryIndex((prev) => prev - 1);
+      setAssembledParts(target);
+    }
+  }, [historyIndex, history]);
 
-  // Tsiolkovsky Delta-V: Δv = Isp * g0 * ln(m_wet / m_dry)
-  const weightedIsp = useMemo(() => {
-    const engines = assembledParts.filter((p) => p.thrust && p.thrust > 0 && p.isp);
-    if (engines.length === 0) return 0;
-    const totalThrust = engines.reduce((acc, e) => acc + (e.thrust || 0), 0);
-    const weightedSum = engines.reduce((acc, e) => acc + (e.thrust || 0) * (e.isp || 0), 0);
-    return Math.round(weightedSum / totalThrust);
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const target = history[historyIndex + 1];
+      setHistoryIndex((prev) => prev + 1);
+      setAssembledParts(target);
+    }
+  }, [historyIndex, history]);
+
+  // --------------------------------------------------------------------------
+  // 5. Persistence State (Blueprints & Progression)
+  // --------------------------------------------------------------------------
+  const [savedBlueprints, setSavedBlueprints] = useState<Blueprint[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_BLUEPRINTS);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [];
+  });
+
+  const [unlockedAchievementIds, setUnlockedAchievementIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PROGRESSION);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [];
+  });
+
+  const [activeToast, setActiveToast] = useState<BuilderAchievement | null>(null);
+
+  const persistBlueprints = (bps: Blueprint[]) => {
+    setSavedBlueprints(bps);
+    try {
+      localStorage.setItem(STORAGE_KEY_BLUEPRINTS, JSON.stringify(bps));
+    } catch {}
+  };
+
+  const triggerUnlock = useCallback(
+    (achievementId: string) => {
+      if (unlockedAchievementIds.includes(achievementId)) return;
+      const ach = BUILDER_ACHIEVEMENTS.find((a) => a.id === achievementId);
+      if (!ach) return;
+
+      const next = [...unlockedAchievementIds, achievementId];
+      setUnlockedAchievementIds(next);
+      setActiveToast(ach);
+      try {
+        localStorage.setItem(STORAGE_KEY_PROGRESSION, JSON.stringify(next));
+      } catch {}
+    },
+    [unlockedAchievementIds]
+  );
+
+  // --------------------------------------------------------------------------
+  // 6. AEROSPACE PHYSICS CALCULATIONS (Tsiolkovsky, TWR, Stability, Readiness)
+  // --------------------------------------------------------------------------
+  const vehicleStats: VehicleStats = useMemo(() => {
+    const dryMass = assembledParts.reduce((acc, p) => acc + p.mass, 0);
+    const propellantMass = assembledParts.reduce(
+      (acc, p) => acc + p.propellantCapacity * p.propellantFill,
+      0
+    );
+    const totalGrossMass = dryMass + propellantMass;
+
+    const totalThrustKn = assembledParts.reduce((acc, p) => acc + (p.thrust || 0), 0);
+    const weightKn = (totalGrossMass * 9.80665) / 1000;
+    const twr = weightKn > 0 ? parseFloat((totalThrustKn / weightKn).toFixed(2)) : 0;
+
+    // Specific impulse thrust-weighted average
+    const engines = assembledParts.filter((p) => p.thrust > 0 && p.isp > 0);
+    let weightedIsp = 0;
+    if (engines.length > 0) {
+      const thrustSum = engines.reduce((acc, e) => acc + e.thrust, 0);
+      const ispSum = engines.reduce((acc, e) => acc + e.thrust * e.isp, 0);
+      weightedIsp = Math.round(ispSum / thrustSum);
+    }
+
+    // Tsiolkovsky Rocket Equation: Δv = Isp * g0 * ln(m_wet / m_dry)
+    let deltaV = 0;
+    if (weightedIsp > 0 && dryMass > 0 && totalGrossMass > dryMass) {
+      deltaV = Math.round(weightedIsp * 9.80665 * Math.log(totalGrossMass / dryMass));
+    }
+
+    const netPowerKw = parseFloat(
+      assembledParts.reduce((acc, p) => acc + (p.power || 0), 0).toFixed(1)
+    );
+
+    const hasEngine = assembledParts.some((p) => p.category === 'engines');
+    const hasCockpit = assembledParts.some((p) => p.category === 'cockpit');
+
+    const validationErrors: string[] = [];
+    if (!hasCockpit) validationErrors.push('Missing forward command deck or cockpit module');
+    if (!hasEngine) validationErrors.push('No propulsion systems installed');
+    if (netPowerKw < 0) validationErrors.push('Electrical draw exceeds generation capacity');
+    if (twr < 1.0 && totalThrustKn > 0) validationErrors.push('Thrust-to-weight ratio below 1.0 (sub-orbital)');
+
+    // Stability Score calculation
+    let stabilityScore = 88;
+    if (!hasEngine) stabilityScore -= 30;
+    if (!hasCockpit) stabilityScore -= 15;
+    if (netPowerKw < 0) stabilityScore -= 10;
+    if (twr < 1.0 && totalThrustKn > 0) stabilityScore -= 15;
+    stabilityScore = Math.max(10, Math.min(100, stabilityScore));
+
+    let missionReadiness = 99;
+    if (validationErrors.length > 0) {
+      missionReadiness = Math.max(20, 100 - validationErrors.length * 25);
+    }
+    const isFlightReady = validationErrors.length === 0 && (twr >= 1.0 || totalThrustKn === 0);
+
+    // Dynamic length approximation from assembly bounds
+    let maxZ = 0;
+    let minZ = 0;
+    assembledParts.forEach((p) => {
+      const halfLen = (p.length || 2) / 2;
+      maxZ = Math.max(maxZ, p.position[2] + halfLen);
+      minZ = Math.min(minZ, p.position[2] - halfLen);
+    });
+    const totalLengthMeters = assembledParts.length > 0 ? parseFloat((maxZ - minZ).toFixed(1)) : 16.8;
+
+    return {
+      dryMass,
+      propellantMass,
+      totalGrossMass,
+      totalThrustKn,
+      weightKn,
+      twr,
+      weightedIsp,
+      deltaV,
+      netPowerKw,
+      stabilityScore,
+      missionReadiness,
+      totalLengthMeters: totalLengthMeters || 16.8,
+      isFlightReady,
+      validationErrors,
+    };
   }, [assembledParts]);
 
-  const deltaV = useMemo(() => {
-    if (weightedIsp === 0 || dryMass === 0 || totalGrossMass <= dryMass) return 0;
-    const massRatio = totalGrossMass / dryMass;
-    return Math.round(weightedIsp * 9.80665 * Math.log(massRatio));
-  }, [weightedIsp, dryMass, totalGrossMass]);
+  // Check achievements dynamically
+  useEffect(() => {
+    if (vehicleStats.isFlightReady && vehicleStats.deltaV >= 9200) {
+      triggerUnlock('ach-flight-ready');
+    }
+    if (vehicleStats.deltaV >= 16500) {
+      triggerUnlock('ach-mars-capable');
+    }
+  }, [vehicleStats, triggerUnlock]);
 
-  // Mission Reachability Assessment
-  const missionTargets = [
-    { name: 'Suborbital Spaceflight', reqDv: 2500, reqTwr: 1.15 },
-    { name: 'Low Earth Orbit (LEO)', reqDv: 9200, reqTwr: 1.20 },
-    { name: 'Lunar Orbit Insertion', reqDv: 12500, reqTwr: 1.20 },
-    { name: 'Mars Trans-Planetary Flyby', reqDv: 15600, reqTwr: 1.25 },
-  ];
+  // --------------------------------------------------------------------------
+  // 7. COMPONENT MANIPULATION & BLENDER ACTIONS
+  // --------------------------------------------------------------------------
+  const selectedComponent = useMemo(() => {
+    return assembledParts.find((p) => p.instanceId === selectedComponentId) || null;
+  }, [assembledParts, selectedComponentId]);
 
-  // Component Actions
-  const handleAddComponent = (comp: VehicleComponent) => {
-    setAssembledParts((prev) => [...prev, comp]);
+  const handleAddComponent = (def: VehicleComponentDef) => {
+    let initialPos: [number, number, number] = [0, 0.8, 0];
+    if (def.category === 'cockpit') initialPos = [0, 1.2, 3.2];
+    else if (def.category === 'engines') initialPos = [0, 0.8, -4.5];
+    else if (def.category === 'wings') initialPos = [2.6, 0.4, -0.6];
+    else if (def.category === 'systems') initialPos = [0, 1.5, 0];
+    else if (def.category === 'modules') initialPos = [0, 0.8, -1.5];
+    else if (def.category === 'utility') initialPos = [1.8, 0.2, -2.5];
+    else if (def.category === 'decor') initialPos = [0, 0.5, 1.0];
+
+    const newComp: AssembledComponent = {
+      instanceId: `inst-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      defId: def.id,
+      name: def.name,
+      category: def.category,
+      mountSlot: def.mountSlot,
+      mountSide: def.mountSlot === 'radial' ? 'both' : undefined,
+      position: initialPos,
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      mass: def.mass,
+      propellantCapacity: def.propellant || 0,
+      propellantFill: def.propellant ? 1.0 : 0,
+      thrust: def.thrust || 0,
+      isp: def.isp || 0,
+      power: def.power,
+      height: def.height,
+      width: def.width,
+      length: def.length || 2.0,
+    };
+
+    const next = [...assembledParts, newComp];
+    setAssembledParts(next);
+    setSelectedComponentId(newComp.instanceId);
+    setTransformMode('translate');
+    pushHistory(next);
+    triggerUnlock('ach-first-assembly');
   };
 
-  const handleRemoveComponent = (idx: number) => {
-    setAssembledParts((prev) => prev.filter((_, i) => i !== idx));
+  const handleUpdateComponentTransform = useCallback(
+    (
+      instanceId: string,
+      position: [number, number, number],
+      rotation: [number, number, number],
+      scale: [number, number, number]
+    ) => {
+      setAssembledParts((prev) => {
+        const next = prev.map((p) =>
+          p.instanceId === instanceId
+            ? { ...p, position, rotation, scale }
+            : p
+        );
+        return next;
+      });
+    },
+    []
+  );
+
+  const handleDuplicateComponent = useCallback(
+    (instanceId: string) => {
+      const comp = assembledParts.find((p) => p.instanceId === instanceId);
+      if (!comp) return;
+
+      const duplicated: AssembledComponent = {
+        ...comp,
+        instanceId: `inst-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        name: `${comp.name} Copy`,
+        position: [comp.position[0] + 0.6, comp.position[1], comp.position[2] + 0.6],
+      };
+
+      const next = [...assembledParts, duplicated];
+      setAssembledParts(next);
+      setSelectedComponentId(duplicated.instanceId);
+      pushHistory(next);
+    },
+    [assembledParts, pushHistory]
+  );
+
+  const handleDeleteComponent = useCallback(
+    (instanceId: string) => {
+      const next = assembledParts.filter((p) => p.instanceId !== instanceId);
+      setAssembledParts(next);
+      if (selectedComponentId === instanceId) {
+        setSelectedComponentId(next[0]?.instanceId || null);
+      }
+      pushHistory(next);
+    },
+    [assembledParts, selectedComponentId, pushHistory]
+  );
+
+  const handleUpdatePropellantFill = (instanceId: string, fillRate: number) => {
+    setAssembledParts((prev) =>
+      prev.map((p) => (p.instanceId === instanceId ? { ...p, propellantFill: fillRate } : p))
+    );
   };
 
-  const handleMoveStage = (fromIdx: number, toIdx: number) => {
-    if (toIdx < 0 || toIdx >= assembledParts.length) return;
-    setAssembledParts((prev) => {
-      const next = [...prev];
-      const item = next.splice(fromIdx, 1)[0];
-      next.splice(toIdx, 0, item);
+  // --------------------------------------------------------------------------
+  // 8. GLOBAL BLENDER KEYBOARD SHORTCUTS (W, E, R, Q, F, Delete, Ctrl+D, Ctrl+Z, Ctrl+Y)
+  // --------------------------------------------------------------------------
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Undo: Ctrl+Z / Cmd+Z (without Shift)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      // Redo: Ctrl+Y / Cmd+Y or Ctrl+Shift+Z / Cmd+Shift+Z
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
+      ) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      // Duplicate: Ctrl+D / Cmd+D
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        if (selectedComponentId) {
+          handleDuplicateComponent(selectedComponentId);
+        }
+        return;
+      }
+
+      // Delete: Delete or Backspace
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedComponentId) {
+          e.preventDefault();
+          handleDeleteComponent(selectedComponentId);
+        }
+        return;
+      }
+
+      // Blender transform modes
+      const key = e.key.toLowerCase();
+      if (key === 'w') {
+        setTransformMode('translate');
+      } else if (key === 'e') {
+        setTransformMode('rotate');
+      } else if (key === 'r') {
+        setTransformMode('scale');
+      } else if (key === 'q' || e.key === 'Escape') {
+        setTransformMode('select');
+      } else if (key === 'f') {
+        setFocusTrigger((n) => n + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedComponentId, handleUndo, handleRedo, handleDuplicateComponent, handleDeleteComponent]);
+
+  // --------------------------------------------------------------------------
+  // 9. SIMULATION & SNAPSHOT ACTIONS
+  // --------------------------------------------------------------------------
+  const handleToggleSimulation = () => {
+    setIsSimulating((s) => {
+      const next = !s;
+      if (next && vehicleStats.totalThrustKn > 0) {
+        triggerUnlock('ach-hotfire-test');
+      }
       return next;
     });
   };
 
-  const handleReset = () => {
-    setAssembledParts([]);
+  const handleTakeSnapshot = () => {
+    try {
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${shipName.toLowerCase().replace(/\s+/g, '-')}-blueprint.png`;
+        link.href = dataUrl;
+        link.click();
+        triggerUnlock('ach-photo-capture');
+      }
+    } catch (err) {
+      console.error('Failed to capture snapshot:', err);
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // 10. BLUEPRINT MANAGEMENT & EXPORT
+  // --------------------------------------------------------------------------
+  const handleSelectBlueprint = (bp: Blueprint) => {
+    setActiveBlueprintId(bp.id);
+    setShipName(bp.name);
+    setShipClass(bp.shipClass || 'Explorer');
+    const liv = LIVERY_OPTIONS.find((l) => l.id === bp.liveryId) || LIVERY_OPTIONS[0];
+    setSelectedLivery(liv);
+    setSelectedMaterial(bp.materialFinish || 'titanium');
+    if (bp.engineGlowColor) setEngineGlowColor(bp.engineGlowColor);
+    setAssembledParts(bp.components);
+    setSelectedComponentId(bp.components[0]?.instanceId || null);
     setIsSimulating(false);
+    pushHistory(bp.components);
   };
 
-  const handleToggleSimulation = () => {
-    setIsSimulating((s) => !s);
+  const handleNewDesign = () => {
+    setActiveBlueprintId(null);
+    setShipName('New Orbital Prototype');
+    setShipClass('Explorer');
+    setAssembledParts([]);
+    setSelectedComponentId(null);
+    setIsSimulating(false);
+    pushHistory([]);
   };
 
-  const filteredCatalog = useMemo(() => {
-    if (activeCategory === 'all') return COMPONENT_CATALOG;
-    return COMPONENT_CATALOG.filter((c) => c.category === activeCategory);
-  }, [activeCategory]);
+  const handleSaveCurrentDesign = (name: string) => {
+    const newBlueprint: Blueprint = {
+      id: `bp-${Date.now()}`,
+      name,
+      shipClass,
+      author: 'Orbit Academy Architect',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isPreset: false,
+      liveryId: selectedLivery.id,
+      materialFinish: selectedMaterial,
+      engineGlowColor,
+      components: assembledParts,
+    };
+
+    persistBlueprints([newBlueprint, ...savedBlueprints]);
+    triggerUnlock('ach-blueprint-saved');
+  };
+
+  const handleExportBlueprint = () => {
+    const bp: Blueprint = {
+      id: `bp-${Date.now()}`,
+      name: shipName,
+      shipClass,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isPreset: false,
+      author: 'Orbit Academy Architect',
+      liveryId: selectedLivery.id,
+      materialFinish: selectedMaterial,
+      engineGlowColor,
+      components: assembledParts,
+    };
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(bp, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute('href', dataStr);
+    dlAnchor.setAttribute('download', `${shipName.toLowerCase().replace(/\s+/g, '-')}.json`);
+    dlAnchor.click();
+    triggerUnlock('ach-blueprint-saved');
+  };
+
+  const handleExportGLB = async () => {
+    if (!spacecraftRootGroupRef.current) {
+      alert('Spacecraft 3D model is initializing. Please try again in a moment.');
+      return;
+    }
+    try {
+      const { GLTFExporter } = await import('three-stdlib');
+      const exporter = new GLTFExporter();
+      exporter.parse(
+        spacecraftRootGroupRef.current,
+        (gltf) => {
+          const blob = new Blob([gltf as ArrayBuffer], { type: 'model/gltf-binary' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${shipName.toLowerCase().replace(/\s+/g, '-')}.glb`;
+          a.click();
+          URL.revokeObjectURL(url);
+          triggerUnlock('ach-blueprint-saved');
+        },
+        (error) => {
+          console.error('GLTF export error:', error);
+        },
+        { binary: true }
+      );
+    } catch (err) {
+      console.error('Failed to export GLB:', err);
+    }
+  };
+
+  const handleDeleteBlueprint = (id: string) => {
+    persistBlueprints(savedBlueprints.filter((b) => b.id !== id));
+  };
+
+  const handleRenameBlueprint = (id: string, newName: string) => {
+    persistBlueprints(
+      savedBlueprints.map((b) => (b.id === id ? { ...b, name: newName, updatedAt: Date.now() } : b))
+    );
+  };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030611] font-sans text-[#F8FAFC]">
-      <MasterHeader />
+    <div className="aerospace-workshop-root relative h-screen w-full flex flex-col bg-[#030611] font-sans text-[#F8FAFC] overflow-hidden select-none">
+      {/* 1. Universal Master Header */}
+      <div className="flex-none z-30">
+        <MasterHeader />
+      </div>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6 animate-fade-in">
-        
-        {/* ================================================================= */}
-        {/* 1. STUDIO HERO TELEMETRY BANNER                                  */}
-        {/* ================================================================= */}
-        <GlassCard
-          variant="elevated"
-          className="p-6 sm:p-8 border-glow-cyan bg-gradient-to-r from-[#0C1427]/90 via-[#070C1B]/95 to-[#161B2E]/90"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="space-y-3 max-w-3xl">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <TelemetryBadge
-                  label="WORKSHOP"
-                  value="3D CAD FABRICATION"
-                  tone="cyan"
-                  pulsing
-                  icon={Rocket}
-                  size="sm"
-                />
-                <TelemetryBadge
-                  label="STAGING"
-                  value={`${assembledParts.length} STAGES`}
-                  tone="violet"
-                  size="sm"
-                />
-                <TelemetryBadge
-                  label="DELTA-V"
-                  value={`${deltaV.toLocaleString()} m/s`}
-                  tone="amber"
-                  size="sm"
-                />
-                <TelemetryBadge
-                  label="STATUS"
-                  value={isFlightReady ? 'FLIGHT CERTIFIED' : 'LOW THRUST'}
-                  tone={isFlightReady ? 'emerald' : 'amber'}
-                  size="sm"
-                />
-              </div>
-
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
-                  <span>Spacecraft Creation Studio</span>
-                  <Sparkles className="h-6 w-6 text-[#38BDF8] hidden sm:inline-block animate-pulse" />
-                </h1>
-                <p className="mt-2 text-sm sm:text-base text-[#94A3B8] leading-relaxed">
-                  Design, assemble, and hot-fire multi-stage spacecraft in an interactive 3D physics environment. Balance cryogenic propellant mass, vacuum specific impulse (I_sp), thrust-to-weight ratios (TWR), and electrical power budgets.
-                </p>
-              </div>
-            </div>
-
-            {/* Live TWR / Delta-V Quick Gauges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 shrink-0">
-              <div className="rounded-xl border border-white/10 bg-[#0B1226]/80 p-3 flex flex-col justify-between">
-                <span className="font-mono text-[10px] uppercase text-[#94A3B8]">Gross Mass</span>
-                <span className="font-mono text-xs sm:text-sm font-bold text-white">
-                  {(totalGrossMass / 1000).toFixed(1)} t
-                </span>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B1226]/80 p-3 flex flex-col justify-between">
-                <span className="font-mono text-[10px] uppercase text-[#94A3B8]">Total Thrust</span>
-                <span className="font-mono text-xs sm:text-sm font-bold text-[#F59E0B]">
-                  {totalThrustKn.toLocaleString()} kN
-                </span>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B1226]/80 p-3 flex flex-col justify-between">
-                <span className="font-mono text-[10px] uppercase text-[#94A3B8]">Liftoff TWR</span>
-                <span className={`font-mono text-xs sm:text-sm font-bold ${isFlightReady ? 'text-[#34D399]' : 'text-amber-400'}`}>
-                  {twr.toFixed(2)}
-                </span>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B1226]/80 p-3 flex flex-col justify-between">
-                <span className="font-mono text-[10px] uppercase text-[#94A3B8]">Avg Isp</span>
-                <span className="font-mono text-xs sm:text-sm font-bold text-[#38BDF8]">
-                  {weightedIsp} s
-                </span>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* ================================================================= */}
-        {/* 2. MAIN 3D WORKBENCH & CAD FABRICATION AREA                      */}
-        {/* ================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column: 3D Three.js Viewport (8 Cols) */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
-            <GlassCard
-              variant="elevated"
-              className="relative aspect-[16/10] min-h-[460px] flex flex-col justify-between p-4 sm:p-5 border-glow-cyan"
-            >
-              {/* Top Viewport Telemetry & Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-3 z-10">
-                <div className="flex items-center gap-2">
-                  <Rocket className="h-4 w-4 text-[#38BDF8]" />
-                  <input
-                    type="text"
-                    value={vehicleName}
-                    onChange={(e) => setVehicleName(e.target.value)}
-                    data-testid="vehicle-name-input"
-                    className="rounded-xl border border-white/10 bg-[#070C1B]/80 px-3 py-1 font-sans text-xs sm:text-sm font-bold text-white focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8]"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <SpaceButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleReset}
-                    icon={RotateCcw}
-                    data-testid="clear-deck-btn"
-                  >
-                    Clear Deck
-                  </SpaceButton>
-
-                  <SpaceButton
-                    variant={isSimulating ? 'danger' : 'primary'}
-                    size="sm"
-                    onClick={handleToggleSimulation}
-                    icon={isSimulating ? Square : Play}
-                    data-testid="toggle-sim-btn"
-                  >
-                    {isSimulating ? 'Abort Test Burn' : 'Engine Hot-Fire Test'}
-                  </SpaceButton>
-                </div>
-              </div>
-
-              {/* R3F 3D Canvas */}
-              <div className="absolute inset-0 h-full w-full">
-                <Canvas
-                  shadows
-                  camera={{ position: [0, 4, 12], fov: 45 }}
-                  gl={{ antialias: true }}
-                >
-                  <OrbitControls
-                    enablePan={true}
-                    enableZoom={true}
-                    minDistance={4}
-                    maxDistance={24}
-                  />
-                  <Vehicle3DModel
-                    components={assembledParts}
-                    isSimulating={isSimulating}
-                  />
-                </Canvas>
-              </div>
-
-              {/* Bottom Viewport Status Bar */}
-              <div className="z-10 flex flex-wrap items-center justify-between border-t border-white/10 pt-2.5 font-mono text-[11px] text-[#94A3B8] gap-2">
-                <div className="flex items-center gap-3">
-                  <span>Stack Height: {(assembledParts.length * 2.2).toFixed(1)} m</span>
-                  <span>•</span>
-                  <span>Stages: {assembledParts.length} Components</span>
-                </div>
-
-                <span className="hidden sm:inline text-[#64748B]">
-                  Orbit Controls: Left Drag to Orbit • Scroll to Zoom
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  {isFlightReady ? (
-                    <span className="flex items-center gap-1 text-[#34D399] font-bold">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>TWR {twr.toFixed(2)} ≥ 1.15 (GO FOR LAUNCH)</span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-amber-400 font-bold">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      <span>TWR {twr.toFixed(2)} &lt; 1.15 (HOLD LAUNCH)</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* Mission Capability Assessment */}
-            <GlassCard variant="default" className="p-5">
-              <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-[#A78BFA]" />
-                  <span className="font-mono text-xs uppercase tracking-wider text-[#A78BFA] font-bold">
-                    MISSION REACHABILITY ASSESSMENT (DELTA-V &amp; TWR)
-                  </span>
-                </div>
-                <span className="font-mono text-xs text-white font-bold">
-                  Current Capability: {deltaV.toLocaleString()} m/s
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {missionTargets.map((m) => {
-                  const hasDv = deltaV >= m.reqDv;
-                  const hasTwr = twr >= m.reqTwr;
-                  const canReach = hasDv && hasTwr;
-
-                  return (
-                    <div
-                      key={m.name}
-                      className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
-                        canReach
-                          ? 'border-[#34D399]/40 bg-[#34D399]/10 text-white'
-                          : 'border-white/5 bg-[#0B1226]/50 text-[#94A3B8]'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-sans text-xs font-bold leading-tight">
-                            {m.name}
-                          </span>
-                          {canReach ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-[#34D399] shrink-0" />
-                          ) : (
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                          )}
-                        </div>
-                        <span className="font-mono text-[10px] block text-[#94A3B8]">
-                          Req: {m.reqDv.toLocaleString()} m/s • TWR {m.reqTwr}
-                        </span>
-                      </div>
-
-                      <span className={`font-mono text-[9.5px] font-bold mt-2 uppercase ${canReach ? 'text-[#34D399]' : 'text-amber-400'}`}>
-                        {canReach ? 'Trajectory Achievable' : 'Insufficient Energy'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* Right Column: Telemetry & Component Catalog (4 Cols) */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
-            
-            {/* Propulsion & Power Telemetry */}
-            <GlassCard variant="default" className="p-5">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold block mb-3">
-                ENGINEERING TELEMETRY MATRIX
-              </span>
-
-              <div className="space-y-2.5 font-mono text-xs">
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Dry Mass:</span>
-                  <span className="text-white font-bold">{dryMass.toLocaleString()} kg</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Propellant Mass:</span>
-                  <span className="text-[#38BDF8] font-bold">{propellantMass.toLocaleString()} kg</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Total Gross Mass:</span>
-                  <span className="text-white font-bold">{totalGrossMass.toLocaleString()} kg</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Vacuum Thrust:</span>
-                  <span className="text-[#F59E0B] font-bold">{totalThrustKn.toLocaleString()} kN</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Liftoff TWR:</span>
-                  <span className={`font-bold ${isFlightReady ? 'text-[#34D399]' : 'text-amber-400'}`}>
-                    {twr.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-[#94A3B8]">Mission Delta-V:</span>
-                  <span className="text-[#F59E0B] font-bold">{deltaV.toLocaleString()} m/s</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5">
-                  <span className="text-[#94A3B8]">Net Electrical Balance:</span>
-                  <span className={`font-bold ${netPowerKw >= 0 ? 'text-[#34D399]' : 'text-red-400'}`}>
-                    {netPowerKw >= 0 ? `+${netPowerKw.toFixed(1)} kW` : `${netPowerKw.toFixed(1)} kW`}
-                  </span>
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* Modular Component Library */}
-            <GlassCard variant="default" className="p-5">
-              <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#38BDF8] font-bold">
-                  MODULAR STAGE CATALOG
-                </span>
-                <span className="font-mono text-[10px] text-[#94A3B8]">
-                  {COMPONENT_CATALOG.length} Parts
-                </span>
-              </div>
-
-              {/* Category Filter Pills */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {['all', 'propulsion', 'fuel', 'payload', 'power', 'avionics'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-2.5 py-1 rounded-lg font-mono text-[10px] transition-all capitalize ${
-                      activeCategory === cat
-                        ? 'border border-[#38BDF8] bg-[#38BDF8]/20 text-[#38BDF8] font-bold'
-                        : 'border border-white/5 bg-[#0B1226]/60 text-[#94A3B8] hover:text-white'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Component Items List */}
-              <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                {filteredCatalog.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-[#0B1226]/70 hover:border-white/15 hover:bg-white/5 transition-all"
-                  >
-                    <div className="flex flex-col pr-2">
-                      <span className="font-sans text-xs font-semibold text-white leading-tight">
-                        {item.name}
-                      </span>
-                      <span className="font-mono text-[9.5px] text-[#94A3B8] mt-0.5">
-                        Mass: {item.mass} kg
-                        {item.propellant ? ` • Fuel: ${item.propellant} kg` : ''}
-                        {item.thrust ? ` • Thrust: ${item.thrust} kN` : ''}
-                        {item.power ? ` • Power: ${item.power > 0 ? `+${item.power}` : item.power} kW` : ''}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleAddComponent(item)}
-                      title={`Add ${item.name} to stack`}
-                      data-testid={`add-part-${item.id}`}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#38BDF8]/30 bg-[#38BDF8]/10 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#030611] transition-colors shrink-0"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-
-            {/* Assembled Staging Hierarchy */}
-            <GlassCard variant="default" className="p-5 font-mono text-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold">
-                  ACTIVE STAGING HIERARCHY ({assembledParts.length})
-                </span>
-                <span className="font-mono text-[10px] text-[#94A3B8]">
-                  Top to Bottom
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                {assembledParts.map((part, idx) => (
-                  <div
-                    key={`${part.id}-${idx}`}
-                    className="flex items-center justify-between rounded-lg border border-white/5 bg-[#070C1B]/80 px-2.5 py-1.5"
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="font-mono text-[10px] text-[#38BDF8] font-bold shrink-0">
-                        S{assembledParts.length - idx}
-                      </span>
-                      <span className="text-xs text-white truncate">
-                        {part.name}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        onClick={() => handleMoveStage(idx, idx - 1)}
-                        className="text-[#94A3B8] hover:text-white disabled:opacity-20"
-                        title="Move Up"
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={idx === assembledParts.length - 1}
-                        onClick={() => handleMoveStage(idx, idx + 1)}
-                        className="text-[#94A3B8] hover:text-white disabled:opacity-20"
-                        title="Move Down"
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveComponent(idx)}
-                        className="text-red-400 hover:text-red-300 ml-1"
-                        title="Remove component"
-                        data-testid={`remove-part-${idx}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-
-          </div>
-
+      {/* 2. Full-Bleed 3D Engineering Stage & Floating CAD HUD Consoles */}
+      <div className="relative flex-1 w-full overflow-hidden min-h-0">
+        {/* Realtime 3D Three.js Viewport (Full Stage) */}
+        <div className="absolute inset-0 z-0">
+          <BuildCanvas3D
+            components={assembledParts}
+            isSimulating={isSimulating}
+            livery={selectedLivery}
+            materialFinish={selectedMaterial}
+            selectedComponentId={selectedComponentId}
+            onSelectComponent={setSelectedComponentId}
+            transformMode={transformMode}
+            onTransformChange={handleUpdateComponentTransform}
+            qualityPreset={qualityPreset}
+            shadingMode={shadingMode}
+            cameraProjection={cameraProjection}
+            focusTrigger={focusTrigger}
+            cameraViewAngle={cameraViewAngle}
+            lightingEnvironmentMode={lightingEnvironmentMode}
+            explodedFactor={explodedFactor}
+            showCenterOfMass={showCenterOfMass}
+            showCenterOfThrust={showCenterOfThrust}
+            showMeasurementCalipers={showMeasurementCalipers}
+            onRegisterSpacecraftGroup={(g) => {
+              spacecraftRootGroupRef.current = g;
+            }}
+          />
         </div>
 
-      </main>
+        {/* Floating Top Editor Toolbar */}
+        <div className="absolute top-2 left-4 right-4 z-20 pointer-events-none">
+          <div className="pointer-events-auto max-w-[1550px] mx-auto">
+            <TopEditorToolbar
+              shipName={shipName}
+              onShipNameChange={setShipName}
+              isMissionReady={vehicleStats.isFlightReady}
+              canUndo={historyIndex > 0}
+              canRedo={historyIndex < history.length - 1}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              shadingMode={shadingMode}
+              onShadingModeChange={setShadingMode}
+              cameraProjection={cameraProjection}
+              onCameraProjectionChange={setCameraProjection}
+              cameraViewAngle={cameraViewAngle}
+              onCameraViewAngleChange={setCameraViewAngle}
+              lightingEnvironmentMode={lightingEnvironmentMode}
+              onLightingEnvironmentModeChange={setLightingEnvironmentMode}
+              showCenterOfMass={showCenterOfMass}
+              onToggleCenterOfMass={() => setShowCenterOfMass((v) => !v)}
+              showCenterOfThrust={showCenterOfThrust}
+              onToggleCenterOfThrust={() => setShowCenterOfThrust((v) => !v)}
+              showMeasurementCalipers={showMeasurementCalipers}
+              onToggleMeasurementCalipers={() => setShowMeasurementCalipers((v) => !v)}
+              onTakeSnapshot={handleTakeSnapshot}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={handleToggleFullscreen}
+              onTestFlight={() => setIsTestFlightOpen(true)}
+              onExportGLB={handleExportGLB}
+            />
+          </div>
+        </div>
+
+        {/* Floating Left Panel: Component Library */}
+        <div className="absolute left-3 top-16 bottom-20 z-20 pointer-events-auto flex">
+          <ComponentLibraryPanel
+            onAddComponent={handleAddComponent}
+            isCollapsed={isLeftPanelCollapsed}
+            onToggleCollapse={handleToggleLeftPanel}
+          />
+        </div>
+
+        {/* Floating Right Panel: Ship Inspector */}
+        <div className="absolute right-3 top-16 bottom-20 z-20 pointer-events-auto flex">
+          <ShipInspectorPanel
+            shipName={shipName}
+            onShipNameChange={setShipName}
+            shipClass={shipClass}
+            onShipClassChange={setShipClass}
+            stats={vehicleStats}
+            selectedComponent={selectedComponent}
+            onUpdateComponentTransform={handleUpdateComponentTransform}
+            onUpdatePropellantFill={handleUpdatePropellantFill}
+            onDuplicateComponent={handleDuplicateComponent}
+            onDeleteComponent={handleDeleteComponent}
+            allComponents={assembledParts}
+            onSelectComponent={setSelectedComponentId}
+            selectedLivery={selectedLivery}
+            onSelectLivery={setSelectedLivery}
+            selectedMaterial={selectedMaterial}
+            onSelectMaterial={setSelectedMaterial}
+            engineGlowColor={engineGlowColor}
+            onEngineGlowColorChange={setEngineGlowColor}
+            isCollapsed={isRightPanelCollapsed}
+            onToggleCollapse={handleToggleRightPanel}
+          />
+        </div>
+
+        {/* Floating Bottom Shipyard Dock */}
+        <div className="absolute bottom-2 left-4 right-4 z-20 pointer-events-none">
+          <div className="pointer-events-auto max-w-4xl mx-auto">
+            <BottomShipyardDock
+              blueprints={PRESET_BLUEPRINTS}
+              activeBlueprintId={activeBlueprintId}
+              onSelectBlueprint={handleSelectBlueprint}
+              onNewDesign={handleNewDesign}
+              transformMode={transformMode}
+              onTransformModeChange={setTransformMode}
+              isSnapEnabled={isSnapEnabled}
+              onToggleSnap={() => setIsSnapEnabled(!isSnapEnabled)}
+              isSimulating={isSimulating}
+              onToggleSimulation={handleToggleSimulation}
+              onSaveBlueprint={() => setIsBlueprintModalOpen(true)}
+              onExportBlueprint={handleExportBlueprint}
+              explodedFactor={explodedFactor}
+              onExplodedFactorChange={setExplodedFactor}
+              stats={vehicleStats}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Bottom Status Telemetry Footer (At Page Base) */}
+      <div className="flex-none z-30">
+        <BottomStatusFooter
+          isBuildValid={vehicleStats.isFlightReady}
+          validationMessage={
+            vehicleStats.isFlightReady
+              ? 'Build Ready • 100% Valid'
+              : vehicleStats.validationErrors[0] || 'Build Needs Calibration'
+          }
+          triangleCount={245000}
+          unlockedAchievementTitle="Shipwright"
+          unlockedXpReward={250}
+        />
+      </div>
+
+      {/* 3. Modals & Toast Overlays */}
+      <TestFlightModal
+        isOpen={isTestFlightOpen}
+        onClose={() => setIsTestFlightOpen(false)}
+        components={assembledParts}
+        livery={selectedLivery}
+        materialFinish={selectedMaterial}
+        stats={vehicleStats}
+        shipName={shipName}
+      />
+
+      <MissionReadinessModal
+        isOpen={isMissionModalOpen}
+        onClose={() => setIsMissionModalOpen(false)}
+        stats={vehicleStats}
+        components={assembledParts}
+      />
+
+      <BlueprintManagerModal
+        isOpen={isBlueprintModalOpen}
+        onClose={() => setIsBlueprintModalOpen(false)}
+        savedBlueprints={savedBlueprints}
+        presetBlueprints={PRESET_BLUEPRINTS}
+        onSaveCurrentDesign={handleSaveCurrentDesign}
+        onLoadBlueprint={handleSelectBlueprint}
+        onRenameBlueprint={handleRenameBlueprint}
+        onDeleteBlueprint={handleDeleteBlueprint}
+        currentVehicleName={shipName}
+      />
+
+      {activeToast && (
+        <ProgressionToast
+          achievement={activeToast}
+          onDismiss={() => setActiveToast(null)}
+        />
+      )}
     </div>
   );
 };
+
+export default SpaceCreationStudioScreen;

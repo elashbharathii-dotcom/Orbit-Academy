@@ -2,6 +2,7 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SolarSystemScene } from './SolarSystemScene';
+import { WebGLErrorBoundary } from '../common/WebGLErrorBoundary';
 
 interface SolarSystemCanvasProps {
   speedScale?: number;
@@ -22,31 +23,36 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
 }) => {
   return (
     <div className="absolute inset-0 h-full w-full bg-[#030611]">
-      <Canvas
-        shadows
-        camera={{
-          position: [0, 48, 92],
-          fov: 42,
-          near: 0.1,
-          far: 1400,
-        }}
-        dpr={[1, 2]} // Performance clamp for high-DPI laptops and mobile
-        gl={{
-          antialias: true,
-          powerPreference: 'high-performance',
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.12,
-        }}
-        onCreated={({ gl, scene }) => {
-          gl.setClearColor('#030611');
-          gl.outputColorSpace = THREE.SRGBColorSpace;
-          gl.shadowMap.enabled = true;
-          gl.shadowMap.type = THREE.PCFSoftShadowMap;
-          scene.background = new THREE.Color('#030611');
-        }}
+      <WebGLErrorBoundary
+        fallbackTitle="Solar System Mission Overview"
+        fallbackDescription="Celestial orbital mechanics and planetary trajectory calculations are active. You can select any planet using the 2D Directory or numerical navigation keys."
       >
-        <SolarSystemScene speedScale={speedScale} />
-      </Canvas>
+        <Canvas
+          shadows
+          camera={{
+            position: [0, 48, 92],
+            fov: 42,
+            near: 0.1,
+            far: 1400,
+          }}
+          dpr={[1, 2]} // Performance clamp for high-DPI laptops and mobile
+          gl={{
+            antialias: true,
+            powerPreference: 'default',
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.12,
+          }}
+          onCreated={({ gl, scene }) => {
+            gl.setClearColor('#030611');
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.shadowMap.enabled = true;
+            gl.shadowMap.type = THREE.PCFSoftShadowMap;
+            scene.background = new THREE.Color('#030611');
+          }}
+        >
+          <SolarSystemScene speedScale={speedScale} />
+        </Canvas>
+      </WebGLErrorBoundary>
     </div>
   );
 };

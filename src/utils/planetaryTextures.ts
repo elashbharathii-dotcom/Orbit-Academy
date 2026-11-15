@@ -13,6 +13,7 @@ import {
   getSaturnRingTexture as getProceduralSaturnRings,
   getUranusTexture as getProceduralUranus,
   getNeptuneTexture as getProceduralNeptune,
+  getNeptuneCirrusTexture as getProceduralNeptuneCirrus,
 } from './textureGenerator';
 
 /**
@@ -212,6 +213,16 @@ export function useSaturnRingTexture(): THREE.Texture {
     };
   }, [url]);
 
+  return texture;
+}
+
+/**
+ * React Hook for Neptune High-Altitude Methane Cirrus Cloud Texture
+ */
+export function useNeptuneCirrusTexture(): THREE.Texture {
+  const [texture] = useState<THREE.Texture>(() => {
+    return getProceduralNeptuneCirrus();
+  });
   return texture;
 }
 

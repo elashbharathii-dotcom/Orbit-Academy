@@ -352,3 +352,93 @@ export const QUIZ_ARENA_QUESTIONS: QuizQuestion[] = [
   },
 ];
 
+export interface CadetFlightRankMeta {
+  rankLevel: number;
+  rankTitle: string;
+  title: string;
+  badgeCode: string;
+  callsign: string;
+  minXp: number;
+  insigniaTone: string;
+  authorityScope: string;
+  description: string;
+}
+
+export const CADET_FLIGHT_RANKS: CadetFlightRankMeta[] = [
+  {
+    rankLevel: 1,
+    rankTitle: 'Junior Space Cadet',
+    title: 'Junior Space Cadet',
+    badgeCode: 'CADET-01',
+    callsign: 'CADET-01',
+    minXp: 0,
+    insigniaTone: 'cyan',
+    authorityScope: 'Access to Basic Planetary Telemetry & Standard Quiz Arenas',
+    description: 'Access to Basic Planetary Telemetry & Standard Quiz Arenas',
+  },
+  {
+    rankLevel: 2,
+    rankTitle: 'Science Specialist',
+    title: 'Science Specialist',
+    badgeCode: 'SPEC-02',
+    callsign: 'SPEC-02',
+    minXp: 300,
+    insigniaTone: 'emerald',
+    authorityScope: 'Authorization to engage Timed Blitz tournaments and view OSDR datasets',
+    description: 'Authorization to engage Timed Blitz tournaments and view OSDR datasets',
+  },
+  {
+    rankLevel: 3,
+    rankTitle: 'Navigation Flight Officer',
+    title: 'Navigation Flight Officer',
+    badgeCode: 'NAV-03',
+    callsign: 'NAV-03',
+    minXp: 800,
+    insigniaTone: 'violet',
+    authorityScope: 'Command authorization for interactive coordinate maps and matching challenges',
+    description: 'Command authorization for interactive coordinate maps and matching challenges',
+  },
+  {
+    rankLevel: 4,
+    rankTitle: 'Mission Flight Director',
+    title: 'Mission Flight Director',
+    badgeCode: 'DIR-04',
+    callsign: 'DIR-04',
+    minXp: 1600,
+    insigniaTone: 'amber',
+    authorityScope: 'Full clearance to execute high-stakes Mission Scenarios and emergency protocols',
+    description: 'Full clearance to execute high-stakes Mission Scenarios and emergency protocols',
+  },
+  {
+    rankLevel: 5,
+    rankTitle: 'Chief NASA Astrophysicist',
+    title: 'Chief NASA Astrophysicist',
+    badgeCode: 'CHIEF-05',
+    callsign: 'CHIEF-05',
+    minXp: 3000,
+    insigniaTone: 'rose',
+    authorityScope: 'Grand Tournament Mastery across all 11 NASA scientific curricula',
+    description: 'Grand Tournament Mastery across all 11 NASA scientific curricula',
+  },
+];
+
+export interface QuizCategoryMetadataItem {
+  id: string;
+  title: string;
+  label: string;
+  icon: string;
+  description: string;
+  questionCount: number;
+  tagline?: string;
+  accentColor?: string;
+  glowColor?: string;
+  badge?: string;
+}
+
+export const QUIZ_CATEGORIES_METADATA: QuizCategoryMetadataItem[] = QUIZ_CATEGORIES.map((cat) => ({
+  ...cat,
+  title: cat.label,
+  description: cat.tagline,
+  questionCount: QUIZ_ARENA_QUESTIONS.filter((q) => q.category === cat.id).length || 5,
+}));
+

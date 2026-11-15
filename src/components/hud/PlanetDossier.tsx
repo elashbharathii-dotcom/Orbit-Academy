@@ -32,13 +32,21 @@ interface PlanetDossierProps {
  * - Responsive: Slides in seamlessly on Desktop, adapts as bottom drawer on Mobile
  */
 export const PlanetDossier: React.FC<PlanetDossierProps> = ({ data }) => {
-  const { selectPlanet } = useSolarSystem();
+  const { selectPlanet, selectedMoonId, selectMoon } = useSolarSystem();
   const { launchModuleForPlanet } = useNavigation();
 
   if (!data) return null;
 
   const { name, latinName, tagline, visual, physical } = data;
-  const dest = getDestinationByPlanetId(data.id);
+  const rawDest = getDestinationByPlanetId(data.id);
+  const dest = rawDest || {
+    category: 'Astrophysics',
+    badge: 'EXPLORATION',
+    name: data.name,
+    learningObjective: data.tagline,
+    buttonText: `Explore ${data.name}`,
+    themeAccent: visual.primaryColor,
+  };
 
   const handleClose = () => {
     selectPlanet(null);
@@ -197,7 +205,60 @@ export const PlanetDossier: React.FC<PlanetDossierProps> = ({ data }) => {
             </div>
           </div>
 
-          {/* 4. Educational Learning Module Destination Launcher */}
+          {/* 4. Natural Satellites / Moons Explorer */}
+          {visual.moons && visual.moons.length > 0 && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between font-mono text-[9.5px] text-[#94A3B8]">
+                <div className="flex items-center gap-1.5">
+                  <Moon className="h-3 w-3 text-[#38BDF8]" aria-hidden="true" />
+                  <span className="font-semibold uppercase tracking-wider">
+                    Natural Satellites ({visual.moons.length})
+                  </span>
+                </div>
+                <span className="text-[8.5px] text-[#38BDF8]">INTERACTIVE</span>
+              </div>
+
+              <div className="mt-2.5 grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                {visual.moons.map((moon) => {
+                  const isCurrentMoon = selectedMoonId === moon.id;
+                  return (
+                    <button
+                      key={moon.id}
+                      type="button"
+                      onClick={() => selectMoon?.(isCurrentMoon ? null : moon.id)}
+                      className={`group flex items-center justify-between rounded-lg border p-2 text-left transition-all ${
+                        isCurrentMoon
+                          ? 'border-[#00F0FF] bg-[#00F0FF]/15 text-white shadow-[0_0_12px_rgba(0,240,255,0.25)]'
+                          : 'border-white/[0.06] bg-white/[0.02] text-[#94A3B8] hover:border-white/20 hover:bg-white/[0.05] hover:text-white'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: moon.primaryColor }}
+                          />
+                          <span className="font-mono text-[10.5px] font-bold text-white truncate">
+                            {moon.name}
+                          </span>
+                        </div>
+                        <div className="font-mono text-[8.5px] text-[#64748B] group-hover:text-[#94A3B8] mt-0.5">
+                          ⌀ {moon.realDiameterKm}
+                        </div>
+                      </div>
+                      {isCurrentMoon && (
+                        <span className="font-mono text-[8px] uppercase text-[#00F0FF] font-bold shrink-0 ml-1">
+                          LOCKED
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 5. Educational Learning Module Destination Launcher */}
           <div className="rounded-xl border border-[#F59E0B]/30 bg-gradient-to-b from-[#F59E0B]/10 to-[#F59E0B]/[0.02] p-3.5 shadow-lg">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#F59E0B]">

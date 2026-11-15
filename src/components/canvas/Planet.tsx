@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { CelestialBodyDefinition } from '../../types';
 import { AtmosphereRim } from './AtmosphereRim';
 import { CelestialReticle } from './CelestialReticle';
+import { PlanetMoon } from './PlanetMoon';
+import { PlanetaryRings } from './PlanetaryRings';
 import { useSolarSystem } from '../../context/SolarSystemContext';
 import { useNavigation } from '../../navigation/NavigationProvider';
 import { setCelestialPosition } from '../../utils/celestialRegistry';
@@ -11,33 +13,12 @@ import {
   usePlanetaryTexture,
   useEarthCloudsTexture,
   useEarthNightLightsTexture,
-  useSaturnRingTexture,
 } from '../../utils/planetaryTextures';
 
 interface PlanetProps {
   data: CelestialBodyDefinition;
   speedScale?: number;
   initialAngleOffset?: number;
-}
-
-/**
- * Creates radial UV mapping for Saturn's rings
- * Maps radial distance from inner ring edge to outer ring edge to U coordinate [0, 1]
- */
-function createRadialRingGeometry(innerRadius: number, outerRadius: number, segments: number = 128) {
-  const geometry = new THREE.RingGeometry(innerRadius, outerRadius, segments, 8);
-  const pos = geometry.attributes.position;
-  const uvs = geometry.attributes.uv;
-
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const dist = Math.sqrt(x * x + y * y);
-    const u = (dist - innerRadius) / (outerRadius - innerRadius);
-    uvs.setXY(i, u, 0.5);
-  }
-  uvs.needsUpdate = true;
-  return geometry;
 }
 
 /**
@@ -60,9 +41,8 @@ export const Planet: React.FC<PlanetProps> = ({
   const orbitGroupRef = useRef<THREE.Group>(null);
   const planetMeshRef = useRef<THREE.Mesh>(null);
   const cloudsMeshRef = useRef<THREE.Mesh>(null);
-  const ringsMeshRef = useRef<THREE.Mesh>(null);
 
-  const { selectedPlanetId, hoveredPlanetId, setHoveredPlanet } = useSolarSystem();
+  const { selectedPlanetId, hoveredPlanetId, setHoveredPlanet, viewingMode } = useSolarSystem();
   const { launchModuleForPlanet } = useNavigation();
 
   const isSelected = selectedPlanetId === data.id;
@@ -77,24 +57,26 @@ export const Planet: React.FC<PlanetProps> = ({
   const {
     visualRadius,
     visualOrbitRadius,
+    scientificRadius,
+    scientificOrbitRadius,
     orbitSpeedMultiplier,
     rotationSpeedMultiplier,
     axialTiltDeg,
     primaryColor,
     hasRings,
+    rings,
+    moons,
   } = data.visual;
+
+  // Dual-mode scale calculations
+  const isScientific = viewingMode === 'scientific';
+  const effectiveRadius = isScientific ? (scientificRadius || visualRadius * 0.8) : visualRadius;
+  const effectiveOrbitRadius = isScientific ? (scientificOrbitRadius || visualOrbitRadius * 1.25) : visualOrbitRadius;
 
   // Reactively loaded 2K photographic maps (auto-rerenders upon browser decode)
   const surfaceTexture = usePlanetaryTexture(id);
   const earthCloudsTexture = useEarthCloudsTexture();
   const earthNightTexture = useEarthNightLightsTexture();
-  const saturnRingTexture = useSaturnRingTexture();
-
-  // Radial UV-mapped Saturn ring geometry
-  const saturnRingGeometry = useMemo(() => {
-    if (id !== 'saturn') return null;
-    return createRadialRingGeometry(visualRadius * 1.45, visualRadius * 2.65, 128);
-  }, [id, visualRadius]);
 
   // Earth night lights custom shader material (illuminates dark hemisphere away from Sol)
   const earthNightShaderMaterial = useMemo(() => {
@@ -203,10 +185,10 @@ export const Planet: React.FC<PlanetProps> = ({
 
   useFrame((_, delta) => {
     // 1. Orbital Revolution
-    if (orbitGroupRef.current && visualOrbitRadius > 0) {
+    if (orbitGroupRef.current && effectiveOrbitRadius > 0) {
       angleRef.current += delta * orbitSpeedMultiplier * speedScale;
-      const x = Math.cos(angleRef.current) * visualOrbitRadius;
-      const z = Math.sin(angleRef.current) * visualOrbitRadius;
+      const x = Math.cos(angleRef.current) * effectiveOrbitRadius;
+      const z = Math.sin(angleRef.current) * effectiveOrbitRadius;
       orbitGroupRef.current.position.set(x, 0, z);
 
       orbitGroupRef.current.getWorldPosition(worldPosVec);
@@ -221,11 +203,6 @@ export const Planet: React.FC<PlanetProps> = ({
     // 3. Earth Independent Cloud Drift
     if (cloudsMeshRef.current) {
       cloudsMeshRef.current.rotation.y += delta * rotationSpeedMultiplier * 0.95;
-    }
-
-    // 4. Ring Alignment
-    if (ringsMeshRef.current) {
-      ringsMeshRef.current.rotation.z += delta * rotationSpeedMultiplier * 0.15;
     }
   });
 
@@ -262,9 +239,19 @@ export const Planet: React.FC<PlanetProps> = ({
   };
 
   return (
-    <group ref={orbitGroupRef} position={[visualOrbitRadius, 0, 0]}>
+    <group ref={orbitGroupRef} position={[effectiveOrbitRadius, 0, 0]}>
       {/* Non-obstructing Celestial Reticle placed above the planet */}
-      <CelestialReticle data={data} yOffset={visualRadius * 1.55} />
+      <CelestialReticle data={data} yOffset={effectiveRadius * 1.55} />
+
+      {/* Natural Satellites / Moons (Local Keplerian Orbits) */}
+      {moons && moons.map((m, mIdx) => (
+        <PlanetMoon
+          key={m.id}
+          moon={m}
+          speedScale={speedScale}
+          initialAngleOffset={(mIdx * Math.PI * 2) / moons.length}
+        />
+      ))}
 
       {/* Axial Tilt Container */}
       <group rotation={[0, 0, axialTiltRad]}>
@@ -279,7 +266,7 @@ export const Planet: React.FC<PlanetProps> = ({
           onPointerOut={handlePointerOut}
           scale={isSelected ? [1.03, 1.03, 1.03] : isHovered ? [1.015, 1.015, 1.015] : [1.0, 1.0, 1.0]}
         >
-          <sphereGeometry args={[visualRadius, 64, 64]} />
+          <sphereGeometry args={[effectiveRadius, 64, 64]} />
           <meshStandardMaterial
             map={surfaceTexture}
             color="#FFFFFF"
@@ -293,7 +280,7 @@ export const Planet: React.FC<PlanetProps> = ({
         {/* 2. Earth: Dynamic Night-Side City Lights */}
         {id === 'earth' && earthNightShaderMaterial && (
           <mesh scale={[1.002, 1.002, 1.002]}>
-            <sphereGeometry args={[visualRadius, 48, 48]} />
+            <sphereGeometry args={[effectiveRadius, 48, 48]} />
             <primitive object={earthNightShaderMaterial} attach="material" />
           </mesh>
         )}
@@ -301,7 +288,7 @@ export const Planet: React.FC<PlanetProps> = ({
         {/* 3. Earth: Independent Dynamic Cloud Layer */}
         {id === 'earth' && earthCloudsTexture && (
           <mesh ref={cloudsMeshRef} scale={[1.012, 1.012, 1.012]}>
-            <sphereGeometry args={[visualRadius, 48, 48]} />
+            <sphereGeometry args={[effectiveRadius, 48, 48]} />
             <meshStandardMaterial
               map={earthCloudsTexture}
               transparent={true}
@@ -315,67 +302,41 @@ export const Planet: React.FC<PlanetProps> = ({
 
         {/* 4. Earth: Thin Realistic Rayleigh Scattering Rim */}
         {id === 'earth' && (
-          <AtmosphereRim radius={visualRadius} color="#38BDF8" intensity={0.90} falloff={4.2} scale={1.02} />
+          <AtmosphereRim radius={effectiveRadius} color="#38BDF8" intensity={0.90} falloff={4.2} scale={1.02} />
         )}
 
         {/* 5. Mars: Subtle Thin Terracotta Atmospheric Haze */}
         {id === 'mars' && (
-          <AtmosphereRim radius={visualRadius} color="#F87171" intensity={0.45} falloff={4.8} scale={1.016} />
+          <AtmosphereRim radius={effectiveRadius} color="#F87171" intensity={0.45} falloff={4.8} scale={1.016} />
         )}
 
         {/* 6. Venus: Dense Sulfuric Atmosphere Rim */}
         {id === 'venus' && (
-          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.75} falloff={3.6} scale={1.022} />
+          <AtmosphereRim radius={effectiveRadius} color="#FDE68A" intensity={0.75} falloff={3.6} scale={1.022} />
         )}
 
         {/* 7. Jupiter: Soft Jovian Atmospheric Edge */}
         {id === 'jupiter' && (
-          <AtmosphereRim radius={visualRadius} color="#FDE68A" intensity={0.35} falloff={4.5} scale={1.014} />
+          <AtmosphereRim radius={effectiveRadius} color="#FDE68A" intensity={0.35} falloff={4.5} scale={1.014} />
         )}
 
         {/* 8. Uranus: Delicate Aquamarine Methane Rim */}
         {id === 'uranus' && (
-          <AtmosphereRim radius={visualRadius} color="#5EEAD4" intensity={0.80} falloff={3.8} scale={1.02} />
+          <AtmosphereRim radius={effectiveRadius} color="#5EEAD4" intensity={0.80} falloff={3.8} scale={1.02} />
         )}
 
         {/* 9. Neptune: Deep Azure Methane Rim */}
         {id === 'neptune' && (
-          <AtmosphereRim radius={visualRadius} color="#3B82F6" intensity={0.90} falloff={3.6} scale={1.02} />
+          <AtmosphereRim radius={effectiveRadius} color="#3B82F6" intensity={0.90} falloff={3.6} scale={1.02} />
         )}
 
-        {/* 10. Saturn: Authentic 2K Radial Ring System with Cassini Division & Shadows */}
-        {hasRings && id === 'saturn' && saturnRingGeometry && (
-          <mesh
-            ref={ringsMeshRef}
-            geometry={saturnRingGeometry}
-            rotation={[Math.PI / 2, 0, 0]}
-            castShadow
-            receiveShadow
-          >
-            <meshStandardMaterial
-              map={saturnRingTexture}
-              side={THREE.DoubleSide}
-              shadowSide={THREE.DoubleSide}
-              transparent={true}
-              opacity={0.96}
-              roughness={0.65}
-              metalness={0.02}
-            />
-          </mesh>
-        )}
-
-        {/* 11. Uranus: Delicate Tilted Dust Ring System */}
-        {hasRings && id === 'uranus' && (
-          <mesh ref={ringsMeshRef} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[visualRadius * 1.35, visualRadius * 1.62, 64]} />
-            <meshStandardMaterial
-              color="#5EEAD4"
-              side={THREE.DoubleSide}
-              transparent={true}
-              opacity={0.25}
-              roughness={0.9}
-            />
-          </mesh>
+        {/* 10. Planetary Rings System (Saturn, Uranus, Neptune, Jupiter) */}
+        {hasRings && rings && (
+          <PlanetaryRings
+            planetId={id}
+            visualRadius={effectiveRadius}
+            config={rings}
+          />
         )}
       </group>
     </group>

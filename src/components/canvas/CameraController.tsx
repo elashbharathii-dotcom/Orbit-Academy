@@ -25,7 +25,7 @@ const OVERVIEW_TARGET = new THREE.Vector3(0, 0, 0);
  */
 export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef }) => {
   const { camera, size } = useThree();
-  const { selectedPlanetId } = useSolarSystem();
+  const { selectedPlanetId, activeEnvironment } = useSolarSystem();
 
   // Animation transition state
   const isTransitioningRef = useRef<boolean>(false);
@@ -38,7 +38,7 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
 
   const lastTargetPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Trigger transition when selected planet changes
+  // Trigger transition when selected planet or environment changes
   useEffect(() => {
     if (!controlsRef.current) return;
 
@@ -49,6 +49,22 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
     // Compute aspect ratio scaling for mobile portrait vs desktop widescreen
     const aspect = size.width / Math.max(1, size.height);
     const portraitMultiplier = aspect < 1.0 ? Math.min(2.4, 0.92 / aspect) : 1.0;
+
+    if (activeEnvironment === 'milky-way') {
+      const destTarget = new THREE.Vector3(0, 0, 0);
+      const destCamPos = new THREE.Vector3(0, 72, 120).multiplyScalar(aspect < 1.0 ? 1.3 : 1.0);
+      controlsRef.current.minDistance = 15.0;
+      controlsRef.current.maxDistance = 300.0 * portraitMultiplier;
+
+      const mid = startCamPosRef.current.clone().lerp(destCamPos, 0.5);
+      mid.y += 24;
+      midCamPosRef.current.copy(mid);
+      lastTargetPosRef.current.copy(destTarget);
+
+      transitionProgressRef.current = 0.0;
+      isTransitioningRef.current = true;
+      return;
+    }
 
     // Determine destination target & camera offset
     const destTarget = selectedPlanetId
@@ -113,10 +129,25 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
     // Initiate flight
     transitionProgressRef.current = 0.0;
     isTransitioningRef.current = true;
-  }, [selectedPlanetId, camera, controlsRef]);
+  }, [selectedPlanetId, activeEnvironment, camera, controlsRef]);
 
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
+
+    if (activeEnvironment === 'milky-way') {
+      if (isTransitioningRef.current) {
+        transitionProgressRef.current += delta / transitionDurationRef.current;
+        const t = Math.min(1.0, transitionProgressRef.current);
+        const easeT = t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+        const targetPos = new THREE.Vector3(0, 0, 0);
+        const destCam = new THREE.Vector3(0, 72, 120);
+        camera.position.copy(startCamPosRef.current.clone().lerp(destCam, easeT));
+        controlsRef.current.target.copy(startTargetRef.current.clone().lerp(targetPos, easeT));
+        controlsRef.current.update();
+        if (t >= 1.0) isTransitioningRef.current = false;
+      }
+      return;
+    }
 
     const currentPlanetPos = selectedPlanetId
       ? getCelestialPosition(selectedPlanetId)

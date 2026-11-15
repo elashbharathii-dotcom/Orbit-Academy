@@ -1,0 +1,414 @@
+/* ═══════════════════════════════════════════════════════════════
+   ORBIT ACADEMY — AETHER LEARNING PORTAL DESIGN SYSTEM
+   Strictly scoped to .aether-learn-portal to prevent style leakage
+   ═══════════════════════════════════════════════════════════════ */
+
+.aether-learn-portal {
+  --alp-bg: #05070C;
+  --alp-bg-2: #080B12;
+  --alp-ink: #E9F0F6;
+  --alp-ink-dim: #93A1B2;
+  --alp-ink-faint: #5A6675;
+  --alp-mint: #7FFFD4;
+  --alp-rule: rgba(255, 255, 255, 0.10);
+  --alp-rule-soft: rgba(255, 255, 255, 0.055);
+
+  --alp-a-earth: #7FFFD4;
+  --alp-a-rust: #FF8A3D;
+  --alp-a-ice: #8FD3FF;
+  --alp-a-gas: #FFC46B;
+
+  --alp-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --alp-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --alp-mono: "Roboto Mono", monospace;
+  --alp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--alp-bg);
+  color: var(--alp-ink);
+  font-family: var(--alp-sans);
+  overflow-x: hidden;
+}
+
+/* Background Layers */
+.aether-learn-portal .alp-bg-nebula {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url("/assets/aether/img/aether-nebula.jpg") center/cover no-repeat;
+  opacity: 0.28;
+  pointer-events: none;
+  filter: saturate(0.85) contrast(1.1);
+}
+
+.aether-learn-portal .alp-bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  opacity: 0.65;
+}
+
+.aether-learn-portal .alp-bg-grid i {
+  border-right: 1px solid var(--alp-rule-soft);
+}
+
+.aether-learn-portal .alp-bg-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 30%, transparent 20%, rgba(5, 7, 12, 0.65) 70%, rgba(5, 7, 12, 0.95) 100%),
+    linear-gradient(to bottom, rgba(5, 7, 12, 0.8), transparent 20%, transparent 75%, rgba(5, 7, 12, 0.95));
+}
+
+/* Typography */
+.aether-learn-portal .alp-display {
+  font-family: var(--alp-serif);
+  font-weight: 300;
+  line-height: 0.92;
+  letter-spacing: -0.018em;
+  color: var(--alp-ink);
+  text-transform: uppercase;
+}
+
+.aether-learn-portal .alp-display em {
+  font-style: italic;
+}
+
+.aether-learn-portal .alp-eyebrow {
+  font-family: var(--alp-sans);
+  font-size: clamp(0.58rem, 0.75vw, 0.72rem);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--alp-mint);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.aether-learn-portal .alp-eyebrow i {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: var(--alp-rule);
+}
+
+.aether-learn-portal .alp-micro {
+  font-family: var(--alp-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--alp-ink-faint);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.aether-learn-portal .alp-micro b {
+  color: var(--alp-mint);
+  font-weight: 600;
+}
+
+.aether-learn-portal .alp-micro i {
+  display: inline-block;
+  width: 14px;
+  height: 1px;
+  background: var(--alp-rule);
+}
+
+.aether-learn-portal .alp-lining-nums {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1, "onum" 0;
+}
+
+/* AETHER Pill Button */
+.aether-learn-portal .alp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85em;
+  padding: 0.85em 1.6em;
+  border: 1px solid var(--alp-rule);
+  border-radius: 99px;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  transition: color 0.4s var(--alp-ease), border-color 0.4s var(--alp-ease), background 0.4s var(--alp-ease);
+  cursor: pointer;
+}
+
+.aether-learn-portal .alp-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--alp-mint);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--alp-ease);
+  z-index: 0;
+}
+
+.aether-learn-portal .alp-pill > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aether-learn-portal .alp-pill:hover {
+  color: #02040A;
+  border-color: var(--alp-mint);
+}
+
+.aether-learn-portal .alp-pill:hover::before {
+  transform: scaleX(1);
+}
+
+.aether-learn-portal .alp-pill--primary {
+  border-color: var(--alp-mint);
+  background: rgba(127, 255, 212, 0.08);
+  color: var(--alp-mint);
+}
+
+.aether-learn-portal .alp-pill--primary:hover {
+  background: var(--alp-mint);
+  color: #02040A;
+}
+
+.aether-learn-portal .alp-pill--primary:hover::before {
+  transform: scaleX(1);
+}
+
+.aether-learn-portal .alp-pill--ghost {
+  border-color: var(--alp-rule);
+  color: var(--alp-ink-dim);
+}
+
+.aether-learn-portal .alp-pill--ghost:hover {
+  color: var(--alp-ink);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.aether-learn-portal .alp-pill--ghost:hover::before {
+  transform: scaleX(0);
+}
+
+/* AETHER Filter Bar */
+.aether-learn-portal .alp-filterbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: clamp(14px, 2vw, 24px);
+  border: 1px solid var(--alp-rule);
+  background: rgba(6, 9, 15, 0.78);
+  backdrop-filter: blur(16px);
+  padding: 12px 20px;
+  border-radius: 4px;
+}
+
+.aether-learn-portal .alp-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  border-right: 1px solid var(--alp-rule);
+  padding-right: 16px;
+}
+
+.aether-learn-portal .alp-search svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--alp-mint);
+  stroke-width: 1.3;
+  flex: none;
+}
+
+.aether-learn-portal .alp-search input {
+  width: 100%;
+  background: none;
+  border: 0;
+  color: var(--alp-ink);
+  font-family: var(--alp-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3em 0;
+}
+
+.aether-learn-portal .alp-search input::placeholder {
+  color: var(--alp-ink-faint);
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.aether-learn-portal .alp-search input:focus {
+  outline: none;
+}
+
+.aether-learn-portal .alp-chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.aether-learn-portal .alp-chip {
+  font-family: var(--alp-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 0.55em 1.1em;
+  border: 1px solid var(--alp-rule);
+  border-radius: 99px;
+  color: var(--alp-ink-dim);
+  background: rgba(255, 255, 255, 0.02);
+  transition: color 0.3s, border-color 0.3s, background 0.3s;
+  cursor: pointer;
+}
+
+.aether-learn-portal .alp-chip:hover {
+  color: var(--alp-ink);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.aether-learn-portal .alp-chip.is-on {
+  background: var(--alp-mint);
+  border-color: var(--alp-mint);
+  color: #02040A;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(127, 255, 212, 0.3);
+}
+
+.aether-learn-portal .alp-chip.is-bookmark-on {
+  background: var(--alp-a-gas);
+  border-color: var(--alp-a-gas);
+  color: #02040A;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(255, 196, 107, 0.3);
+}
+
+/* Dossier Card Grid */
+.aether-learn-portal .alp-card {
+  position: relative;
+  border: 1px solid var(--alp-rule);
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
+  backdrop-filter: blur(14px);
+  padding: clamp(20px, 2.2vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.35s var(--alp-ease), border-color 0.35s var(--alp-ease), box-shadow 0.35s var(--alp-ease);
+}
+
+.aether-learn-portal .alp-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 12px 34px -10px rgba(0, 0, 0, 0.7);
+}
+
+.aether-learn-portal .alp-card-fig {
+  font-family: var(--alp-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.aether-learn-portal .alp-card-title {
+  font-family: var(--alp-serif);
+  font-weight: 300;
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.012em;
+  color: var(--alp-ink);
+  text-transform: uppercase;
+}
+
+.aether-learn-portal .alp-card-desc {
+  color: var(--alp-ink-dim);
+  font-size: clamp(0.78rem, 0.9vw, 0.88rem);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.aether-learn-portal .alp-card-meta {
+  margin-top: auto;
+  display: flex;
+  gap: clamp(16px, 2vw, 32px);
+  border-top: 1px solid var(--alp-rule);
+  padding-top: 14px;
+}
+
+.aether-learn-portal .alp-card-meta dt {
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--alp-ink-faint);
+  margin-bottom: 0.3em;
+}
+
+.aether-learn-portal .alp-card-meta dd {
+  font-family: var(--alp-serif);
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 300;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--alp-ink);
+}
+
+.aether-learn-portal .alp-card-meta dd em {
+  font-style: normal;
+  font-family: var(--alp-sans);
+  font-size: 0.4em;
+  color: var(--alp-ink-dim);
+  letter-spacing: 0.08em;
+  margin-left: 0.2em;
+}
+
+/* Planet Orb Graphic */
+.aether-learn-portal .alp-orb-circle {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 50px -10px rgba(127, 255, 212, 0.2);
+}
+
+.aether-learn-portal .alp-orb-circle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 35px -4px rgba(140, 205, 255, 0.4);
+  pointer-events: none;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .aether-learn-portal .alp-filterbar {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .aether-learn-portal .alp-search {
+    border-right: 0;
+    border-bottom: 1px solid var(--alp-rule);
+    padding-bottom: 10px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .aether-learn-portal .alp-bg-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

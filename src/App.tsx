@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { SolarSystemProvider } from './context/SolarSystemContext';
 import { NavigationProvider, useNavigation } from './navigation/NavigationProvider';
 import { ROUTES } from './navigation/routes';
@@ -17,8 +17,8 @@ const MarsAdventureScreen = React.lazy(() =>
 const SolarExplorerScreen = React.lazy(() =>
   import('./modules/solar-explorer/SolarExplorerScreen').then((m) => ({ default: m.SolarExplorerScreen }))
 );
-const VenusClimateScreen = React.lazy(() =>
-  import('./modules/venus-climate/VenusClimateScreen').then((m) => ({ default: m.VenusClimateScreen }))
+const ClimateSimulatorScreen = React.lazy(() =>
+  import('./modules/climate/ClimateSimulatorScreen').then((m) => ({ default: m.ClimateSimulatorScreen }))
 );
 const JupiterLabScreen = React.lazy(() =>
   import('./modules/jupiter-lab/JupiterLabScreen').then((m) => ({ default: m.JupiterLabScreen }))
@@ -28,9 +28,6 @@ const SaturnArtScreen = React.lazy(() =>
 );
 const UranusQuizScreen = React.lazy(() =>
   import('./modules/uranus-quiz/UranusQuizScreen').then((m) => ({ default: m.UranusQuizScreen }))
-);
-const NeptuneDiscoveryScreen = React.lazy(() =>
-  import('./modules/neptune-discovery/NeptuneDiscoveryScreen').then((m) => ({ default: m.NeptuneDiscoveryScreen }))
 );
 
 // Six Primary Core Experiences
@@ -45,6 +42,24 @@ const QuizArenaScreen = React.lazy(() =>
 );
 const SpaceCreationStudioScreen = React.lazy(() =>
   import('./modules/build/SpaceCreationStudioScreen').then((m) => ({ default: m.SpaceCreationStudioScreen }))
+);
+const DiscoveryUniverseScreen = React.lazy(() =>
+  import('./modules/discovery/DiscoveryUniverseScreen').then((m) => ({ default: m.DiscoveryUniverseScreen }))
+);
+const SpaceWeatherCommandCenter = React.lazy(() =>
+  import('./modules/space-weather/SpaceWeatherCommandCenter').then((m) => ({ default: m.SpaceWeatherCommandCenter }))
+);
+const PlanetaryDataPreviewScreen = React.lazy(() =>
+  import('./modules/planetary-preview/PlanetaryDataPreviewScreen').then((m) => ({ default: m.PlanetaryDataPreviewScreen }))
+);
+const NasaResearchHubScreen = React.lazy(() =>
+  import('./modules/nasa-hub/NasaResearchHubScreen').then((m) => ({ default: m.NasaResearchHubScreen }))
+);
+const SpaceBiologyLabScreen = React.lazy(() =>
+  import('./modules/space-biology/SpaceBiologyLabScreen').then((m) => ({ default: m.SpaceBiologyLabScreen }))
+);
+const SpaceMissionSimulatorScreen = React.lazy(() =>
+  import('./modules/simulator/SpaceMissionSimulatorScreen').then((m) => ({ default: m.SpaceMissionSimulatorScreen }))
 );
 
 /**
@@ -65,6 +80,20 @@ const AppViewport: React.FC = () => {
   const { currentRoute, isTransitioning, pendingPlanetId } = useNavigation();
 
   const isHome = currentRoute === ROUTES.HOME;
+
+  useEffect(() => {
+    if (isHome) {
+      document.documentElement.classList.add('overflow-hidden');
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.documentElement.classList.remove('overflow-hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+    return () => {
+      document.documentElement.classList.remove('overflow-hidden');
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isHome]);
 
   return (
     <div
@@ -87,21 +116,27 @@ const AppViewport: React.FC = () => {
       {!isHome && (
         <div className="relative z-10 w-full min-h-screen flex flex-col">
           <Suspense fallback={<ScreenSuspenseFallback />}>
-            {/* Six Primary Core Experiences */}
+            {/* Six Primary Core Experiences & Flagship Modes */}
             {currentRoute === ROUTES.LEARN && <LearnPortalScreen />}
             {(currentRoute === ROUTES.DRAW || currentRoute === ROUTES.EARTH_DRAWING) && <EarthDrawingScreen />}
             {currentRoute === ROUTES.LAB && <ScienceLabScreen />}
             {currentRoute === ROUTES.QUIZ && <QuizArenaScreen />}
             {currentRoute === ROUTES.BUILD && <SpaceCreationStudioScreen />}
+            {currentRoute === ROUTES.SIMULATOR && <SpaceMissionSimulatorScreen />}
+            {currentRoute === ROUTES.SPACE_WEATHER && <SpaceWeatherCommandCenter />}
+            {currentRoute === ROUTES.TREK_PREVIEW && <PlanetaryDataPreviewScreen />}
+            {(currentRoute === ROUTES.RESEARCH || currentRoute === ROUTES.SPACE_BIOLOGY) && <SpaceBiologyLabScreen />}
+            {currentRoute === ROUTES.NASA_HUB && <NasaResearchHubScreen />}
+            {currentRoute === ROUTES.DISCOVERY && <DiscoveryUniverseScreen />}
+            {currentRoute === ROUTES.NEPTUNE_DISCOVERY && <DiscoveryUniverseScreen initialPlanetId="neptune" />}
 
             {/* Planetary Modular Experiences */}
             {currentRoute === ROUTES.MARS_ADVENTURE && <MarsAdventureScreen />}
             {currentRoute === ROUTES.EXPLORER && <SolarExplorerScreen />}
-            {currentRoute === ROUTES.VENUS_CLIMATE && <VenusClimateScreen />}
+            {(currentRoute === ROUTES.VENUS_CLIMATE || currentRoute === ROUTES.CLIMATE) && <ClimateSimulatorScreen />}
             {currentRoute === ROUTES.JUPITER_LAB && <JupiterLabScreen />}
             {currentRoute === ROUTES.SATURN_ART && <SaturnArtScreen />}
             {currentRoute === ROUTES.URANUS_QUIZ && <UranusQuizScreen />}
-            {currentRoute === ROUTES.NEPTUNE_DISCOVERY && <NeptuneDiscoveryScreen />}
           </Suspense>
         </div>
       )}

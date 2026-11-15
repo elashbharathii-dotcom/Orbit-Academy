@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigation } from '../../navigation/NavigationProvider';
+import { ROUTES } from '../../navigation/routes';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { TelemetryBadge } from '../../components/ui/TelemetryBadge';
@@ -13,6 +15,7 @@ import { SolarPhysicsChamber } from './chambers/SolarPhysicsChamber';
 import { PlanetaryGeologyChamber } from './chambers/PlanetaryGeologyChamber';
 import { SpaceEnvironmentChamber } from './chambers/SpaceEnvironmentChamber';
 import { LabPad } from './components/LabPad';
+import { useStudentProgress } from '../../services/studentProgressService';
 import {
   Orbit,
   Sun,
@@ -22,6 +25,7 @@ import {
   ArrowLeft,
   Activity,
   Award,
+  Dna,
 } from 'lucide-react';
 
 const CHAMBER_ICONS: Record<LabChamberId, React.ComponentType<{ className?: string }>> = {
@@ -32,11 +36,13 @@ const CHAMBER_ICONS: Record<LabChamberId, React.ComponentType<{ className?: stri
 };
 
 export const ScienceLabScreen: React.FC = () => {
+  const { navigate } = useNavigation();
+  const { progress, awardXp } = useStudentProgress();
+
   // Navigation State: Landing Gallery vs Active Chamber
   const [selectedChamber, setSelectedChamber] = useState<LabChamberId | null>(null);
 
-  // Student XP & Completed Milestones
-  const [totalXp, setTotalXp] = useState<number>(150);
+  // Student Completed Milestones
   const [completedMilestones, setCompletedMilestones] = useState<string[]>([
     'orbit-circular',
     'solar-irradiance',
@@ -47,7 +53,7 @@ export const ScienceLabScreen: React.FC = () => {
   const [telemetryLogs, setTelemetryLogs] = useState<string[]>([
     '[08:00:12] LAB_INIT: Primary experimental telemetry bus online.',
     '[08:00:15] SENSORS: 4 chambers calibrated to CODATA standards.',
-    '[08:00:20] LABPAD: Student session initialized with 150 base XP.',
+    `[08:00:20] LABPAD: Student session initialized with ${progress.totalXp} global XP.`,
   ]);
 
   // Completion Reward Modal
@@ -67,7 +73,7 @@ export const ScienceLabScreen: React.FC = () => {
       const reward = milestone?.xpReward || 50;
 
       setCompletedMilestones((prev) => [...prev, milestoneId]);
-      setTotalXp((x) => x + reward);
+      awardXp(reward);
 
       handleLogTelemetry(
         `ACHIEVEMENT: Completed "${milestone?.title || milestoneId}" (+${reward} XP awarded)`
@@ -138,7 +144,7 @@ export const ScienceLabScreen: React.FC = () => {
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0B1226]/80 px-4 py-2.5 font-mono text-xs text-[#94A3B8]">
                     <Award className="h-4 w-4 text-[#F59E0B]" />
-                    <span className="text-[#F8FAFC] font-bold">{totalXp} XP</span>
+                    <span className="text-[#F8FAFC] font-bold">{progress.totalXp.toLocaleString()} XP</span>
                     <span>Earned</span>
                   </div>
 
@@ -161,6 +167,70 @@ export const ScienceLabScreen: React.FC = () => {
                 <span className="text-[#F59E0B]">Solar Constant: 1,361 W/m²</span>
                 <span>•</span>
                 <span className="text-[#10B981]">Precision: IEEE-754 64-bit</span>
+              </div>
+            </GlassCard>
+
+            {/* FEATURED: AAA CLIMATE LAB SIMULATOR */}
+            <GlassCard
+              variant="interactive"
+              onClick={() => navigate(ROUTES.CLIMATE)}
+              className="p-6 border-cyan-500/40 bg-gradient-to-r from-slate-950/90 via-[#062038]/80 to-slate-950/90 hover:border-cyan-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3.5 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] shrink-0">
+                  <Globe2 className="w-8 h-8 animate-spin-slow" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <TelemetryBadge label="PREMIER 3D SIMULATOR" tone="cyan" size="sm" />
+                    <span className="text-[10px] font-mono text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/50">
+                      NASA / IPCC AR6
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    Earth Climate Science & Weather Simulator
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-2xl mt-1 leading-relaxed">
+                    Interactive 3D Earth with dynamic day/night PBR, city lights, Rayleigh scattering, real-time hurricane vortices, and 6 structured climate experiments.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono text-xs font-bold transition-all shadow-lg shrink-0">
+                <span>Launch Simulator</span>
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </GlassCard>
+
+            {/* PREMIER NASA SPACE BIOLOGY LAB CARD */}
+            <GlassCard
+              variant="interactive"
+              onClick={() => navigate(ROUTES.RESEARCH)}
+              className="p-6 border-indigo-500/40 bg-gradient-to-r from-slate-950/90 via-[#0B1528]/85 to-slate-950/90 hover:border-cyan-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3.5 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.4)] shrink-0">
+                  <Dna className="w-8 h-8 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <TelemetryBadge label="STAGE 05 FLAGSHIP" tone="indigo" size="sm" />
+                    <span className="text-[10px] font-mono text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/50">
+                      NASA OSDR / GENELAB
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    NASA Space Biology & Astronaut Research Lab
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-2xl mt-1 leading-relaxed">
+                    647+ NASA OSDR multi-omics datasets, 8 interactive 3D cellular and molecular models, spaceflight hallmarks (SANS, radiation, muscle atrophy), and countermeasure simulators.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono text-xs font-bold transition-all shadow-lg shrink-0">
+                <span>Launch Lab</span>
+                <ArrowRight className="w-4 h-4" />
               </div>
             </GlassCard>
 
@@ -350,7 +420,7 @@ export const ScienceLabScreen: React.FC = () => {
               completedMilestones={completedMilestones}
               onCompleteMilestone={handleMilestoneAchieved}
               telemetryLogs={telemetryLogs}
-              totalXp={totalXp}
+              totalXp={progress.totalXp}
             />
           </div>
         )}

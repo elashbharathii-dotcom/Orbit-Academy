@@ -2,6 +2,36 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+import {
+  getApod,
+  GIBS_AVAILABLE_LAYERS,
+  getGibsWmsUrl,
+  getNeoWsFeed,
+  getDonkiSpaceWeather,
+  getComprehensiveSpaceWeather,
+  getDonkiFlares,
+  getDonkiCmes,
+  getDonkiGeomagneticStorms,
+  getDonkiSepEvents,
+  getDonkiNotifications,
+  searchNasaMedia,
+  getExoplanets,
+  getEpicImages,
+  getEonetEvents,
+  getNasaTrekCatalog,
+  getNasaTrekLayers,
+  getNasaTrekNomenclature,
+  getNasaTrekBookmarks,
+  getNasaPowerPointData,
+} from './nasaService';
+import {
+  getOsdrDatasetsList,
+  getOsdrStudyMetadata,
+  getOsdrAssays,
+  getOsdrFiles,
+  searchOsdrCatalog,
+  getOsdrResearchStats,
+} from './services/nasaOsdrService';
 
 // Load server environment variables
 dotenv.config();
@@ -81,11 +111,305 @@ const rateLimiter = (req: Request, res: Response, next: NextFunction): void => {
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
-    service: 'ORBIT ACADEMY LAURA AI Service',
+    service: 'ORBIT ACADEMY NASA Open Science & LAURA AI Service',
     model: GEMINI_MODEL,
-    hasApiKey: hasValidApiKey(),
+    hasGeminiKey: hasValidApiKey(),
+    hasNasaKey: Boolean(process.env.NASA_API_KEY && process.env.NASA_API_KEY !== 'DEMO_KEY'),
     timestamp: new Date().toISOString(),
   });
+});
+
+// -----------------------------------------------------------------------------
+// NASA OPEN API PROXY ENDPOINTS
+// -----------------------------------------------------------------------------
+
+// 1. NASA APOD (Astronomy Picture of the Day)
+app.get('/api/nasa/apod', async (req: Request, res: Response) => {
+  try {
+    const date = typeof req.query.date === 'string' ? req.query.date : undefined;
+    const result = await getApod(date);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA APOD', details: String(err) });
+  }
+});
+
+// 2. NASA GIBS Satellite Layers & Direct Imagery URL
+app.get('/api/nasa/gibs/layers', (_req: Request, res: Response) => {
+  res.json({
+    layers: GIBS_AVAILABLE_LAYERS,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/nasa/gibs/url', (req: Request, res: Response) => {
+  const layer = typeof req.query.layer === 'string' ? req.query.layer : 'MODIS_Terra_CorrectedReflectance_TrueColor';
+  const date = typeof req.query.date === 'string' ? req.query.date : new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const bbox = typeof req.query.bbox === 'string' ? req.query.bbox : '-90,-180,90,180';
+  const url = getGibsWmsUrl(layer, date, bbox);
+  res.json({ url, layer, date, bbox });
+});
+
+// NASA POWER Solar Irradiance & Meteorology
+app.get('/api/nasa/power/point', async (req: Request, res: Response) => {
+  try {
+    const lat = typeof req.query.lat === 'string' ? parseFloat(req.query.lat) : 0;
+    const lon = typeof req.query.lon === 'string' ? parseFloat(req.query.lon) : 0;
+    const data = await getNasaPowerPointData(lat, lon);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA POWER data', details: String(err) });
+  }
+});
+
+// 3. NASA NeoWs Near-Earth Asteroid Tracking
+app.get('/api/nasa/neows/feed', async (req: Request, res: Response) => {
+  try {
+    const startDate = typeof req.query.startDate === 'string' ? req.query.startDate : undefined;
+    const endDate = typeof req.query.endDate === 'string' ? req.query.endDate : undefined;
+    const result = await getNeoWsFeed(startDate, endDate);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA NeoWs feed', details: String(err) });
+  }
+});
+
+// 4. NASA DONKI Space Weather Dashboard & Real-Time Command Center
+app.get('/api/nasa/donki/summary', async (_req: Request, res: Response) => {
+  try {
+    const result = await getDonkiSpaceWeather();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA DONKI space weather', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/comprehensive', async (_req: Request, res: Response) => {
+  try {
+    const result = await getComprehensiveSpaceWeather();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve comprehensive NASA space weather', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/flr', async (req: Request, res: Response) => {
+  try {
+    const start = typeof req.query.startDate === 'string' ? req.query.startDate : undefined;
+    const end = typeof req.query.endDate === 'string' ? req.query.endDate : undefined;
+    const result = await getDonkiFlares(start, end);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA solar flares', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/cme', async (req: Request, res: Response) => {
+  try {
+    const start = typeof req.query.startDate === 'string' ? req.query.startDate : undefined;
+    const end = typeof req.query.endDate === 'string' ? req.query.endDate : undefined;
+    const result = await getDonkiCmes(start, end);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA CMEs', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/gst', async (req: Request, res: Response) => {
+  try {
+    const start = typeof req.query.startDate === 'string' ? req.query.startDate : undefined;
+    const end = typeof req.query.endDate === 'string' ? req.query.endDate : undefined;
+    const result = await getDonkiGeomagneticStorms(start, end);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA geomagnetic storms', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/sep', async (req: Request, res: Response) => {
+  try {
+    const start = typeof req.query.startDate === 'string' ? req.query.startDate : undefined;
+    const end = typeof req.query.endDate === 'string' ? req.query.endDate : undefined;
+    const result = await getDonkiSepEvents(start, end);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA SEP events', details: String(err) });
+  }
+});
+
+app.get('/api/nasa/donki/notifications', async (_req: Request, res: Response) => {
+  try {
+    const result = await getDonkiNotifications();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA space weather alerts', details: String(err) });
+  }
+});
+
+// 5. NASA Image and Video Library Search
+app.get('/api/nasa/images/search', async (req: Request, res: Response) => {
+  try {
+    const query = typeof req.query.q === 'string' ? req.query.q : 'earth';
+    const mediaType = typeof req.query.media_type === 'string' ? req.query.media_type : 'image';
+    const result = await searchNasaMedia(query, mediaType);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to search NASA media library', details: String(err) });
+  }
+});
+
+// 6. NASA Exoplanet Archive TAP Confirmed Planets
+app.get('/api/nasa/exoplanets', async (req: Request, res: Response) => {
+  try {
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 40;
+    const result = await getExoplanets(limit);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA Exoplanet Archive', details: String(err) });
+  }
+});
+
+// 7. NASA EPIC DSCOVR Lagrange-1 Daily Earth Imagery
+app.get('/api/nasa/epic', async (_req: Request, res: Response) => {
+  try {
+    const result = await getEpicImages();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA EPIC imagery', details: String(err) });
+  }
+});
+
+// 8. NASA EONET Active Natural Environmental Events
+app.get('/api/nasa/eonet/events', async (req: Request, res: Response) => {
+  try {
+    const category = typeof req.query.category === 'string' ? req.query.category : undefined;
+    const result = await getEonetEvents(category);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA EONET events', details: String(err) });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// 9. NASA SOLAR SYSTEM TREKS (WMTS Layers, Nomenclature & Rover Landing Bookmarks)
+// -----------------------------------------------------------------------------
+
+// Comprehensive Catalog of Supported Bodies
+app.get('/api/nasa/trek/catalog', async (_req: Request, res: Response) => {
+  try {
+    const result = await getNasaTrekCatalog();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA Trek catalog', details: String(err) });
+  }
+});
+
+// Layers Query for a Planetary Destination
+app.get('/api/nasa/trek/layers', async (req: Request, res: Response) => {
+  try {
+    const body = typeof req.query.body === 'string' ? req.query.body : 'mars';
+    const start = typeof req.query.start === 'string' ? parseInt(req.query.start, 10) : 0;
+    const rows = typeof req.query.rows === 'string' ? parseInt(req.query.rows, 10) : 50;
+    const result = await getNasaTrekLayers(body, start, rows);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA Trek layers', details: String(err) });
+  }
+});
+
+// Nomenclature Features Query (Craters, Montes, Valles with IAU Coordinates)
+app.get('/api/nasa/trek/nomenclature', async (req: Request, res: Response) => {
+  try {
+    const body = typeof req.query.body === 'string' ? req.query.body : 'mars';
+    const category = typeof req.query.category === 'string' ? req.query.category : undefined;
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 30;
+    const result = await getNasaTrekNomenclature(body, category, limit);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA Trek nomenclature', details: String(err) });
+  }
+});
+
+// Rover and Spacecraft Landing Bookmarks
+app.get('/api/nasa/trek/bookmarks', async (req: Request, res: Response) => {
+  try {
+    const body = typeof req.query.body === 'string' ? req.query.body : 'mars';
+    const result = await getNasaTrekBookmarks(body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA Trek bookmarks', details: String(err) });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// 10. NASA OSDR (OPEN SCIENCE DATA REPOSITORY & SPACE BIOLOGY API v2)
+// -----------------------------------------------------------------------------
+
+// High-Level Aggregated Research Statistics for Dashboard
+app.get('/api/nasa/osdr/stats', async (_req: Request, res: Response) => {
+  try {
+    const stats = await getOsdrResearchStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA OSDR statistics', details: String(err) });
+  }
+});
+
+// List of all registered OSDR datasets from Biological Data API v2
+app.get('/api/nasa/osdr/datasets', async (_req: Request, res: Response) => {
+  try {
+    const result = await getOsdrDatasetsList();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA OSDR datasets', details: String(err) });
+  }
+});
+
+// Single Study Metadata & Biological Protocols
+app.get('/api/nasa/osdr/dataset/:accessionId', async (req: Request, res: Response) => {
+  try {
+    const { accessionId } = req.params;
+    const metadata = await getOsdrStudyMetadata(accessionId);
+    res.json(metadata);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA OSDR study metadata', details: String(err) });
+  }
+});
+
+// Assays and Technology Platforms for a Study
+app.get('/api/nasa/osdr/dataset/:accessionId/assays', async (req: Request, res: Response) => {
+  try {
+    const { accessionId } = req.params;
+    const assays = await getOsdrAssays(accessionId);
+    res.json({ accession: accessionId, assays });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA OSDR assays', details: String(err) });
+  }
+});
+
+// Downloadable Files and Data Assets for a Study
+app.get('/api/nasa/osdr/dataset/:accessionId/files', async (req: Request, res: Response) => {
+  try {
+    const { accessionId } = req.params;
+    const files = await getOsdrFiles(accessionId);
+    res.json({ accession: accessionId, files });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve NASA OSDR files', details: String(err) });
+  }
+});
+
+// High-Volume Search across OSDR / GeneLab / ALSDA / ESA
+app.get('/api/nasa/osdr/search', async (req: Request, res: Response) => {
+  try {
+    const term = typeof req.query.term === 'string' ? req.query.term : undefined;
+    const type = typeof req.query.type === 'string' ? req.query.type : undefined;
+    const size = typeof req.query.size === 'string' ? parseInt(req.query.size, 10) : 20;
+    const from = typeof req.query.from === 'string' ? parseInt(req.query.from, 10) : 0;
+    const results = await searchOsdrCatalog({ term, type, size, from });
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to execute NASA OSDR search', details: String(err) });
+  }
 });
 
 // -----------------------------------------------------------------------------

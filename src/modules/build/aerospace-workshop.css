@@ -1,0 +1,142 @@
+/* ═══════════════════════════════════════════════════════════════
+   ORBIT ACADEMY — AEROSPACE ENGINEERING WORKSHOP DESIGN SYSTEM
+   Inspired by auto-machines & NASA JPL Cleanroom telemetry
+   Scoped strictly to .aerospace-workshop-root
+   ═══════════════════════════════════════════════════════════════ */
+
+.aerospace-workshop-root {
+  --color-brand-orange: #F27D26;
+  --color-brand-orange-hover: #E06815;
+  --color-brand-cyan: #00E5FF;
+  --color-brand-cyan-glow: rgba(0, 229, 255, 0.45);
+  --color-bg-dark: #07090E;
+  --color-panel-bg: rgba(7, 12, 27, 0.88);
+  --color-panel-border: rgba(255, 255, 255, 0.12);
+
+  font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #030611;
+  color: #F8FAFC;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Aerospace Heading Typography */
+.aerospace-workshop-root .font-display {
+  font-family: 'Orbitron', 'Space Grotesk', sans-serif;
+}
+
+/* Technical Telemetry Typography */
+.aerospace-workshop-root .font-mono {
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+}
+
+/* Engineering Body Typography */
+.aerospace-workshop-root .font-sans {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Glassmorphism Panel */
+.aerospace-workshop-root .workshop-glass {
+  background: rgba(7, 12, 27, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.aerospace-workshop-root .workshop-glass-panel {
+  background: linear-gradient(135deg, rgba(11, 18, 38, 0.9) 0%, rgba(5, 8, 18, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Clipped Technical Corner */
+.aerospace-workshop-root .clip-corner-sm {
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    0 100%,
+    0 8px
+  );
+}
+
+.aerospace-workshop-root .clip-corner-md {
+  clip-path: polygon(
+    14px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%,
+    0 14px
+  );
+}
+
+/* Glowing Engineering Text */
+.aerospace-workshop-root .text-glow-orange {
+  text-shadow: 0 0 12px rgba(242, 125, 38, 0.6);
+}
+
+.aerospace-workshop-root .text-glow-cyan {
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+}
+
+/* Engineering Technical Crosshair Reticle */
+.aerospace-workshop-root .reticle-corner {
+  position: relative;
+}
+
+.aerospace-workshop-root .reticle-corner::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00E5FF;
+  border-left: 2px solid #00E5FF;
+  pointer-events: none;
+}
+
+.aerospace-workshop-root .reticle-corner::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #00E5FF;
+  border-right: 2px solid #00E5FF;
+  pointer-events: none;
+}
+
+/* CAD Grid Background overlay */
+.aerospace-workshop-root .cad-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Custom Sleek Scrollbar */
+.aerospace-workshop-root ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.aerospace-workshop-root ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.aerospace-workshop-root ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.aerospace-workshop-root ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.5);
+}

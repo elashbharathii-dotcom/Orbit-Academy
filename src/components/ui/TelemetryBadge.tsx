@@ -3,7 +3,7 @@ import React from 'react';
 export interface TelemetryBadgeProps {
   label: string;
   value?: string | number;
-  tone?: 'cyan' | 'amber' | 'violet' | 'emerald' | 'muted';
+  tone?: 'cyan' | 'amber' | 'violet' | 'emerald' | 'muted' | 'indigo' | 'rose' | 'blue';
   icon?: React.ComponentType<{ className?: string }>;
   pulsing?: boolean;
   size?: 'sm' | 'md';
@@ -38,6 +38,21 @@ export const TelemetryBadge: React.FC<TelemetryBadgeProps> = ({
       pip: 'bg-[#A78BFA]',
       ping: 'bg-[#A78BFA]',
     },
+    indigo: {
+      badge: 'border-indigo-500/30 bg-indigo-500/15 text-indigo-300',
+      pip: 'bg-indigo-400',
+      ping: 'bg-indigo-400',
+    },
+    rose: {
+      badge: 'border-rose-500/30 bg-rose-500/15 text-rose-300',
+      pip: 'bg-rose-400',
+      ping: 'bg-rose-400',
+    },
+    blue: {
+      badge: 'border-blue-500/30 bg-blue-500/15 text-blue-300',
+      pip: 'bg-blue-400',
+      ping: 'bg-blue-400',
+    },
     emerald: {
       badge: 'border-[#34D399]/25 bg-[#34D399]/10 text-[#34D399]',
       pip: 'bg-[#34D399]',
@@ -48,21 +63,23 @@ export const TelemetryBadge: React.FC<TelemetryBadgeProps> = ({
       pip: 'bg-[#94A3B8]',
       ping: 'bg-[#94A3B8]',
     },
-  }[tone];
+  };
+
+  const activeToneStyle = toneStyles[tone] || toneStyles.cyan;
 
   const sizeStyles = size === 'sm' ? 'px-2 py-0.5 text-[9.5px]' : 'px-2.5 py-1 text-[11px]';
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border font-mono font-medium tracking-wider uppercase transition-colors ${toneStyles.badge} ${sizeStyles} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border font-mono font-medium tracking-wider uppercase transition-colors ${activeToneStyle.badge} ${sizeStyles} ${className}`}
     >
       {/* Optional Pulsing Indicator Pip */}
       {pulsing ? (
         <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span
-            className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${toneStyles.ping}`}
+            className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${activeToneStyle.ping}`}
           />
-          <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${toneStyles.pip}`} />
+          <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${activeToneStyle.pip}`} />
         </span>
       ) : Icon ? (
         <Icon className={size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3'} />

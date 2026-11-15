@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { CelestialId, SolarSystemInteractionState } from '../types';
+import { CelestialId, SolarSystemInteractionState, ViewingMode, ActiveEnvironment } from '../types';
 
 const SolarSystemContext = createContext<SolarSystemInteractionState | null>(null);
 
@@ -24,12 +24,17 @@ function getInitialPlanet(): CelestialId | null {
 export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedPlanetId, setSelectedPlanetId] = useState<CelestialId | null>(getInitialPlanet);
   const [hoveredPlanetId, setHoveredPlanetId] = useState<CelestialId | null>(null);
+  const [selectedMoonId, setSelectedMoonId] = useState<string | null>(null);
+  const [viewingMode, setViewingModeState] = useState<ViewingMode>('cinematic');
+  const [activeEnvironment, setActiveEnvironmentState] = useState<ActiveEnvironment>('solar-system');
+  const [timeWarp, setTimeWarpState] = useState<number>(1.0);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
   const selectPlanet = useCallback((id: CelestialId | null) => {
     setSelectedPlanetId((prev) => {
       if (prev === id) return prev;
       setIsTransitioning(true);
+      setSelectedMoonId(null); // Clear active moon on planet switch
 
       // Synchronize search params for shareable URLs
       if (typeof window !== 'undefined') {
@@ -46,8 +51,24 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, []);
 
+  const selectMoon = useCallback((id: string | null) => {
+    setSelectedMoonId(id);
+  }, []);
+
   const setHoveredPlanet = useCallback((id: CelestialId | null) => {
     setHoveredPlanetId(id);
+  }, []);
+
+  const setViewingMode = useCallback((mode: ViewingMode) => {
+    setViewingModeState(mode);
+  }, []);
+
+  const setActiveEnvironment = useCallback((env: ActiveEnvironment) => {
+    setActiveEnvironmentState(env);
+  }, []);
+
+  const setTimeWarp = useCallback((speed: number) => {
+    setTimeWarpState(speed);
   }, []);
 
   // Keyboard navigation shortcuts: Escape to overview, 1-8 for planets, 0 for Sun
@@ -90,9 +111,17 @@ export const SolarSystemProvider: React.FC<{ children: React.ReactNode }> = ({ c
       value={{
         selectedPlanetId,
         hoveredPlanetId,
+        selectedMoonId,
+        viewingMode,
+        activeEnvironment,
+        timeWarp,
         isTransitioning,
         selectPlanet,
+        selectMoon,
         setHoveredPlanet,
+        setViewingMode,
+        setActiveEnvironment,
+        setTimeWarp,
       }}
     >
       {children}
