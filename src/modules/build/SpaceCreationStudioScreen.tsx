@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { MasterHeader } from '../../components/navigation/MasterHeader';
 import { BuildCanvas3D } from './components/BuildCanvas3D';
 import { TopEditorToolbar } from './components/TopEditorToolbar';
@@ -222,7 +222,7 @@ export const SpaceCreationStudioScreen: React.FC = () => {
       weightedIsp = Math.round(ispSum / thrustSum);
     }
 
-    // Tsiolkovsky Rocket Equation: Δv = Isp * g0 * ln(m_wet / m_dry)
+    // Tsiolkovsky Rocket Equation: Î”v = Isp * g0 * ln(m_wet / m_dry)
     let deltaV = 0;
     if (weightedIsp > 0 && dryMass > 0 && totalGrossMass > dryMass) {
       deltaV = Math.round(weightedIsp * 9.80665 * Math.log(totalGrossMass / dryMass));

@@ -12,7 +12,7 @@ export const ResourceNodes: React.FC = () => {
       {resourceNodes.map((node) => {
         if (node.depleted) return null;
 
-        const y = getTerrainHeight(node.position[0], node.position[2]);
+        const y = node.position[1] !== 0 ? node.position[1] : getTerrainHeight(node.position[0], node.position[2]);
         const isTargeted = targeted?.id === node.id;
 
         return (
@@ -218,6 +218,127 @@ export const ResourceNodes: React.FC = () => {
                   <meshStandardMaterial color="#E2E8F0" metalness={0.9} roughness={0.2} />
                 </mesh>
                 <pointLight position={[0, 0.1, 0]} color="#10B981" intensity={0.5} distance={3} />
+              </group>
+            )}
+
+            {/* 12. Copper Wiring Loom */}
+            {node.type === 'copper_wire' && (
+              <group position={[0, 0.25, 0]} rotation={[0.2, 0.5, 0]}>
+                <mesh castShadow receiveShadow>
+                  <torusGeometry args={[0.32, 0.08, 12, 24]} />
+                  <meshStandardMaterial color="#EA580C" metalness={0.9} roughness={0.2} />
+                </mesh>
+                <mesh position={[0.15, 0.05, 0.1]} rotation={[0, 0.8, 0]}>
+                  <cylinderGeometry args={[0.04, 0.04, 0.6, 8]} />
+                  <meshStandardMaterial color="#B45309" metalness={0.8} roughness={0.3} />
+                </mesh>
+              </group>
+            )}
+
+            {/* 13. Integrated Circuit Board */}
+            {node.type === 'circuit_board' && (
+              <group position={[0, 0.2, 0]} rotation={[-0.1, 0.3, 0.2]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[0.55, 0.04, 0.45]} />
+                  <meshStandardMaterial color="#065F46" metalness={0.3} roughness={0.4} />
+                </mesh>
+                {/* Gold trace contacts */}
+                <mesh position={[0, 0.03, 0]}>
+                  <boxGeometry args={[0.3, 0.02, 0.25]} />
+                  <meshStandardMaterial color="#FBBF24" metalness={0.95} roughness={0.15} />
+                </mesh>
+                <pointLight position={[0, 0.2, 0]} color="#10B981" intensity={0.3} distance={2} />
+              </group>
+            )}
+
+            {/* 14. Titanium Fasteners Box */}
+            {node.type === 'fasteners' && (
+              <group position={[0, 0.2, 0]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[0.4, 0.18, 0.3]} />
+                  <meshStandardMaterial color="#334155" metalness={0.85} roughness={0.3} />
+                </mesh>
+                {[-0.1, 0, 0.1].map((x, i) => (
+                  <mesh key={i} position={[x, 0.12, 0]} castShadow>
+                    <cylinderGeometry args={[0.03, 0.03, 0.12, 6]} />
+                    <meshStandardMaterial color="#CBD5E1" metalness={0.95} roughness={0.1} />
+                  </mesh>
+                ))}
+              </group>
+            )}
+
+            {/* 15. Solid-State Battery Cell */}
+            {node.type === 'battery_cell' && (
+              <group position={[0, 0.25, 0]} rotation={[0, 0.4, 0.3]}>
+                <mesh castShadow receiveShadow>
+                  <cylinderGeometry args={[0.16, 0.16, 0.5, 16]} />
+                  <meshStandardMaterial color="#0284C7" metalness={0.7} roughness={0.3} />
+                </mesh>
+                <mesh position={[0, 0, 0]}>
+                  <cylinderGeometry args={[0.165, 0.165, 0.12, 16]} />
+                  <meshStandardMaterial color="#F59E0B" metalness={0.9} roughness={0.2} />
+                </mesh>
+                <pointLight position={[0, 0.25, 0]} color="#0284C7" intensity={0.4} distance={2.5} />
+              </group>
+            )}
+
+            {/* 16. Kapton Polymer Sheet Roll */}
+            {node.type === 'polymer' && (
+              <group position={[0, 0.25, 0]} rotation={[0.4, 0.6, 0]}>
+                <mesh castShadow receiveShadow>
+                  <cylinderGeometry args={[0.18, 0.18, 0.7, 16]} />
+                  <meshStandardMaterial color="#D97706" metalness={0.6} roughness={0.2} transparent opacity={0.9} />
+                </mesh>
+              </group>
+            )}
+
+            {/* 17. Survival Food Ration Pack */}
+            {node.type === 'food_ration' && (
+              <group position={[0, 0.18, 0]} rotation={[0, 0.2, 0]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[0.45, 0.14, 0.35]} />
+                  <meshStandardMaterial color="#94A3B8" metalness={0.8} roughness={0.25} />
+                </mesh>
+                {/* Nutrition label band */}
+                <mesh position={[0, 0.08, 0]}>
+                  <boxGeometry args={[0.46, 0.02, 0.12]} />
+                  <meshBasicMaterial color="#10B981" />
+                </mesh>
+              </group>
+            )}
+
+            {/* 18. Potable Water Canister */}
+            {node.type === 'water' && (
+              <group position={[0, 0.3, 0]}>
+                <mesh castShadow receiveShadow>
+                  <cylinderGeometry args={[0.15, 0.15, 0.55, 16]} />
+                  <meshStandardMaterial color="#1E3A8A" metalness={0.5} roughness={0.3} />
+                </mesh>
+                <mesh position={[0, 0.28, 0]}>
+                  <cylinderGeometry args={[0.07, 0.07, 0.1, 12]} />
+                  <meshStandardMaterial color="#38BDF8" roughness={0.1} transparent opacity={0.9} />
+                </mesh>
+                <pointLight position={[0, 0.25, 0]} color="#38BDF8" intensity={0.35} distance={2.5} />
+              </group>
+            )}
+
+            {/* 19. Emergency Trauma Medkit */}
+            {node.type === 'medical_kit' && (
+              <group position={[0, 0.22, 0]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[0.5, 0.22, 0.38]} />
+                  <meshStandardMaterial color="#F8FAFC" roughness={0.3} metalness={0.2} />
+                </mesh>
+                {/* Red cross symbol */}
+                <mesh position={[0, 0.12, 0]}>
+                  <boxGeometry args={[0.22, 0.02, 0.08]} />
+                  <meshBasicMaterial color="#EF4444" />
+                </mesh>
+                <mesh position={[0, 0.12, 0]}>
+                  <boxGeometry args={[0.08, 0.02, 0.22]} />
+                  <meshBasicMaterial color="#EF4444" />
+                </mesh>
+                <pointLight position={[0, 0.25, 0]} color="#EF4444" intensity={0.4} distance={2.5} />
               </group>
             )}
 

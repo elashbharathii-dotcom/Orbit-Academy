@@ -5,31 +5,47 @@ import { useMarsGameStore } from '../../store/useMarsGameStore';
 
 export const MarsSky: React.FC = () => {
   const solCycle = useMarsGameStore((state) => state.solCycle);
+  const playerPos = useMarsGameStore((state) => state.playerPosition);
+  const roverPos = useMarsGameStore((state) => state.roverPosition);
+  const controlMode = useMarsGameStore((state) => state.settings.controlMode);
+  const graphicsQuality = useMarsGameStore((state) => state.settings.graphicsQuality ?? 'high');
+
   const sunLightRef = useRef<THREE.DirectionalLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
+
+  const shadowResolution = graphicsQuality === 'low' ? 512 : graphicsQuality === 'medium' ? 1024 : 2048;
 
   // Compute sun elevation angle from timeOfDay (0 - 24.65)
   // Sunrise at ~6h, Sunset at ~18.5h
   const sunAngle = ((solCycle.timeOfDay - 6.0) / 12.5) * Math.PI;
   const isSunUp = solCycle.timeOfDay >= 5.5 && solCycle.timeOfDay <= 19.0;
 
-  const sunX = Math.cos(sunAngle) * 80;
-  const sunY = Math.sin(sunAngle) * 65;
-  const sunZ = -30;
+  const sunX = Math.cos(sunAngle) * 85;
+  const sunY = Math.sin(sunAngle) * 70;
+  const sunZ = -35;
 
   useFrame(() => {
+    // Dynamic Shadow Tracking: Center directional sunlight camera over active player/rover
+    // This provides 2048x2048 ultra-crisp shadows everywhere across the 360m world without performance drops!
+    const targetX = controlMode === 'driving_rover' ? roverPos[0] : playerPos[0];
+    const targetZ = controlMode === 'driving_rover' ? roverPos[2] : playerPos[2];
+
     if (sunLightRef.current) {
       if (isSunUp) {
-        sunLightRef.current.position.set(sunX, Math.max(0.5, sunY), sunZ);
-        // Sun intensity scales with height
-        const intensity = Math.max(0.1, Math.sin(sunAngle) * 2.2);
-        sunLightRef.current.intensity = intensity;
+        sunLightRef.current.position.set(targetX + sunX, Math.max(1.0, sunY), targetZ + sunZ);
+        sunLightRef.current.target.position.set(targetX, 0, targetZ);
+        sunLightRef.current.target.updateMatrixWorld();
 
-        // Sunset/sunrise blueish hue, daytime warm amber
-        if (sunY < 12) {
-          sunLightRef.current.color.set('#93C5FD'); // Martian blue sunset
+        // Sunlight intensity scales with elevation and dust storm attenuation
+        const stormFade = 1.0 - solCycle.dustStormIntensity * 0.55;
+        const baseIntensity = Math.max(0.12, Math.sin(sunAngle) * 2.3) * stormFade;
+        sunLightRef.current.intensity = baseIntensity;
+
+        // Sunset/sunrise blueish hue, midday crisp pale sunlight
+        if (sunY < 14) {
+          sunLightRef.current.color.set('#93C5FD'); // Martian blue sunset/sunrise
         } else {
-          sunLightRef.current.color.set('#FFFBEB'); // Crisp pale sunlight
+          sunLightRef.current.color.set('#FFFBEB'); // Crisp pale solar rays
         }
       } else {
         sunLightRef.current.intensity = 0.04; // Faint starlight
@@ -39,8 +55,10 @@ export const MarsSky: React.FC = () => {
 
     if (ambientLightRef.current) {
       if (isSunUp) {
-        ambientLightRef.current.intensity = 0.45;
-        ambientLightRef.current.color.set('#78350F'); // Martian ground bounce ambient
+        // Ground bounce ambient illumination
+        const stormWarmth = solCycle.dustStormIntensity * 0.2;
+        ambientLightRef.current.intensity = 0.42 + stormWarmth;
+        ambientLightRef.current.color.set(solCycle.dustStormIntensity > 0.4 ? '#9A3412' : '#78350F');
       } else {
         ambientLightRef.current.intensity = 0.08;
         ambientLightRef.current.color.set('#0F172A'); // Deep space ambient
@@ -50,33 +68,35 @@ export const MarsSky: React.FC = () => {
 
   return (
     <>
-      {/* Martian Atmospheric Fog */}
+      {/* Dynamic Atmospheric Fog with Dust Storm Haze */}
       <fogExp2
         attach="fog"
         args={[
           isSunUp
-            ? sunY < 10
+            ? sunY < 12
               ? '#4A1D11' // Sunset horizon dusk
-              : '#854D0E' // Dusty butterscotch daytime
+              : solCycle.dustStormIntensity > 0.3
+                ? '#92400E' // Heavy dust storm haze
+                : '#78350F' // Dusty butterscotch daytime
             : '#05070D', // Starry night void
-          0.014 + solCycle.dustStormIntensity * 0.02,
+          0.009 + solCycle.dustStormIntensity * 0.024,
         ]}
       />
 
-      {/* Primary Directional Sunlight with Soft Shadows */}
+      {/* Primary Directional Sunlight with High-Fidelity Cascading Shadows */}
       <directionalLight
         ref={sunLightRef}
         position={[sunX, Math.max(1, sunY), sunZ]}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        castShadow={graphicsQuality !== 'low'}
+        shadow-mapSize-width={shadowResolution}
+        shadow-mapSize-height={shadowResolution}
         shadow-camera-near={0.5}
-        shadow-camera-far={200}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
-        shadow-bias={-0.0005}
+        shadow-camera-far={220}
+        shadow-camera-left={-42}
+        shadow-camera-right={42}
+        shadow-camera-top={42}
+        shadow-camera-bottom={-42}
+        shadow-bias={-0.00035}
       />
 
       {/* Atmospheric Ambient Fill */}
@@ -85,18 +105,18 @@ export const MarsSky: React.FC = () => {
       {/* Visual Sun Mesh in Sky */}
       {isSunUp && (
         <group position={[sunX * 1.5, Math.max(2, sunY * 1.5), sunZ * 1.5]}>
-          {/* Small solar disc (Sun appears smaller on Mars than Earth) */}
+          {/* Solar disc (Sun appears smaller on Mars than Earth) */}
           <mesh>
             <sphereGeometry args={[2.2, 16, 16]} />
             <meshBasicMaterial color="#FFFFFF" />
           </mesh>
           {/* Martian blue glow corona */}
           <mesh>
-            <sphereGeometry args={[4.5, 16, 16]} />
+            <sphereGeometry args={[4.8, 16, 16]} />
             <meshBasicMaterial
-              color={sunY < 12 ? '#60A5FA' : '#FDE68A'}
+              color={sunY < 14 ? '#60A5FA' : '#FDE68A'}
               transparent
-              opacity={0.35}
+              opacity={0.32}
             />
           </mesh>
         </group>

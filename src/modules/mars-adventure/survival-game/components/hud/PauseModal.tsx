@@ -143,6 +143,26 @@ export const PauseModal: React.FC<PauseModalProps> = ({ canvasContainerRef }) =>
             </div>
 
             <div className="flex items-center justify-between rounded-xl border border-white/5 bg-[#11182E] px-3 py-2">
+              <span className="text-slate-400">P</span>
+              <span className="font-bold text-yellow-400">Power Grid & Circuits</span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-[#11182E] px-3 py-2">
+              <span className="text-slate-400">U</span>
+              <span className="font-bold text-cyan-400">Base AI & Robotics Hub</span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-[#11182E] px-3 py-2">
+              <span className="text-slate-400">C / Tab</span>
+              <span className="font-bold text-cyan-400">Backpack Cargo</span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-[#11182E] px-3 py-2">
+              <span className="text-slate-400">M</span>
+              <span className="font-bold text-amber-400">Sol Mission Log</span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-[#11182E] px-3 py-2">
               <span className="text-slate-400">ESC</span>
               <span className="font-bold text-red-400">Pause / Release Mouse</span>
             </div>
@@ -151,7 +171,17 @@ export const PauseModal: React.FC<PauseModalProps> = ({ canvasContainerRef }) =>
 
         {/* Buttons */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                useMarsGameStore.getState().openMainMenu();
+              }}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-500/20 transition-all"
+              title="Return to Main Menu"
+            >
+              <span>Main Menu</span>
+            </button>
+
             <button
               onClick={() => {
                 restartGame();

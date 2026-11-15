@@ -9,6 +9,7 @@ export const ScannerOverlay: React.FC = () => {
   const playerPos = useMarsGameStore((state) => state.playerPosition);
   const doorOpen = useMarsGameStore((state) => state.doorOpen);
   const openSubstanceModal = useMarsGameStore((state) => state.openSubstanceModal);
+  const scanningState = useMarsGameStore((state) => state.scanningState);
 
   if (!visorScanActive) return null;
 
@@ -77,6 +78,29 @@ export const ScannerOverlay: React.FC = () => {
           {detected.length} TARGETS IN RANGE
         </span>
       </div>
+
+      {/* Center Reticle Scanning Progress */}
+      {scanningState.active && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
+          <div className="relative w-28 h-28 border-2 border-dashed border-cyan-400 rounded-full animate-spin [animation-duration:10s] flex items-center justify-center">
+            <div className="w-16 h-16 border border-cyan-300 rounded-full animate-ping" />
+          </div>
+          <div className="mt-3 bg-zinc-950/90 border border-cyan-400/50 rounded-lg px-4 py-2 flex flex-col items-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <div className="text-xs font-bold text-cyan-300 tracking-wider">
+              SPECTRAL SCAN IN PROGRESS...
+            </div>
+            <div className="w-36 h-2 bg-zinc-800 rounded-full overflow-hidden mt-1.5 border border-zinc-700">
+              <div
+                className="h-full bg-cyan-400 transition-all duration-75 shadow-[0_0_8px_#00F0FF]"
+                style={{ width: `${Math.round(scanningState.progress)}%` }}
+              />
+            </div>
+            <div className="text-[10px] text-cyan-400 font-mono mt-1 font-bold">
+              {Math.round(scanningState.progress)}% COMPLETE
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detected Mineral Signatures List on Top-Right */}
       <div className="pointer-events-auto absolute top-28 right-6 flex flex-col gap-2 max-w-xs w-full max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
