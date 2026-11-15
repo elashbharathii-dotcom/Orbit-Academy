@@ -243,10 +243,6 @@ export const Sun: React.FC<SunProps> = ({ radius = 4.6 }) => {
         intensity={3.4}
         distance={380}
         decay={0.28}
-        castShadow
-        shadow-bias={-0.0002}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
       />
 
       {/* 2. Soft Chromospheric Fill Light */}

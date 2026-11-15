@@ -104,7 +104,6 @@ export const AsteroidBelt: React.FC<AsteroidBeltProps> = ({
     <instancedMesh
       ref={meshRef}
       args={[undefined, undefined, count]}
-      castShadow
       receiveShadow
     >
       <dodecahedronGeometry args={[1, 0]} />

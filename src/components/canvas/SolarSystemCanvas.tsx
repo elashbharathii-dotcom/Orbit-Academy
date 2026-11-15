@@ -42,7 +42,7 @@ export const SolarSystemCanvas: React.FC<SolarSystemCanvasProps> = ({
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
-          scene.background = null;
+          scene.background = new THREE.Color('#030611');
         }}
       >
         <SolarSystemScene speedScale={speedScale} />
