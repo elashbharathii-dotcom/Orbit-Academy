@@ -1,7 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export const CosmicBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mouseOffset, setMouseOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Mouse parallax tracking
+  useEffect(() => {
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let animId: number;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      targetX = (e.clientX - cx) / cx; // -1 to 1
+      targetY = (e.clientY - cy) / cy;
+    };
+
+    const updateParallax = () => {
+      currentX += (targetX - currentX) * 0.05;
+      currentY += (targetY - currentY) * 0.05;
+      setMouseOffset({ x: currentX, y: currentY });
+      animId = requestAnimationFrame(updateParallax);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    animId = requestAnimationFrame(updateParallax);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animId);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,7 +64,7 @@ export const CosmicBackground: React.FC = () => {
       alphaSpeed: number;
     }
 
-    const starCount = 85;
+    const starCount = 95;
     const particles: Particle[] = [];
     const colors = [
       'rgba(56, 221, 248, 0.85)', // Cyan
@@ -48,8 +80,8 @@ export const CosmicBackground: React.FC = () => {
         y: Math.random() * height,
         radius: Math.random() * 1.8 + 0.4,
         color: colors[Math.floor(Math.random() * colors.length)],
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
         alpha: Math.random() * 0.8 + 0.2,
         alphaSpeed: (Math.random() * 0.015 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
       });
@@ -67,9 +99,27 @@ export const CosmicBackground: React.FC = () => {
     }
     let shootingStar: LightTrail | null = null;
     let nextShootingStarTime = Date.now() + 2500;
+    let orbitAngle = 0;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
+
+      // Subtle animated orbital rings in background
+      orbitAngle += 0.002;
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(orbitAngle);
+      ctx.strokeStyle = 'rgba(56, 221, 248, 0.035)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, width * 0.45, height * 0.35, Math.PI / 6, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(167, 139, 250, 0.025)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, width * 0.55, height * 0.45, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
 
       // 1. Draw glowing stars
       for (let i = 0; i < particles.length; i++) {
@@ -160,22 +210,33 @@ export const CosmicBackground: React.FC = () => {
       {/* Deep Space Base Vignette */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B1024] via-[#050816] to-[#02040B]" />
 
-      {/* Atmospheric Nebula Ambient Glows */}
-      {/* Cyan Nebula Top Left */}
-      <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-[#38DDF8]/12 blur-[140px] pointer-events-none" />
+      {/* Atmospheric Nebula Ambient Glows with Parallax Shift */}
+      <div
+        className="absolute inset-0 transition-transform duration-300 ease-out pointer-events-none"
+        style={{
+          transform: `translate3d(${mouseOffset.x * -20}px, ${mouseOffset.y * -20}px, 0)`,
+        }}
+      >
+        {/* Cyan Nebula Top Left */}
+        <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-[#38DDF8]/14 blur-[140px]" />
 
-      {/* Violet / Purple Nebula Top Right */}
-      <div className="absolute top-1/4 -right-32 w-[600px] h-[600px] rounded-full bg-[#A78BFA]/12 blur-[150px] pointer-events-none" />
+        {/* Violet / Purple Nebula Top Right */}
+        <div className="absolute top-1/4 -right-32 w-[600px] h-[600px] rounded-full bg-[#A78BFA]/14 blur-[150px]" />
 
-      {/* Magenta Nebula Center Bottom */}
-      <div className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full bg-[#E879F9]/10 blur-[130px] pointer-events-none" />
+        {/* Magenta Nebula Center Bottom */}
+        <div className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full bg-[#E879F9]/12 blur-[130px]" />
+
+        {/* Amber Stellar Forge Center */}
+        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full bg-[#F59E0B]/8 blur-[160px]" />
+      </div>
 
       {/* Subtle Grid Line Perspective Mesh */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        className="absolute inset-0 opacity-[0.03] pointer-events-none transition-transform duration-500 ease-out"
         style={{
           backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.4) 1px, transparent 1px)`,
           backgroundSize: '64px 64px',
+          transform: `translate3d(${mouseOffset.x * -10}px, ${mouseOffset.y * -10}px, 0)`,
         }}
       />
 
@@ -184,4 +245,3 @@ export const CosmicBackground: React.FC = () => {
     </div>
   );
 };
-

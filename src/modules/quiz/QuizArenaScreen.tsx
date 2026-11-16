@@ -46,6 +46,7 @@ import {
   Shield,
   Play,
   Rocket,
+  Compass,
 } from 'lucide-react';
 
 interface QuestionResult {
@@ -661,17 +662,26 @@ export const QuizArenaScreen: React.FC = () => {
                     className="p-6 flex-1 flex flex-col justify-between backdrop-blur-2xl bg-gradient-to-b from-[#0B1024]/90 to-[#050816]/90 border border-white/[0.14] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)]"
                   >
                     <div className="space-y-4">
-                      {/* Mission Header */}
-                      <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
-                        <BookOpen className="h-4 w-4 text-[#38DDF8]" />
-                        <h2 className="font-mono text-xs uppercase tracking-wider text-[#38DDF8] font-bold">
-                          MISSION BRIEFING
-                        </h2>
+                      {/* Mission Header with Live System Status */}
+                      <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-[#38DDF8]" />
+                          <h2 className="font-mono text-xs uppercase tracking-wider text-[#38DDF8] font-bold">
+                            MISSION BRIEFING
+                          </h2>
+                        </div>
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#34D399]">
+                          <span className="h-2 w-2 rounded-full bg-[#34D399] animate-pulse" />
+                          <span className="hidden sm:inline">SYSTEMS: ONLINE</span>
+                        </div>
                       </div>
 
+                      {/* Selected Category Highlight Card */}
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{selectedCatMeta.icon}</span>
+                        <div className="flex items-center gap-3 bg-white/[0.03] p-3 rounded-2xl border border-white/[0.06]">
+                          <span className="text-3xl animate-float-gentle filter drop-shadow-[0_0_12px_rgba(56,221,248,0.5)]">
+                            {selectedCatMeta.icon}
+                          </span>
                           <div>
                             <span className="block font-sans text-sm font-extrabold text-white">
                               {selectedCatMeta.label}
@@ -687,7 +697,7 @@ export const QuizArenaScreen: React.FC = () => {
                         </p>
                       </div>
 
-                      {/* Flight Audit Parameters */}
+                      {/* Flight Audit Parameters with Holographic Separators */}
                       <div className="space-y-2 font-mono text-xs pt-1">
                         <div className="flex justify-between items-center py-1.5 border-b border-white/[0.06]">
                           <span className="text-[#94A3B8]">Challenges Armed:</span>
@@ -707,8 +717,8 @@ export const QuizArenaScreen: React.FC = () => {
                         </div>
                         <div className="flex justify-between items-center py-1.5 border-b border-white/[0.06]">
                           <span className="text-[#94A3B8]">Timer Protocol:</span>
-                          <span className={`font-bold ${isTimedBlitz ? 'text-[#FBBF24]' : 'text-white'}`}>
-                            {isTimedBlitz ? '60s Countdown' : 'Untimed Mission'}
+                          <span className={`font-bold ${isTimedBlitz ? 'text-[#FBBF24]' : 'text-[#38DDF8]'}`}>
+                            {isTimedBlitz ? '60s Blitz Countdown' : '5-Min Standard Flight'}
                           </span>
                         </div>
                       </div>
@@ -721,11 +731,16 @@ export const QuizArenaScreen: React.FC = () => {
                         disabled={questionPool.length === 0}
                         onClick={handleInitiateLaunch}
                         data-testid="start-arena-btn"
-                        className="group relative w-full flex items-center justify-center gap-3 py-4 sm:py-5 px-6 rounded-2xl font-sans text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 bg-gradient-to-r from-[#FBBF24] via-[#F97316] to-[#EF4444] hover:from-[#FCD34D] hover:via-[#FB923C] hover:to-[#F87171] shadow-[0_0_35px_rgba(251,191,36,0.5)] hover:shadow-[0_0_55px_rgba(251,191,36,0.8)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
+                        className="group relative w-full flex items-center justify-center gap-3 py-4 sm:py-5 px-6 rounded-2xl font-sans text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 bg-gradient-to-r from-[#FBBF24] via-[#F97316] to-[#EF4444] hover:from-[#FCD34D] hover:via-[#FB923C] hover:to-[#F87171] shadow-[0_0_35px_rgba(251,191,36,0.6)] hover:shadow-[0_0_55px_rgba(251,191,36,0.9)] transition-all duration-300 transform hover:-translate-y-1.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer overflow-hidden"
                       >
-                        <Play className="h-5 w-5 fill-slate-950 text-slate-950 transition-transform group-hover:scale-110" />
-                        <span>ENGAGE ARENA ({questionPool.length} QUESTIONS)</span>
-                        <ArrowRight className="h-4 w-4 text-slate-950 transition-transform group-hover:translate-x-1" />
+                        {/* Animated Light Sweep Across Button Face */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden pointer-events-none">
+                          <div className="absolute -inset-full w-[250%] h-[250%] bg-gradient-to-r from-transparent via-white/35 to-transparent transform -rotate-45 animate-shimmer-sweep" />
+                        </div>
+
+                        <Play className="h-5 w-5 fill-slate-950 text-slate-950 transition-transform group-hover:scale-125" />
+                        <span className="relative z-10">START QUIZYYY!!! ({questionPool.length} QUESTIONS)</span>
+                        <ArrowRight className="h-4 w-4 text-slate-950 transition-transform group-hover:translate-x-1.5" />
 
                         {/* Subtle Glowing Aura */}
                         <span className="absolute -inset-1 rounded-2xl border-2 border-[#FBBF24] opacity-40 animate-ping pointer-events-none" />
@@ -789,6 +804,10 @@ export const QuizArenaScreen: React.FC = () => {
                         tone={currentQ.difficulty === 'Astrophysicist' ? 'amber' : 'cyan'}
                         size="sm"
                       />
+                      <div className="hidden sm:flex items-center gap-1.5 font-mono text-[10px] text-[#38DDF8] bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/[0.08]">
+                        <Compass className="h-3 w-3 text-[#38DDF8]" />
+                        <span>HDG 184° • DEFLECTOR 100%</span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-4">
